@@ -4,9 +4,9 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug @trading-stack/backend with Nx",
+      "name": "Debug backend with Nx",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["exec", "nx", "serve", "@trading-stack/backend"],
+      "runtimeArgs": ["exec", "nx", "serve", "backend"],
       "env": {
         "NODE_OPTIONS": "--inspect=9229"
       },

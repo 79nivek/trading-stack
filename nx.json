@@ -69,5 +69,8 @@
       "dependsOn": ["^build"]
     }
   },
+    "tui": {
+    "enabled": false
+  },
   "neverConnectToCloud": true
 }
