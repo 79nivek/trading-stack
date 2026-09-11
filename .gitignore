@@ -48,3 +48,5 @@ vitest.config.*.timestamp*
 
 # env
 .env
+
+.angular
