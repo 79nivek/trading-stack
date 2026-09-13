@@ -1,0 +1,66 @@
+{
+  "THEME": {
+    "TOGGLE": "Toggle Theme"
+  },
+  "MENU": {
+    "DASHBOARD": "Dashboard",
+    "CURRENTLY_TRADING": "Currently Trading",
+    "FOLLOWED": "Followed",
+    "SUGGESTION": "Suggestion",
+    "SETTING": "Setting"
+  },
+  "COMMON": {
+    "CLOSE": "Close",
+    "SAVE": "Save",
+    "CANCEL": "Cancel",
+    "SUBMIT": "Submit"
+  },
+  "AUTH": {
+    "LOGIN": "Login",
+    "USERNAME": "Username",
+    "PASSWORD": "Password",
+    "SUBMIT": "Sign In"
+  },
+  "HEADER_PROFILE": {
+    "PROFILE": "Profile",
+    "CHANGE_PASSWORD": "Change Password",
+    "LOGOUT": "Logout"
+  },
+  "SIGNUP": {
+    "TITLE": "Sign Up",
+    "FIRST_NAME": "First Name",
+    "LAST_NAME": "Last Name",
+    "ALREADY_HAVE_ACCOUNT": "Already have an account? Log in",
+    "SUCCESS_TITLE": "Success",
+    "SUCCESS_MSG": "Registration successful! You can now login.",
+    "GO_TO_LOGIN": "Go to Login",
+    "ERROR_TITLE": "Error",
+    "CLOSE": "Close"
+  },
+  "LOGIN": {
+    "NO_ACCOUNT": "Don't have an account? Sign up",
+    "WELCOME_BACK": "Welcome back to Trading Stack"
+  },
+  "ERROR": {
+    "REQUIRED": "This field is required.",
+    "EMAIL_INVALID": "Please enter a valid email address.",
+    "PASSWORD_WEAK": "Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character.",
+    "PASSWORD_MISMATCH": "Passwords do not match.",
+    "UNKNOWN": "An unknown error occurred."
+  },
+  "SETTING": {
+    "PROFILE": "Profile",
+    "BINANCE": "Binance Credentials",
+    "NOTIFICATION": "Notifications"
+  },
+  "PROFILE": {
+    "CHANGE_PASSWORD": "Change Password",
+    "RESET_PASSWORD": "Reset Password",
+    "OLD_PASSWORD": "Old Password",
+    "OLD_PASSWORD_PLACEHOLDER": "Enter your old password",
+    "NEW_PASSWORD": "New Password",
+    "NEW_PASSWORD_PLACEHOLDER": "Enter your new password",
+    "CONFIRM_PASSWORD": "Confirm Password",
+    "CONFIRM_PASSWORD_PLACEHOLDER": "Re-enter your new password"
+  }
+}

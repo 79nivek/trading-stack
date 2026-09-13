@@ -50,3 +50,4 @@ vitest.config.*.timestamp*
 .env
 
 .angular
+docker/postgres

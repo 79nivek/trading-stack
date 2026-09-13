@@ -1,0 +1,23 @@
+@reference '../../../../styles.css';
+
+.dropdown-wrapper {
+  @apply relative inline-block text-left;
+}
+.dropdown-trigger {
+  @apply cursor-pointer;
+}
+.dropdown-menu {
+  @apply origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-surface border border-border ring-1 ring-black/5 focus:outline-none z-50;
+}
+.dropdown-menu-content {
+  @apply py-1;
+}
+.dropdown-item {
+  @apply block px-4 py-2 text-sm text-text hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors;
+}
+.dropdown-item-flex {
+  @apply flex items-center;
+}
+.dropdown-icon {
+  @apply mr-2;
+}

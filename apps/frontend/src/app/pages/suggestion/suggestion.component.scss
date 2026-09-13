@@ -1,0 +1,8 @@
+@reference '../../../styles.css';
+
+.page-title {
+  @apply text-2xl font-bold text-text;
+}
+.page-card {
+  @apply mt-4 p-4 bg-surface border border-border rounded-lg shadow-sm;
+}

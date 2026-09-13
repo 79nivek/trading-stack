@@ -1,0 +1,98 @@
+<div class="auth-container">
+  <div class="auth-card">
+    
+    <div class="auth-header">
+      <h1 class="auth-title">{{ 'SIGNUP.TITLE' | translate }}</h1>
+    </div>
+
+    <form [formGroup]="signUpForm" (ngSubmit)="onSubmit()" class="auth-form">
+      
+      <!-- Username -->
+      <div class="form-group">
+        <label for="signup-username" class="form-label">{{ 'AUTH.USERNAME' | translate }}</label>
+        <input 
+          id="signup-username"
+          formControlName="username" 
+          type="text" 
+          [class.form-input]="!isFieldInvalid('username')"
+          [class.form-input-error]="isFieldInvalid('username')"
+        >
+        <p *ngIf="isFieldInvalid('username')" class="error-text">{{ ERRORS.REQUIRED | translate }}</p>
+      </div>
+
+      <!-- Name -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label for="signup-firstname" class="form-label">{{ 'SIGNUP.FIRST_NAME' | translate }}</label>
+          <input 
+            id="signup-firstname"
+            formControlName="firstName" 
+            type="text" 
+            [class.form-input]="!isFieldInvalid('firstName')"
+            [class.form-input-error]="isFieldInvalid('firstName')"
+          >
+          <p *ngIf="isFieldInvalid('firstName')" class="error-text">{{ ERRORS.REQUIRED | translate }}</p>
+        </div>
+        <div class="form-group">
+          <label for="signup-lastname" class="form-label">{{ 'SIGNUP.LAST_NAME' | translate }}</label>
+          <input 
+            id="signup-lastname"
+            formControlName="lastName" 
+            type="text" 
+            [class.form-input]="!isFieldInvalid('lastName')"
+            [class.form-input-error]="isFieldInvalid('lastName')"
+          >
+          <p *ngIf="isFieldInvalid('lastName')" class="error-text">{{ ERRORS.REQUIRED | translate }}</p>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="signup-email" class="form-label">Email</label>
+        <input 
+          id="signup-email"
+          formControlName="email" 
+          type="email" 
+          [class.form-input]="!isFieldInvalid('email')"
+          [class.form-input-error]="isFieldInvalid('email')"
+        >
+        <div *ngIf="isFieldInvalid('email')">
+          <p *ngIf="f.email.errors?.['required']" class="error-text">{{ ERRORS.REQUIRED | translate }}</p>
+          <p *ngIf="f.email.errors?.['pattern']" class="error-text">{{ ERRORS.EMAIL_INVALID | translate }}</p>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="signup-password" class="form-label">{{ 'AUTH.PASSWORD' | translate }}</label>
+        <input 
+          id="signup-password"
+          formControlName="password" 
+          type="password" 
+          [class.form-input]="!isFieldInvalid('password')"
+          [class.form-input-error]="isFieldInvalid('password')"
+        >
+        <div *ngIf="isFieldInvalid('password')">
+          <p *ngIf="f.password.errors?.['required']" class="error-text">{{ ERRORS.REQUIRED | translate }}</p>
+          <p *ngIf="f.password.errors?.['pattern']" class="error-text">{{ ERRORS.PASSWORD_WEAK | translate }}</p>
+        </div>
+      </div>
+
+      <div class="pt-4">
+        <app-button 
+          type="submit" 
+          btnType="primary" 
+          size="L" 
+          [disabled]="signUpForm.invalid"
+          class="w-full block"
+        >
+          {{ 'SIGNUP.TITLE' | translate }}
+        </app-button>
+      </div>
+      
+      <div class="auth-footer">
+        <a [routerLink]="APP_PATHS.LOGIN" class="auth-link">{{ 'SIGNUP.ALREADY_HAVE_ACCOUNT' | translate }}</a>
+      </div>
+    </form>
+  </div>
+</div>

@@ -14,6 +14,16 @@ module.exports = {
     'zlib-sync': 'commonjs zlib-sync',
     bufferutil: 'commonjs bufferutil',
     'utf-8-validate': 'commonjs utf-8-validate',
+    bcrypt: 'commonjs bcrypt',
+    amqplib: 'commonjs amqplib',
+    'amqp-connection-manager': 'commonjs amqp-connection-manager',
+    nats: 'commonjs nats',
+    kafkajs: 'commonjs kafkajs',
+    '@grpc/grpc-js': 'commonjs @grpc/grpc-js',
+    '@grpc/proto-loader': 'commonjs @grpc/proto-loader',
+    mqtt: 'commonjs mqtt',
+    ioredis: 'commonjs ioredis',
+    '@nestjs/platform-socket.io': 'commonjs @nestjs/platform-socket.io',
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -28,7 +38,7 @@ module.exports = {
       sourceMap: true,
     }),
     new webpack.IgnorePlugin({
-      resourceRegExp: /^(zlib-sync|bufferutil|utf-8-validate)$/,
+      resourceRegExp: /^(zlib-sync|bufferutil|utf-8-validate|amqplib|amqp-connection-manager|nats|kafkajs|@grpc\/grpc-js|@grpc\/proto-loader|mqtt|ioredis|@nestjs\/platform-socket.io)$/,
     }),
   ],
   ignoreWarnings: [

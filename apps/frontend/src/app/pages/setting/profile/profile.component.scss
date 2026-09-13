@@ -1,0 +1,25 @@
+@reference '../../../../styles.css';
+
+.profile-container {
+  @apply max-w-3xl mx-auto;
+}
+
+.page-title {
+  @apply text-2xl font-bold text-text mb-6;
+}
+
+.card {
+  @apply bg-surface rounded-xl shadow-sm border border-border p-6 md:p-8;
+}
+
+.form-group {
+  @apply mb-4;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-text mb-1;
+}
+
+.form-input {
+  @apply w-full px-4 py-2 bg-background border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all;
+}

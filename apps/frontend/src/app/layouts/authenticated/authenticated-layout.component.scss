@@ -1,0 +1,50 @@
+@reference '../../../styles.css';
+
+.layout-container {
+  @apply min-h-screen flex bg-background text-text;
+}
+.layout-sidebar {
+  @apply bg-surface border-r border-border transition-all duration-300 flex flex-col;
+}
+.sidebar-header {
+  @apply h-16 flex items-center justify-center border-b border-border;
+}
+.sidebar-title {
+  @apply font-bold text-lg truncate;
+}
+.sidebar-title-short {
+  @apply font-bold text-lg;
+}
+.sidebar-nav {
+  @apply flex-1 overflow-y-auto py-4;
+}
+.sidebar-link {
+  @apply flex items-center px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors;
+}
+.sidebar-link-active {
+  @apply bg-primary/10 text-primary border-r-4 border-primary;
+}
+.sidebar-icon {
+  @apply w-6 h-6 flex items-center justify-center bg-black/10 dark:bg-white/10 rounded-md text-sm;
+}
+.sidebar-label {
+  @apply ml-3 truncate;
+}
+.layout-main {
+  @apply flex-1 flex flex-col min-w-0 overflow-hidden;
+}
+.main-header {
+  @apply h-16 bg-surface border-b border-border flex items-center justify-between px-4;
+}
+.sidebar-toggle-btn {
+  @apply p-2 rounded-md hover:bg-black/10 dark:hover:bg-white/10 text-text;
+}
+.header-controls {
+  @apply flex items-center space-x-4;
+}
+.avatar-trigger {
+  @apply w-10 h-10 rounded-full bg-primary/20 border border-primary text-primary flex items-center justify-center font-bold;
+}
+.main-content {
+  @apply flex-1 overflow-y-auto p-4 md:p-6;
+}

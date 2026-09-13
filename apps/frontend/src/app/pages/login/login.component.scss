@@ -1,0 +1,38 @@
+@reference '../../../styles.css';
+
+.auth-container {
+  @apply min-h-screen bg-background flex items-center justify-center p-4;
+}
+.auth-card {
+  @apply max-w-md w-full p-8 bg-surface border border-border rounded-lg shadow-xl;
+}
+.auth-header {
+  @apply text-center mb-8;
+}
+.auth-title {
+  @apply text-3xl font-bold text-text;
+}
+.auth-subtitle {
+  @apply text-text/60 mt-2;
+}
+.auth-form {
+  @apply space-y-6;
+}
+.form-group {
+  @apply relative;
+}
+.form-label {
+  @apply block text-sm font-medium text-text mb-2;
+}
+.form-input {
+  @apply w-full px-4 py-2 bg-background border border-border rounded-md text-text focus:outline-none focus:ring-2 focus:ring-primary;
+}
+.form-input-error {
+  @apply w-full px-4 py-2 bg-background border border-red-500 rounded-md text-text focus:outline-none focus:ring-2 focus:ring-primary;
+}
+.auth-footer {
+  @apply text-center mt-4;
+}
+.auth-link {
+  @apply text-sm text-primary hover:underline;
+}

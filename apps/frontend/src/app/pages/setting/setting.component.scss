@@ -1,0 +1,17 @@
+@reference '../../../styles.css';
+
+.page-title {
+  @apply text-2xl font-bold text-text mb-6;
+}
+.settings-grid {
+  @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6;
+}
+.setting-card {
+  @apply flex flex-col items-center justify-center p-6 bg-surface border border-border rounded-xl shadow-sm hover:shadow-md hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer aspect-square text-center;
+}
+.setting-icon-wrapper {
+  @apply text-primary mb-4 flex items-center justify-center;
+}
+.setting-label {
+  @apply font-medium text-text text-sm md:text-base;
+}

@@ -1,0 +1,66 @@
+{
+  "THEME": {
+    "TOGGLE": "Đổi giao diện"
+  },
+  "MENU": {
+    "DASHBOARD": "Bảng điều khiển",
+    "CURRENTLY_TRADING": "Đang giao dịch",
+    "FOLLOWED": "Đã theo dõi",
+    "SUGGESTION": "Gợi ý",
+    "SETTING": "Cài đặt"
+  },
+  "COMMON": {
+    "CLOSE": "Đóng",
+    "SAVE": "Lưu",
+    "CANCEL": "Hủy",
+    "SUBMIT": "Gửi"
+  },
+  "AUTH": {
+    "LOGIN": "Đăng nhập",
+    "USERNAME": "Tên đăng nhập",
+    "PASSWORD": "Mật khẩu",
+    "SUBMIT": "Đăng nhập"
+  },
+  "HEADER_PROFILE": {
+    "PROFILE": "Hồ sơ",
+    "CHANGE_PASSWORD": "Đổi mật khẩu",
+    "LOGOUT": "Đăng xuất"
+  },
+  "SIGNUP": {
+    "TITLE": "Đăng ký",
+    "FIRST_NAME": "Tên",
+    "LAST_NAME": "Họ",
+    "ALREADY_HAVE_ACCOUNT": "Đã có tài khoản? Đăng nhập",
+    "SUCCESS_TITLE": "Thành công",
+    "SUCCESS_MSG": "Đăng ký thành công! Bạn có thể đăng nhập.",
+    "GO_TO_LOGIN": "Đến trang Đăng nhập",
+    "ERROR_TITLE": "Lỗi",
+    "CLOSE": "Đóng"
+  },
+  "LOGIN": {
+    "NO_ACCOUNT": "Chưa có tài khoản? Đăng ký",
+    "WELCOME_BACK": "Chào mừng trở lại Trading Stack"
+  },
+  "ERROR": {
+    "REQUIRED": "Trường này là bắt buộc.",
+    "EMAIL_INVALID": "Vui lòng nhập địa chỉ email hợp lệ.",
+    "PASSWORD_WEAK": "Mật khẩu phải chứa ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.",
+    "PASSWORD_MISMATCH": "Mật khẩu không khớp.",
+    "UNKNOWN": "Đã xảy ra lỗi không xác định."
+  },
+  "SETTING": {
+    "PROFILE": "Hồ sơ",
+    "BINANCE": "Khóa API Binance",
+    "NOTIFICATION": "Thông báo"
+  },
+  "PROFILE": {
+    "CHANGE_PASSWORD": "Đổi mật khẩu",
+    "RESET_PASSWORD": "Đặt lại mật khẩu",
+    "OLD_PASSWORD": "Mật khẩu cũ",
+    "OLD_PASSWORD_PLACEHOLDER": "Nhập mật khẩu cũ",
+    "NEW_PASSWORD": "Mật khẩu mới",
+    "NEW_PASSWORD_PLACEHOLDER": "Nhập mật khẩu mới",
+    "CONFIRM_PASSWORD": "Xác nhận mật khẩu",
+    "CONFIRM_PASSWORD_PLACEHOLDER": "Nhập lại mật khẩu mới"
+  }
+}

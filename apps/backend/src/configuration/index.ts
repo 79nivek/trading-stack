@@ -16,6 +16,10 @@ class Configuration {
   @IsOptional()
   IS_DEV = process.env['IS_DEV'] || true;
 
+  @IsString()
+  @IsOptional()
+  JWT_SECRET = process.env['JWT_SECRET'] || 'default-secret';
+
   // Binance API credentials — Ed25519 (for User Data Stream via WebSocket API v3)
   @IsString()
   @IsOptional()

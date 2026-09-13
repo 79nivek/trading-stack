@@ -16,6 +16,10 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["@trading-stack/source"]
+    "experimentalDecorators": true,
+    "customConditions": ["@trading-stack/source"],
+    "paths": {
+      "@trading-stack/shared-dto": ["./libs/shared-dto/src/index.ts"]
+    }
   }
 }

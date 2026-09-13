@@ -1,0 +1,23 @@
+@reference '../../../../styles.css';
+
+.popup-overlay {
+  @apply fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 backdrop-blur-sm;
+}
+.popup-card {
+  @apply bg-surface border border-border rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all;
+}
+.popup-header {
+  @apply px-6 py-4 border-b border-border;
+}
+.popup-title {
+  @apply text-lg font-bold text-text;
+}
+.popup-body {
+  @apply px-6 py-4;
+}
+.popup-message {
+  @apply text-text/80 text-sm whitespace-pre-wrap;
+}
+.popup-footer {
+  @apply px-6 py-4 bg-black/5 dark:bg-white/5 border-t border-border flex justify-end gap-3;
+}

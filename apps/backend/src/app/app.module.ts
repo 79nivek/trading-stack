@@ -1,18 +1,13 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CONFIGURATION } from '../configuration';
-import { AccountBalanceStreamerModule } from '../modules/account-balance-streamer/account-balance-streamer.module';
-import { DiscordWebhookModule } from '../modules/discord-webhook/discord-webhook.module';
-import { DatabaseModule } from '../modules/database/database.module';
-import { DiscordBotModule } from '../modules/discord-bot/discord-bot.module';
-import { P2PSyncModule } from '../modules/p2p-sync/p2p-sync.module';
-import { PortfolioValuationModule } from '../modules/portfolio-valuation/portfolio-valuation.module';
-import { FuturesScannerModule } from '../modules/futures-scanner/futures-scanner.module';
-import { BinanceExecutionModule } from '../modules/binance-execution/binance-execution.module';
-import { FollowedTokenModule } from '../modules/followed-token/followed-token.module';
+import { AuthModule } from '../modules/auth/auth.module';
+import { UsersModule } from '../modules/users/users.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,15 +15,22 @@ import { FollowedTokenModule } from '../modules/followed-token/followed-token.mo
       load: [() => ({ ...CONFIGURATION })],
     }),
     ScheduleModule.forRoot(),
-    AccountBalanceStreamerModule,
-    DiscordWebhookModule,
-    DatabaseModule,
-    DiscordBotModule,
-    P2PSyncModule,
-    PortfolioValuationModule,
-    FuturesScannerModule,
-    BinanceExecutionModule,
-    FollowedTokenModule,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('POSTGRES_HOST'),
+        port: parseInt(config.get<string>('POSTGRES_PORT') || '5432', 10),
+        username: config.get<string>('POSTGRES_USER'),
+        password: config.get<string>('POSTGRES_PASSWORD'),
+        database: config.get<string>('POSTGRES_DB'),
+        autoLoadEntities: true,
+        synchronize: true, // auto create tables (suitable for dev/simple apps)
+      }),
+    }),
+    AuthModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

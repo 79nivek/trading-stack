@@ -1,0 +1,60 @@
+<div class="layout-container">
+      <!-- Sidebar -->
+      <aside 
+        [class.w-64]="isSidebarOpen()" 
+        [class.w-16]="!isSidebarOpen()" 
+        class="layout-sidebar"
+      >
+        <div class="sidebar-header">
+          <span *ngIf="isSidebarOpen()" class="sidebar-title px-4">Trading Stack</span>
+          <span *ngIf="!isSidebarOpen()" class="sidebar-title-short">TS</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+          <ul class="space-y-1">
+            <li *ngFor="let item of menuItems">
+              <a 
+                [routerLink]="item.path" 
+                routerLinkActive="sidebar-link-active" 
+                class="sidebar-link"
+                [title]="item.label | translate"
+              >
+                <!-- Simple icon placeholder -->
+                <span class="sidebar-icon">
+                  {{ item.icon }}
+                </span>
+                <span *ngIf="isSidebarOpen()" class="sidebar-label">{{ item.label | translate }}</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <div class="layout-main">
+        <!-- Header -->
+        <header class="main-header">
+          <button (click)="toggleSidebar()" class="sidebar-toggle-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+          
+          <div class="header-controls">
+            <app-lang-toggle></app-lang-toggle>
+            <app-theme-toggle></app-theme-toggle>
+            
+            <app-dropdown [items]="profileMenu" (action)="handleProfileMenuAction($event)">
+              <div trigger class="avatar-trigger">
+                {{ authService.currentUser()?.firstName?.charAt(0) || 'U' | uppercase }}
+              </div>
+            </app-dropdown>
+          </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="main-content">
+          <router-outlet></router-outlet>
+        </main>
+      </div>
+    </div>

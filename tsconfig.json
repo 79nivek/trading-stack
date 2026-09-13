@@ -1,5 +1,10 @@
 {
   "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@trading-stack/shared-dto": ["./libs/shared-dto/src/index.ts"]
+    }
+  },
   "compileOnSave": false,
   "files": [],
   "references": [
@@ -7,7 +12,10 @@
       "path": "./apps/backend"
     },
     {
-      "path": "./frontend/tsconfig.app.json"
+      "path": "./apps/frontend"
+    },
+    {
+      "path": "./libs/shared-dto"
     }
   ]
 }

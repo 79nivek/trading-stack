@@ -1,0 +1,41 @@
+@reference '../../../../styles.css';
+
+.modal-backdrop {
+  @apply fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto;
+}
+
+.modal-dialog {
+  @apply w-full bg-surface rounded-xl shadow-xl flex flex-col my-auto border border-border;
+  animation: slide-down 0.2s ease-out;
+}
+
+.modal-header {
+  @apply flex items-center justify-between p-4 border-b border-border;
+}
+
+.modal-title {
+  @apply text-lg font-bold text-text;
+}
+
+.modal-close-btn {
+  @apply text-text/60 hover:text-text hover:bg-black/5 dark:hover:bg-white/10 p-1.5 rounded-lg transition-colors;
+}
+
+.modal-body {
+  @apply p-4 overflow-y-auto max-h-[70vh];
+}
+
+.modal-footer {
+  @apply flex items-center justify-end p-4 border-t border-border gap-3;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

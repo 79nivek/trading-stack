@@ -1,0 +1,8 @@
+@reference '../../../styles.css';
+
+.unauth-container {
+  @apply min-h-screen bg-background text-text flex items-center justify-center p-4;
+}
+.unauth-controls {
+  @apply fixed bottom-4 right-4 flex items-center space-x-2 bg-surface p-2 rounded-full shadow-lg border border-border;
+}

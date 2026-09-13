@@ -1,0 +1,31 @@
+<div class="dropdown-wrapper">
+  <!-- Trigger -->
+  <div (click)="toggle()" class="dropdown-trigger">
+    <ng-content select="[trigger]"></ng-content>
+  </div>
+
+  <!-- Dropdown Menu -->
+  <div 
+    *ngIf="isOpen()" 
+    class="dropdown-menu"
+  >
+    <div class="dropdown-menu-content">
+      <ng-container *ngFor="let item of items; let last = last">
+        <!-- Item -->
+        <a 
+          *ngIf="!item.divider"
+          (click)="onItemClick(item)"
+          class="dropdown-item"
+        >
+          <div class="dropdown-item-flex">
+            <span *ngIf="item.icon" class="dropdown-icon">{{ item.icon }}</span>
+            <span>{{ item.label | translate }}</span>
+          </div>
+        </a>
+
+        <!-- Divider -->
+        <div *ngIf="item.divider || (item.action === 'divider')" class="border-t border-border my-1"></div>
+      </ng-container>
+    </div>
+  </div>
+</div>

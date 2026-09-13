@@ -1,6 +1,7 @@
 {
-    "/api": {
+    "/api/v1/**": {
         "target": "http://localhost:3000",
-        "insecure": true
+        "secure": false,
+        "logLevel": "debug"
     }
 }

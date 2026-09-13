@@ -1,6 +1,6 @@
 packages:
   - 'apps/*'
-
+  - 'libs/shared-dto'
 autoInstallPeers: true
 onlyBuiltDependencies:
-  - nx
+  - 'nx'

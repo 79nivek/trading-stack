@@ -37,10 +37,7 @@
         "browser": "apps/frontend/src/main.ts",
         "tsConfig": "apps/frontend/tsconfig.app.json",
         "assets": [
-          {
-            "glob": "**/*",
-            "input": "apps/frontend/public"
-          }
+          "apps/frontend/public"
         ],
         "styles": [
           "apps/frontend/src/styles.css"
