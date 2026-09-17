@@ -41,6 +41,30 @@
           </button>
           
           <div class="header-controls">
+            <!-- Master Token Section -->
+            <div class="flex items-center gap-2 mr-4">
+              <ng-container *ngIf="!secretKeyService.masterToken()">
+                <input 
+                  type="password" 
+                  placeholder="Master Token" 
+                  [(ngModel)]="masterTokenInput"
+                  (keyup.enter)="onSaveMasterToken()"
+                  class="px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+                <button 
+                  (click)="onSaveMasterToken()" 
+                  [disabled]="isVerifyingToken || !masterTokenInput.trim()"
+                  class="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                >
+                  {{ isVerifyingToken ? '...' : 'Apply' }}
+                </button>
+              </ng-container>
+              <ng-container *ngIf="secretKeyService.masterToken()">
+                <span class="text-xs text-green-500 font-medium">Token Active</span>
+                <button (click)="secretKeyService.clearToken()" class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600">Clear</button>
+              </ng-container>
+            </div>
+
             <app-lang-toggle></app-lang-toggle>
             <app-theme-toggle></app-theme-toggle>
             

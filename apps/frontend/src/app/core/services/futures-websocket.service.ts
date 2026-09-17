@@ -3,6 +3,7 @@ import { KlineData } from '@trading-stack/shared-dto';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { ENV } from '../../environments';
 
 type StreamPayload = {
   stream: string; //  "stream" = vthousdt@kline_1m;
@@ -105,7 +106,7 @@ export class FuturesWebsocketService implements OnDestroy {
       .map((t) => `${t}@kline_${this.interval}`)
       .join('/');
 
-    const url = `wss://fstream.binance.com/market/stream?streams=${streams}`;
+    const url = `${ENV.BINANCE_FUTURES_WS_URL}/market/stream?streams=${streams}`;
 
     this.wsSubject = webSocket({
       url,

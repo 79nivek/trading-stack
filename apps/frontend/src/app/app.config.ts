@@ -3,7 +3,6 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
 import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
-import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { spinnerInterceptor } from './core/interceptors/spinner.interceptor';
@@ -21,7 +20,7 @@ export class CustomTranslateLoader implements TranslateLoader {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor, spinnerInterceptor, errorInterceptor])),
+    provideHttpClient(withInterceptors([spinnerInterceptor, errorInterceptor])),
     provideTranslateService({
       fallbackLang: 'en',
       lang: 'en',

@@ -8,6 +8,7 @@ import { StorageService } from './storage.service';
 import { ThemeService, Theme } from './theme.service';
 import { LanguageService } from './language.service';
 import { APP_PATHS } from '../constants/routes.constants';
+import { ENV } from '../../environments';
 
 export interface UserProfile {
   id: string;
@@ -48,25 +49,39 @@ export class BackendApiService implements OnInit, OnDestroy {
     }
   }
 
+  private useAuth() {
+    const token = this.storage.token.get();
+
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  }
+
   login(credentials: any): Observable<any> {
-    return this.http.post('/api/v1/auth/login', credentials).pipe(
-      tap((response: any) => {
-        if (response.access_token) {
-          this.storage.token.set(response.access_token);
-          this.isAuthenticated.set(true);
-          this.isTokenVerified = true;
-          this.startPolling();
-        }
-      }),
-    );
+    return this.http
+      .post(`${ENV.BACKEND_URL}/api/v1/auth/login`, credentials)
+      .pipe(
+        tap((response: any) => {
+          if (response.access_token) {
+            this.storage.token.set(response.access_token);
+            this.isAuthenticated.set(true);
+            this.isTokenVerified = true;
+            this.startPolling();
+          }
+        }),
+      );
   }
 
   logout() {
     if (this.storage.token.get()) {
-      this.http.post('/api/v1/auth/logout', {}).subscribe({
-        next: () => this.clearSession(),
-        error: () => this.clearSession(),
-      });
+      this.http
+        .post(`${ENV.BACKEND_URL}/api/v1/auth/logout`, {}, this.useAuth())
+        .subscribe({
+          next: () => this.clearSession(),
+          error: () => this.clearSession(),
+        });
     } else {
       this.clearSession();
     }
@@ -89,13 +104,18 @@ export class BackendApiService implements OnInit, OnDestroy {
       this.pollSub.unsubscribe();
     }
     this.pollSub = interval(10000).subscribe(() => {
-      this.http.get('/api/v1/auth/check', skipSpinnerOptions()).subscribe({
-        error: (err) => {
-          if (err.status === 401) {
-            this.logout();
-          }
-        },
-      });
+      this.http
+        .get(`${ENV.BACKEND_URL}/api/v1/auth/check`, {
+          ...this.useAuth(),
+          ...skipSpinnerOptions(),
+        })
+        .subscribe({
+          error: (err) => {
+            if (err.status === 401) {
+              this.logout();
+            }
+          },
+        });
     });
   }
 
@@ -109,46 +129,80 @@ export class BackendApiService implements OnInit, OnDestroy {
       return of(true);
     }
 
-    return this.http.get<UserProfile>('/api/v1/users/me').pipe(
-      map((user) => {
-        this.isTokenVerified = true;
-        this.isAuthenticated.set(true);
-        this.currentUser.set(user);
+    return this.http
+      .get<UserProfile>(`${ENV.BACKEND_URL}/api/v1/users/me`, this.useAuth())
+      .pipe(
+        map((user) => {
+          this.isTokenVerified = true;
+          this.isAuthenticated.set(true);
+          this.currentUser.set(user);
 
-        if (user.theme) {
-          this.themeService.setTheme(user.theme as Theme, false);
-        }
-        if (user.language) {
-          this.langService.setLanguage(user.language, false);
-        }
+          if (user.theme) {
+            this.themeService.setTheme(user.theme as Theme, false);
+          }
+          if (user.language) {
+            this.langService.setLanguage(user.language, false);
+          }
 
-        this.startPolling();
-        return true;
-      }),
-      catchError(() => {
-        this.logout();
-        return of(false);
-      }),
-    );
-  }
-
-  getToken(): string | null {
-    return this.storage.token.get();
+          this.startPolling();
+          return true;
+        }),
+        catchError(() => {
+          this.logout();
+          return of(false);
+        }),
+      );
   }
 
   signUp(data: any): Observable<any> {
-    return this.http.post('/api/v1/auth/sign-up', data);
+    return this.http.post(`${ENV.BACKEND_URL}/api/v1/auth/sign-up`, data);
   }
 
   resetPassword(data: any): Observable<any> {
-    return this.http.post('/api/v1/auth/reset-password', data);
+    return this.http.post(
+      `${ENV.BACKEND_URL}/api/v1/auth/reset-password`,
+      data,
+      this.useAuth(),
+    );
   }
 
   updateProfile(data: any): Observable<any> {
-    return this.http.patch('/api/v1/users', data);
+    return this.http.patch(
+      `${ENV.BACKEND_URL}/api/v1/users`,
+      data,
+      this.useAuth(),
+    );
   }
 
   updateConfig(config: { language?: string; theme?: string }): Observable<any> {
-    return this.http.patch('/api/v1/users/config', config);
+    return this.http.patch(
+      `${ENV.BACKEND_URL}/api/v1/users/config`,
+      config,
+      this.useAuth(),
+    );
+  }
+
+  checkBinanceCredentials(data: any): Observable<any> {
+    return this.http.post(
+      `${ENV.BACKEND_URL}/api/v1/binance-credentials/check`,
+      data,
+      this.useAuth(),
+    );
+  }
+
+  saveBinanceCredentials(data: any): Observable<{ token: string }> {
+    return this.http.post<{ token: string }>(
+      `${ENV.BACKEND_URL}/api/v1/binance-credentials/save`,
+      data,
+      this.useAuth(),
+    );
+  }
+
+  checkMasterToken(masterToken: string): Observable<any> {
+    return this.http.post(
+      `${ENV.BACKEND_URL}/api/v1/binance-credentials/check-token`,
+      { masterToken },
+      this.useAuth(),
+    );
   }
 }

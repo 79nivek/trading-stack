@@ -1,23 +1,35 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from './user.entity';
+import { User } from '../users/user.entity';
 
-@Entity('sessions')
-export class Session {
+@Entity('binance_credentials')
+export class BinanceCredential {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @ManyToOne(() => User, (user) => user.sessions, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user!: User;
 
   @Column()
   userId!: string;
 
-  @Column({ unique: true })
-  token!: string;
+  @Column()
+  encryptedApiKey!: string;
 
-  @Column({ default: true })
-  isActive!: boolean;
+  @Column()
+  encryptedSecretKey!: string;
+
+  @Column()
+  apiKeyIv!: string;
+
+  @Column()
+  apiKeyAuthTag!: string;
+
+  @Column()
+  secretKeyIv!: string;
+
+  @Column()
+  secretKeyAuthTag!: string;
 
   @CreateDateColumn()
   createdAt!: Date;

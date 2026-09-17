@@ -1,11 +1,11 @@
 <h1 class="page-title">{{ 'MENU.SETTING' | translate }}</h1>
 <div class="settings-grid">
-  <a 
+  <div 
     *ngFor="let item of settings" 
-    [routerLink]="item.link" 
-    class="setting-card"
+    (click)="item.action()" 
+    class="setting-card cursor-pointer"
   >
     <div class="setting-icon-wrapper" [innerHTML]="item.icon"></div>
     <span class="setting-label">{{ item.labelKey | translate }}</span>
-  </a>
+  </div>
 </div>
