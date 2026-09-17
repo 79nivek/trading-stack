@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   ReactiveFormsModule,
   FormBuilder,
@@ -21,12 +21,11 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
   selector: 'app-profile-page',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     TranslatePipe,
     TranslateDirective,
-    ButtonComponent,
-  ],
+    ButtonComponent
+],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })

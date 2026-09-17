@@ -1,7 +1,11 @@
-import { injectMutation, injectQuery } from "@tanstack/angular-query-experimental";
-import { lastValueFrom } from "rxjs";
-import { effect } from "@angular/core";
+import {
+  injectMutation,
+  injectQuery,
+} from '@tanstack/angular-query-experimental';
+import { lastValueFrom } from 'rxjs';
+import { effect } from '@angular/core';
 import { Component, signal, inject } from '@angular/core';
+import { PageTitleStrategy } from '../../core/strategies/page-title.strategy';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
@@ -18,7 +22,10 @@ import { SecretKeyService } from '../../core/services/secret-key.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ThemeService, Theme } from '../../core/services/theme.service';
 import { LanguageService } from '../../core/services/language.service';
-import { TimeframeService, Timeframe } from '../../core/services/timeframe.service';
+import {
+  TimeframeService,
+  Timeframe,
+} from '../../core/services/timeframe.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -33,7 +40,7 @@ import { FormsModule } from '@angular/forms';
     TranslatePipe,
     TranslateDirective,
     DropdownComponent,
-    FormsModule
+    FormsModule,
   ],
   templateUrl: './authenticated-layout.component.html',
   styleUrl: './authenticated-layout.component.scss',
@@ -47,13 +54,18 @@ export class AuthenticatedLayoutComponent {
   private themeService = inject(ThemeService);
   private langService = inject(LanguageService);
   private timeframeService = inject(TimeframeService);
+  public pageTitleStrategy = inject(PageTitleStrategy);
 
   masterTokenInput = '';
   isVerifyingToken = false;
 
   menuItems = [
     { path: APP_PATHS.DASHBOARD, label: 'MENU.DASHBOARD', icon: 'D' },
-    { path: APP_PATHS.CURRENTLY_TRADING, label: 'MENU.CURRENTLY_TRADING', icon: 'C' },
+    {
+      path: APP_PATHS.CURRENTLY_TRADING,
+      label: 'MENU.CURRENTLY_TRADING',
+      icon: 'C',
+    },
     { path: APP_PATHS.FOLLOWED, label: 'MENU.FOLLOWED', icon: 'F' },
     { path: APP_PATHS.SUGGESTION, label: 'MENU.SUGGESTION', icon: 'S' },
     { path: APP_PATHS.SETTING, label: 'MENU.SETTING', icon: '⚙' },
@@ -66,14 +78,14 @@ export class AuthenticatedLayoutComponent {
     { label: 'HEADER_PROFILE.LOGOUT', action: 'logout' },
   ];
 
-
   settingsQuery = injectQuery(() => ({
     queryKey: ['settings'],
-    queryFn: () => lastValueFrom(this.authService.getSettings())
+    queryFn: () => lastValueFrom(this.authService.getSettings()),
   }));
 
   verifyTokenMutation = injectMutation(() => ({
-    mutationFn: (token: string) => lastValueFrom(this.authService.checkMasterToken(token)),
+    mutationFn: (token: string) =>
+      lastValueFrom(this.authService.checkMasterToken(token)),
     onSuccess: (res, token) => {
       if (res.ok) {
         this.secretKeyService.setToken(token);
@@ -84,17 +96,27 @@ export class AuthenticatedLayoutComponent {
       }
     },
     onError: (err: any) => {
-      this.toastService.show(err.error?.message || 'Invalid Master Token', 'danger');
-    }
+      this.toastService.show(
+        err.error?.message || 'Invalid Master Token',
+        'danger',
+      );
+    },
   }));
 
   constructor(public authService: BackendApiService) {
     effect(() => {
+      console.log('pageTitle', this.pageTitleStrategy.pageTitle());
       const settings = this.settingsQuery.data();
       if (settings) {
-        if (settings.theme) this.themeService.setTheme(settings.theme as Theme, false);
-        if (settings.language) this.langService.setLanguage(settings.language, false);
-        if (settings.timeFrame) this.timeframeService.setTimeframe(settings.timeFrame as Timeframe, false);
+        if (settings.theme)
+          this.themeService.setTheme(settings.theme as Theme, false);
+        if (settings.language)
+          this.langService.setLanguage(settings.language, false);
+        if (settings.timeFrame)
+          this.timeframeService.setTimeframe(
+            settings.timeFrame as Timeframe,
+            false,
+          );
       }
     });
   }

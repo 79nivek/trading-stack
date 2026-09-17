@@ -1,20 +1,23 @@
-<div *ngIf="popupService.currentPopup() as popup" class="popup-overlay" (click)="onBackdropClick($event)">
-  <div class="popup-card">
-    <div class="popup-header">
-      <h3 class="popup-title">{{ popup.title | translate }}</h3>
-    </div>
-    <div class="popup-body">
-      <p class="popup-message">{{ popup.message | translate }}</p>
-    </div>
-    <div class="popup-footer">
-      <app-button 
-        *ngFor="let btn of popup.buttons" 
-        [btnType]="btn.type" 
-        size="M" 
-        (btnClick)="handleAction(btn.action)"
-      >
-        {{ btn.text | translate }}
-      </app-button>
+@if (popupService.currentPopup(); as popup) {
+  <div class="popup-overlay" (click)="onBackdropClick($event)">
+    <div class="popup-card">
+      <div class="popup-header">
+        <h3 class="popup-title">{{ popup.title | translate }}</h3>
+      </div>
+      <div class="popup-body">
+        <p class="popup-message">{{ popup.message | translate }}</p>
+      </div>
+      <div class="popup-footer">
+        @for (btn of popup.buttons; track btn) {
+          <app-button
+            [btnType]="btn.type"
+            size="M"
+            (btnClick)="handleAction(btn.action)"
+            >
+            {{ btn.text | translate }}
+          </app-button>
+        }
+      </div>
     </div>
   </div>
-</div>
+}

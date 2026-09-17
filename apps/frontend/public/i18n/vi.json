@@ -1,76 +1,86 @@
 {
   "THEME": {
-    "TOGGLE": "\u0110\u1ed5i giao di\u1ec7n"
+    "TOGGLE": "Đổi giao diện"
   },
   "MENU": {
-    "DASHBOARD": "B\u1ea3ng \u0111i\u1ec1u khi\u1ec3n",
-    "CURRENTLY_TRADING": "\u0110ang giao d\u1ecbch",
-    "FOLLOWED": "\u0110\u00e3 theo d\u00f5i",
-    "SUGGESTION": "G\u1ee3i \u00fd",
-    "SETTING": "C\u00e0i \u0111\u1eb7t"
+    "DASHBOARD": "Bảng điều khiển",
+    "CURRENTLY_TRADING": "Đang giao dịch",
+    "FOLLOWED": "Đã theo dõi",
+    "SUGGESTION": "Gợi ý",
+    "SETTING": "Cài đặt"
   },
   "COMMON": {
-    "CLOSE": "\u0110\u00f3ng",
-    "SAVE": "L\u01b0u",
-    "CANCEL": "H\u1ee7y",
-    "SUBMIT": "G\u1eedi"
+    "CLOSE": "Đóng",
+    "SAVE": "Lưu",
+    "CANCEL": "Hủy",
+    "SUBMIT": "Gửi"
   },
   "AUTH": {
-    "LOGIN": "\u0110\u0103ng nh\u1eadp",
-    "USERNAME": "T\u00ean \u0111\u0103ng nh\u1eadp",
-    "PASSWORD": "M\u1eadt kh\u1ea9u",
-    "SUBMIT": "\u0110\u0103ng nh\u1eadp"
+    "LOGIN": "Đăng nhập",
+    "USERNAME": "Tên đăng nhập",
+    "PASSWORD": "Mật khẩu",
+    "SUBMIT": "Đăng nhập"
   },
   "HEADER_PROFILE": {
-    "PROFILE": "H\u1ed3 s\u01a1",
-    "CHANGE_PASSWORD": "\u0110\u1ed5i m\u1eadt kh\u1ea9u",
-    "LOGOUT": "\u0110\u0103ng xu\u1ea5t"
+    "PROFILE": "Hồ sơ",
+    "CHANGE_PASSWORD": "Đổi mật khẩu",
+    "LOGOUT": "Đăng xuất"
   },
   "SIGNUP": {
-    "TITLE": "\u0110\u0103ng k\u00fd",
-    "FIRST_NAME": "T\u00ean",
-    "LAST_NAME": "H\u1ecd",
-    "ALREADY_HAVE_ACCOUNT": "\u0110\u00e3 c\u00f3 t\u00e0i kho\u1ea3n? \u0110\u0103ng nh\u1eadp",
-    "SUCCESS_TITLE": "Th\u00e0nh c\u00f4ng",
-    "SUCCESS_MSG": "\u0110\u0103ng k\u00fd th\u00e0nh c\u00f4ng! B\u1ea1n c\u00f3 th\u1ec3 \u0111\u0103ng nh\u1eadp.",
-    "GO_TO_LOGIN": "\u0110\u1ebfn trang \u0110\u0103ng nh\u1eadp",
-    "ERROR_TITLE": "L\u1ed7i",
-    "CLOSE": "\u0110\u00f3ng"
+    "TITLE": "Đăng ký",
+    "FIRST_NAME": "Tên",
+    "LAST_NAME": "Họ",
+    "ALREADY_HAVE_ACCOUNT": "Đã có tài khoản? Đăng nhập",
+    "SUCCESS_TITLE": "Thành công",
+    "SUCCESS_MSG": "Đăng ký thành công! Bạn có thể đăng nhập.",
+    "GO_TO_LOGIN": "Đến trang Đăng nhập",
+    "ERROR_TITLE": "Lỗi",
+    "CLOSE": "Đóng"
   },
   "LOGIN": {
-    "NO_ACCOUNT": "Ch\u01b0a c\u00f3 t\u00e0i kho\u1ea3n? \u0110\u0103ng k\u00fd",
-    "WELCOME_BACK": "Ch\u00e0o m\u1eebng tr\u1edf l\u1ea1i Trading Stack"
+    "NO_ACCOUNT": "Chưa có tài khoản? Đăng ký",
+    "WELCOME_BACK": "Chào mừng trở lại Trading Stack"
   },
   "ERROR": {
-    "REQUIRED": "Tr\u01b0\u1eddng n\u00e0y l\u00e0 b\u1eaft bu\u1ed9c.",
-    "EMAIL_INVALID": "Vui l\u00f2ng nh\u1eadp \u0111\u1ecba ch\u1ec9 email h\u1ee3p l\u1ec7.",
-    "PASSWORD_WEAK": "M\u1eadt kh\u1ea9u ph\u1ea3i ch\u1ee9a \u00edt nh\u1ea5t 8 k\u00fd t\u1ef1, g\u1ed3m ch\u1eef hoa, ch\u1eef th\u01b0\u1eddng, s\u1ed1 v\u00e0 k\u00fd t\u1ef1 \u0111\u1eb7c bi\u1ec7t.",
-    "PASSWORD_MISMATCH": "M\u1eadt kh\u1ea9u kh\u00f4ng kh\u1edbp.",
-    "UNKNOWN": "\u0110\u00e3 x\u1ea3y ra l\u1ed7i kh\u00f4ng x\u00e1c \u0111\u1ecbnh."
+    "REQUIRED": "Trường này là bắt buộc.",
+    "EMAIL_INVALID": "Vui lòng nhập địa chỉ email hợp lệ.",
+    "PASSWORD_WEAK": "Mật khẩu phải chứa ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.",
+    "PASSWORD_MISMATCH": "Mật khẩu không khớp.",
+    "UNKNOWN": "Đã xảy ra lỗi không xác định."
   },
   "SETTING": {
-    "PROFILE": "H\u1ed3 s\u01a1",
-    "BINANCE": "Kh\u00f3a API Binance",
-    "NOTIFICATION": "Th\u00f4ng b\u00e1o"
+    "PROFILE": "Hồ sơ",
+    "BINANCE": "Khóa API Binance",
+    "NOTIFICATION": "Thông báo"
   },
   "PROFILE": {
-    "CHANGE_PASSWORD": "\u0110\u1ed5i m\u1eadt kh\u1ea9u",
-    "RESET_PASSWORD": "\u0110\u1eb7t l\u1ea1i m\u1eadt kh\u1ea9u",
-    "OLD_PASSWORD": "M\u1eadt kh\u1ea9u c\u0169",
-    "OLD_PASSWORD_PLACEHOLDER": "Nh\u1eadp m\u1eadt kh\u1ea9u c\u0169",
-    "NEW_PASSWORD": "M\u1eadt kh\u1ea9u m\u1edbi",
-    "NEW_PASSWORD_PLACEHOLDER": "Nh\u1eadp m\u1eadt kh\u1ea9u m\u1edbi",
-    "CONFIRM_PASSWORD": "X\u00e1c nh\u1eadn m\u1eadt kh\u1ea9u",
-    "CONFIRM_PASSWORD_PLACEHOLDER": "Nh\u1eadp l\u1ea1i m\u1eadt kh\u1ea9u m\u1edbi"
+    "CHANGE_PASSWORD": "Đổi mật khẩu",
+    "RESET_PASSWORD": "Đặt lại mật khẩu",
+    "OLD_PASSWORD": "Mật khẩu cũ",
+    "OLD_PASSWORD_PLACEHOLDER": "Nhập mật khẩu cũ",
+    "NEW_PASSWORD": "Mật khẩu mới",
+    "NEW_PASSWORD_PLACEHOLDER": "Nhập mật khẩu mới",
+    "CONFIRM_PASSWORD": "Xác nhận mật khẩu",
+    "CONFIRM_PASSWORD_PLACEHOLDER": "Nhập lại mật khẩu mới"
   },
   "SUGGESTION": {
-    "TITLE": "G\u1ee3i \u00fd Futures",
-    "DESCRIPTION": "C\u00e1c token \u0111\u00e1ng ch\u00fa \u00fd \u0111\u1ec3 trade futures d\u1ef1a tr\u00ean c\u00e1c th\u00f4ng s\u1ed1 \u0111\u1ecbnh l\u01b0\u1ee3ng.",
-    "NO_DATA": "Hi\u1ec7n t\u1ea1i kh\u00f4ng c\u00f3 g\u1ee3i \u00fd n\u00e0o.",
+    "TITLE": "Gợi ý Futures",
+    "DESCRIPTION": "Các token đáng chú ý để trade futures dựa trên các thông số định lượng.",
+    "NO_DATA": "Hiện tại không có gợi ý nào.",
     "VOLUME_24H": "Vol 24h (USDT)",
     "FUNDING_RATE": "Funding Rate",
-    "TRADE_COUNT": "S\u1ed1 GD",
-    "SCORE": "\u0110i\u1ec3m Quant",
-    "ANALYSIS": "Ph\u00e2n t\u00edch"
+    "TRADE_COUNT": "Số GD",
+    "SCORE": "Điểm Quant",
+    "ANALYSIS": "Phân tích"
+  },
+  "NAV": {
+    "LOGIN": "Đăng nhập",
+    "SIGN_UP": "Đăng ký",
+    "DASHBOARD": "Bảng điều khiển",
+    "CURRENTLY_TRADING": "Đang giao dịch",
+    "FOLLOWED": "Đã theo dõi",
+    "SUGGESTION": "Gợi ý",
+    "SETTING": "Cài đặt",
+    "PROFILE": "Hồ sơ"
   }
 }

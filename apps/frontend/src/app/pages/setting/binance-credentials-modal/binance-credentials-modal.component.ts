@@ -1,7 +1,7 @@
 import { injectMutation } from "@tanstack/angular-query-experimental";
 import { lastValueFrom } from "rxjs";
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -13,7 +13,7 @@ import { PopupService } from '../../../core/services/popup.service';
 @Component({
   selector: 'app-binance-credentials-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ModalComponent, ButtonComponent],
+  imports: [ReactiveFormsModule, ModalComponent, ButtonComponent],
   templateUrl: './binance-credentials-modal.component.html',
   styleUrl: './binance-credentials-modal.component.scss'
 })

@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, ElementRef, HostListener, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TranslatePipe } from '@ngx-translate/core';
 
 export interface DropdownItem {
@@ -12,7 +12,7 @@ export interface DropdownItem {
 @Component({
   selector: 'app-dropdown',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './dropdown.component.html',
   styleUrl: './dropdown.component.scss'
 })

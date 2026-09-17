@@ -1,3 +1,27 @@
 <div class="chart-wrapper">
+
+  @if (hoveredData()) {
+    <div class="absolute top-2 left-4 z-10 text-xs font-mono flex flex-col gap-1 pointer-events-none">
+      <div class="flex gap-2 items-center font-bold text-text">
+        <span>O: <span [class.text-success]="hoveredData().candle.close >= hoveredData().candle.open" [class.text-danger]="hoveredData().candle.close < hoveredData().candle.open">{{ hoveredData().candle.open | number:'1.2-6' }}</span></span>
+        <span>H: <span [class.text-success]="hoveredData().candle.close >= hoveredData().candle.open" [class.text-danger]="hoveredData().candle.close < hoveredData().candle.open">{{ hoveredData().candle.high | number:'1.2-6' }}</span></span>
+        <span>L: <span [class.text-success]="hoveredData().candle.close >= hoveredData().candle.open" [class.text-danger]="hoveredData().candle.close < hoveredData().candle.open">{{ hoveredData().candle.low | number:'1.2-6' }}</span></span>
+        <span>C: <span [class.text-success]="hoveredData().candle.close >= hoveredData().candle.open" [class.text-danger]="hoveredData().candle.close < hoveredData().candle.open">{{ hoveredData().candle.close | number:'1.2-6' }}</span></span>
+        <span class="text-text-muted ml-2">Vol: {{ hoveredData().vol | number:'1.0-2' }}</span>
+      </div>
+      <div class="flex gap-3">
+        @if (hoveredData().ma7) {
+          <span style="color: #f59e0b">MA(7): {{ hoveredData().ma7 | number:'1.2-6' }}</span>
+        }
+        @if (hoveredData().ma25) {
+          <span style="color: #3b82f6">MA(25): {{ hoveredData().ma25 | number:'1.2-6' }}</span>
+        }
+        @if (hoveredData().ma99) {
+          <span style="color: #ec4899">MA(99): {{ hoveredData().ma99 | number:'1.2-6' }}</span>
+        }
+      </div>
+    </div>
+  }
+
   <div #chartContainer class="chart-container w-full h-full min-h-[400px]"></div>
 </div>

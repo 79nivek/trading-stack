@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-lang-toggle',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './lang-toggle.component.html',
   styleUrl: './lang-toggle.component.scss'
 })

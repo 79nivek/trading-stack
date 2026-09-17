@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { PopupService } from '../../../core/services/popup.service';
 import { ButtonComponent } from '../button/button.component';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -7,7 +7,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 @Component({
   selector: 'app-popup',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, TranslatePipe],
+  imports: [ButtonComponent, TranslatePipe],
   templateUrl: './popup.component.html',
   styleUrl: './popup.component.scss'
 })

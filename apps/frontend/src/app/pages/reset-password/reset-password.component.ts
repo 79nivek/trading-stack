@@ -1,7 +1,7 @@
 import { injectMutation } from "@tanstack/angular-query-experimental";
 import { lastValueFrom } from "rxjs";
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 
@@ -15,7 +15,7 @@ import { ResetPasswordDto } from '@trading-stack/shared-dto';
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, TranslateDirective, ModalComponent, ButtonComponent],
+  imports: [ReactiveFormsModule, TranslatePipe, TranslateDirective, ModalComponent, ButtonComponent],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.scss'
 })

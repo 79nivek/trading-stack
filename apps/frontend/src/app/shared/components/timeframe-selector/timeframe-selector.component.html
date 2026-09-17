@@ -1,7 +1,7 @@
 <app-dropdown [items]="dropdownItems()" (action)="onAction($event)">
-  <div trigger class="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-border rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm">
+  <div trigger class="flex items-center gap-1 px-3 py-1.5 text-sm font-medium border border-border rounded-md bg-surface text-text cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors shadow-sm">
     <span>{{ timeframeService.timeframe() }}</span>
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
     </svg>
   </div>

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TranslatePipe } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -10,7 +10,7 @@ import { BinanceCredentialsModalComponent } from './binance-credentials-modal/bi
 @Component({
   selector: 'app-setting-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './setting.component.html',
   styleUrl: './setting.component.scss'
 })

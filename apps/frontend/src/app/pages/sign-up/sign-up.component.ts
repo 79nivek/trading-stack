@@ -1,7 +1,7 @@
 import { injectMutation } from "@tanstack/angular-query-experimental";
 import { lastValueFrom } from "rxjs";
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -17,13 +17,12 @@ import { APP_PATHS } from '../../core/constants/routes.constants';
   selector: 'app-sign-up',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterModule,
     ButtonComponent,
     TranslatePipe,
-    TranslateDirective,
-  ],
+    TranslateDirective
+],
   templateUrl: './sign-up.component.html',
   styleUrl: './sign-up.component.scss',
 })

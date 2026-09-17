@@ -5,27 +5,32 @@
   </div>
 
   <!-- Dropdown Menu -->
-  <div 
-    *ngIf="isOpen()" 
-    class="dropdown-menu"
-  >
-    <div class="dropdown-menu-content">
-      <ng-container *ngFor="let item of items; let last = last">
-        <!-- Item -->
-        <a 
-          *ngIf="!item.divider"
-          (click)="onItemClick(item)"
-          class="dropdown-item"
-        >
-          <div class="dropdown-item-flex">
-            <span *ngIf="item.icon" class="dropdown-icon">{{ item.icon }}</span>
-            <span>{{ item.label | translate }}</span>
-          </div>
-        </a>
-
-        <!-- Divider -->
-        <div *ngIf="item.divider || (item.action === 'divider')" class="border-t border-border my-1"></div>
-      </ng-container>
+  @if (isOpen()) {
+    <div
+      class="dropdown-menu"
+      >
+      <div class="dropdown-menu-content">
+        @for (item of items; track item; let last = $last) {
+          <!-- Item -->
+          @if (!item.divider) {
+            <a
+              (click)="onItemClick(item)"
+              class="dropdown-item"
+              >
+              <div class="dropdown-item-flex">
+                @if (item.icon) {
+                  <span class="dropdown-icon">{{ item.icon }}</span>
+                }
+                <span>{{ item.label | translate }}</span>
+              </div>
+            </a>
+          }
+          <!-- Divider -->
+          @if (item.divider || (item.action === 'divider')) {
+            <div class="border-t border-border my-1"></div>
+          }
+        }
+      </div>
     </div>
-  </div>
+  }
 </div>

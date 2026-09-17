@@ -1,7 +1,7 @@
 @reference '../../../styles.css';
 
 .layout-container {
-  @apply min-h-screen flex bg-background text-text;
+  @apply h-screen overflow-hidden flex bg-background text-text;
 }
 .layout-sidebar {
   @apply bg-surface border-r border-border transition-all duration-300 flex flex-col;

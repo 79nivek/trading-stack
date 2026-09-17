@@ -73,5 +73,15 @@
     "SCORE": "Quant Score",
     "ACTION_SUGGESTION": "Suggested Action",
     "ANALYSIS": "Analysis"
+  },
+  "NAV": {
+    "LOGIN": "Login",
+    "SIGN_UP": "Sign Up",
+    "DASHBOARD": "Dashboard",
+    "CURRENTLY_TRADING": "Currently Trading",
+    "FOLLOWED": "Followed",
+    "SUGGESTION": "Suggestions",
+    "SETTING": "Settings",
+    "PROFILE": "Profile"
   }
 }

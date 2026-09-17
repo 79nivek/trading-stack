@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import {
   Component,
   ElementRef,
@@ -8,10 +9,11 @@ import {
   SimpleChanges,
   ViewChild,
   inject,
+  signal,
   effect
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { createChart, IChartApi, ISeriesApi, Time, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
+
+import { createChart, IChartApi, ISeriesApi, Time, CandlestickSeries, HistogramSeries, LineSeries } from 'lightweight-charts';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { lastValueFrom } from 'rxjs';
 import { BinanceFuturesApiService } from '../../../core/services/binance-futures-api.service';
@@ -22,7 +24,7 @@ import { ThemeService } from '../../../core/services/theme.service';
 @Component({
   selector: 'app-chart',
   standalone: true,
-  imports: [CommonModule],
+  imports: [DecimalPipe],
   templateUrl: './chart.component.html',
   styleUrl: './chart.component.scss'
 })
@@ -35,6 +37,13 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private chart: IChartApi | null = null;
   private candlestickSeries: ISeriesApi<'Candlestick'> | null = null;
   private volumeSeries: ISeriesApi<'Histogram'> | null = null;
+
+  private ma7Series: ISeriesApi<'Line'> | null = null;
+  private ma25Series: ISeriesApi<'Line'> | null = null;
+  private ma99Series: ISeriesApi<'Line'> | null = null;
+
+  hoveredData = signal<any>(null);
+
 
   private binanceApi = inject(BinanceFuturesApiService);
   private wsService = inject(FuturesWebsocketService);
@@ -103,22 +112,24 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private initChart(): void {
+    const isDark = this.themeService.theme() === 'dark';
+
     const chartOptions = {
       width: this.chartContainer.nativeElement.clientWidth,
       height: 400,
       layout: {
         background: { color: 'transparent' },
-        textColor: '#d1d5db',
+        textColor: isDark ? '#d1d5db' : '#374151',
       },
       grid: {
-        vertLines: { color: 'rgba(42, 46, 57, 0.5)' },
-        horzLines: { color: 'rgba(42, 46, 57, 0.5)' },
+        vertLines: { color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)' },
+        horzLines: { color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)' },
       },
       rightPriceScale: {
-        borderColor: 'rgba(197, 203, 206, 0.8)',
+        borderColor: isDark ? 'rgba(197, 203, 206, 0.8)' : 'rgba(0, 0, 0, 0.2)',
       },
       timeScale: {
-        borderColor: 'rgba(197, 203, 206, 0.8)',
+        borderColor: isDark ? 'rgba(197, 203, 206, 0.8)' : 'rgba(0, 0, 0, 0.2)',
         timeVisible: true,
         secondsVisible: false,
       },
@@ -140,6 +151,48 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         type: 'volume',
       },
       priceScaleId: '',
+    });
+
+
+    this.ma7Series = this.chart.addSeries(LineSeries, { color: '#f59e0b', lineWidth: 1, crosshairMarkerVisible: false, lastValueVisible: false, priceLineVisible: false });
+    this.ma25Series = this.chart.addSeries(LineSeries, { color: '#3b82f6', lineWidth: 1, crosshairMarkerVisible: false, lastValueVisible: false, priceLineVisible: false });
+    this.ma99Series = this.chart.addSeries(LineSeries, { color: '#ec4899', lineWidth: 1, crosshairMarkerVisible: false, lastValueVisible: false, priceLineVisible: false });
+
+    // Crosshair move for legend
+    this.chart.subscribeCrosshairMove((param) => {
+      if (
+        param.point === undefined ||
+        !param.time ||
+        param.point.x < 0 ||
+        param.point.x > this.chartContainer.nativeElement.clientWidth ||
+        param.point.y < 0 ||
+        param.point.y > 400
+      ) {
+        // Fallback to the latest candle if not hovering properly
+        if (this.currentData.length > 0) {
+
+
+           this.updateHoveredDataWithLatest();
+        } else {
+           this.hoveredData.set(null);
+        }
+      } else {
+        const candleData = param.seriesData.get(this.candlestickSeries!);
+        const volData = param.seriesData.get(this.volumeSeries!);
+        const ma7 = param.seriesData.get(this.ma7Series!);
+        const ma25 = param.seriesData.get(this.ma25Series!);
+        const ma99 = param.seriesData.get(this.ma99Series!);
+
+        if (candleData) {
+          this.hoveredData.set({
+            candle: candleData,
+            vol: (volData as any)?.value,
+            ma7: (ma7 as any)?.value,
+            ma25: (ma25 as any)?.value,
+            ma99: (ma99 as any)?.value,
+          });
+        }
+      }
     });
 
     this.chart.priceScale('').applyOptions({
@@ -176,11 +229,61 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       grid: {
         vertLines: { color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)' },
         horzLines: { color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)' },
+      },
+      rightPriceScale: {
+        borderColor: isDark ? 'rgba(197, 203, 206, 0.8)' : 'rgba(0, 0, 0, 0.2)',
+      },
+      timeScale: {
+        borderColor: isDark ? 'rgba(197, 203, 206, 0.8)' : 'rgba(0, 0, 0, 0.2)',
       }
     });
   }
 
   private queryClient = injectQueryClient();
+
+  private calculateSMA(data: any[], period: number): {time: Time, value: number}[] {
+    const smaData = [];
+    for (let i = period - 1; i < data.length; i++) {
+      let sum = 0;
+      for (let j = 0; j < period; j++) {
+        sum += data[i - j].close;
+      }
+      smaData.push({ time: data[i].time, value: sum / period });
+    }
+    return smaData;
+  }
+
+  private updateMAs(): void {
+    if (!this.ma7Series || !this.ma25Series || !this.ma99Series) return;
+    this.ma7Series.setData(this.calculateSMA(this.currentData, 7));
+    this.ma25Series.setData(this.calculateSMA(this.currentData, 25));
+    this.ma99Series.setData(this.calculateSMA(this.currentData, 99));
+  }
+
+  private updateHoveredDataWithLatest(): void {
+    if (this.currentData.length === 0) return;
+
+
+
+    // Calculate last MAs
+    const getSma = (period: number) => {
+        if (this.currentData.length < period) return undefined;
+        let sum = 0;
+        for (let j = 0; j < period; j++) {
+            sum += this.currentData[this.currentData.length - 1 - j].close;
+        }
+        return sum / period;
+    };
+
+    this.hoveredData.set({
+        candle: this.currentData[this.currentData.length - 1],
+        vol: this.currentVolumeData[this.currentVolumeData.length - 1]?.value,
+        ma7: getSma(7),
+        ma25: getSma(25),
+        ma99: getSma(99),
+    });
+  }
+
   private earliestTime: number | null = null;
   private isLoadingMore = false;
   private currentData: any[] = [];
@@ -198,7 +301,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
       if (this.candlestickSeries && this.volumeSeries && data.length > 0) {
         this.earliestTime = data[0].time as number;
-        
+
         this.currentData = data.map(d => ({
           time: d.time as Time,
           open: d.open,
@@ -211,9 +314,12 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
           value: d.volume,
           color: d.close >= d.open ? '#26a69a80' : '#ef535080'
         }));
-        
+
         this.candlestickSeries.setData(this.currentData);
         this.volumeSeries.setData(this.currentVolumeData);
+        this.updateMAs();
+        this.updateMAs();
+        this.updateHoveredDataWithLatest();
       }
     } catch (err) {
       console.error(`Failed to load historical data for ${this.symbol}:`, err);
@@ -287,7 +393,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
             value: kline.volume,
             color: kline.close >= kline.open ? '#26a69a80' : '#ef535080'
           };
-          
+
           this.candlestickSeries.update(candle);
           this.volumeSeries.update(volume);
 
@@ -299,6 +405,12 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
           } else {
             this.currentData.push(candle);
             this.currentVolumeData.push(volume);
+          }
+
+          this.updateMAs();
+          // Only update hover with latest if not hovering elsewhere
+          if (!this.hoveredData() || this.hoveredData()?.candle?.time === candle.time) {
+            this.updateHoveredDataWithLatest();
           }
         }
       },

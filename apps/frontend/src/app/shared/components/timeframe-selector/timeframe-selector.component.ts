@@ -1,12 +1,12 @@
 import { Component, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TimeframeService, Timeframe } from '../../../core/services/timeframe.service';
 import { DropdownComponent, DropdownItem } from '../dropdown/dropdown.component';
 
 @Component({
   selector: 'app-timeframe-selector',
   standalone: true,
-  imports: [CommonModule, DropdownComponent],
+  imports: [DropdownComponent],
   templateUrl: './timeframe-selector.component.html',
   styleUrl: './timeframe-selector.component.scss'
 })

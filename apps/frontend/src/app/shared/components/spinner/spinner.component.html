@@ -1,3 +1,5 @@
-<div *ngIf="spinnerService.isVisible()" class="spinner-overlay">
-  <div class="spinner-icon"></div>
-</div>
+@if (spinnerService.isVisible()) {
+  <div class="spinner-overlay">
+    <div class="spinner-icon"></div>
+  </div>
+}

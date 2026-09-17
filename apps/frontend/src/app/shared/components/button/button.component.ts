@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 export type ButtonType = 'primary' | 'danger' | 'warning' | 'success' | 'info';
 export type ButtonSize = 'SM' | 'M' | 'L';
@@ -7,7 +7,7 @@ export type ButtonSize = 'SM' | 'M' | 'L';
 @Component({
   selector: 'app-button',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './button.component.html',
   styleUrl: './button.component.scss'
 })

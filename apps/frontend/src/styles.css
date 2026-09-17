@@ -8,6 +8,8 @@
   --color-text: var(--color-text-val);
   --color-text-muted: var(--color-text-muted-val);
   --color-border: var(--color-border-val);
+  --color-success: var(--color-success-val);
+  --color-danger: var(--color-danger-val);
 }
 
 @layer base {
@@ -18,6 +20,8 @@
     --color-text-val: #111827;
     --color-text-muted-val: #6b7280;
     --color-border-val: #e5e7eb;
+    --color-success-val: #10b981;
+    --color-danger-val: #ef4444;
   }
 
   .dark {
@@ -27,6 +31,8 @@
     --color-text-val: #f9fafb;
     --color-text-muted-val: #9ca3af;
     --color-border-val: #374151;
+    --color-success-val: #34d399;
+    --color-danger-val: #f87171;
   }
 
   body {

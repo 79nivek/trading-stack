@@ -1,7 +1,7 @@
 import { injectMutation } from "@tanstack/angular-query-experimental";
 import { lastValueFrom } from "rxjs";
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { BackendApiService } from '../../core/services/backend-api.service';
 import { Router, RouterModule } from '@angular/router';
@@ -14,13 +14,12 @@ import { APP_PATHS } from '../../core/constants/routes.constants';
   selector: 'app-login-page',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterModule,
     TranslatePipe,
     TranslateDirective,
-    ButtonComponent,
-  ],
+    ButtonComponent
+],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
