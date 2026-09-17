@@ -28,7 +28,7 @@ export class LanguageService {
     this.language.set(lang);
     if (syncWithBackend) {
       const backendApi = this.injector.get(BackendApiService);
-      backendApi.updateConfig({ language: lang }).subscribe({
+      backendApi.updateSettings({ language: lang }).subscribe({
         error: (err) => console.error('Failed to sync language', err)
       });
     }

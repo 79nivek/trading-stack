@@ -7,6 +7,7 @@ import { CONFIGURATION } from '../configuration';
 import { AuthModule } from '../modules/auth/auth.module';
 import { UsersModule } from '../modules/users/users.module';
 import { BinanceCredentialsModule } from '../modules/binance-credentials/binance-credentials.module';
+import { UserSettingsModule } from '../modules/user-settings/user-settings.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
@@ -33,6 +34,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     AuthModule,
     UsersModule,
     BinanceCredentialsModule,
+    UserSettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

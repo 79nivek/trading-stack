@@ -1,8 +1,8 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 
-@Entity('sessions')
-export class Session {
+@Entity('login_sessions')
+export class LoginSession {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
@@ -18,6 +18,9 @@ export class Session {
 
   @Column({ default: true })
   isActive!: boolean;
+
+  @Column()
+  expiresAt!: Date;
 
   @CreateDateColumn()
   createdAt!: Date;

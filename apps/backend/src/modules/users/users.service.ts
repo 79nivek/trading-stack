@@ -1,8 +1,8 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { UserRepository } from './user.repository';
-import { SessionRepository } from './session.repository';
+import { LoginSessionRepository } from './login-session.repository';
 import { User } from './user.entity';
-import { Session } from './session.entity';
+import { LoginSession } from './login-session.entity';
 import * as bcrypt from 'bcryptjs';
 import { UpdateUserDto } from '@trading-stack/shared-dto';
 
@@ -10,7 +10,7 @@ import { UpdateUserDto } from '@trading-stack/shared-dto';
 export class UsersService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly sessionRepository: SessionRepository,
+    private readonly loginSessionRepository: LoginSessionRepository,
   ) {}
 
   async create(userData: Partial<User>): Promise<User> {
@@ -44,16 +44,6 @@ export class UsersService {
     return this.userRepository.findById(id);
   }
 
-  async updateConfig(userId: string, config: { language?: string; theme?: string }): Promise<User> {
-    const user = await this.findById(userId);
-    if (!user) throw new NotFoundException('User not found');
-
-    if (config.language !== undefined) user.language = config.language;
-    if (config.theme !== undefined) user.theme = config.theme;
-
-    return this.userRepository.save(user);
-  }
-
   async updateUser(userId: string, dto: UpdateUserDto): Promise<User> {
     const user = await this.findById(userId);
     if (!user) throw new NotFoundException('User not found');
@@ -78,16 +68,16 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async createSession(userId: string, token: string): Promise<Session> {
-    const session = this.sessionRepository.create({ userId, token, isActive: true });
-    return this.sessionRepository.save(session);
+  async createSession(userId: string, token: string, expiresAt: Date): Promise<LoginSession> {
+    const session = this.loginSessionRepository.create({ userId, token, isActive: true, expiresAt });
+    return this.loginSessionRepository.save(session);
   }
 
-  async findSessionByToken(token: string): Promise<Session | null> {
-    return this.sessionRepository.findByToken(token);
+  async findSessionByToken(token: string): Promise<LoginSession | null> {
+    return this.loginSessionRepository.findByToken(token);
   }
 
   async deactivateSession(token: string): Promise<void> {
-    await this.sessionRepository.deactivateToken(token);
+    await this.loginSessionRepository.deactivateToken(token);
   }
 }

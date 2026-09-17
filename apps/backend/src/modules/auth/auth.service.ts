@@ -38,7 +38,9 @@ export class AuthService {
 
   async login(user: Omit<User, 'password'>) {
     const sessionToken = crypto.randomUUID();
-    await this.usersService.createSession(user.id, sessionToken);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    await this.usersService.createSession(user.id, sessionToken, expiresAt);
 
     const payload = { username: user.username, sub: user.id, sessionToken };
     return {
@@ -46,8 +48,11 @@ export class AuthService {
     };
   }
 
-  async logout(sessionToken: string) {
-    await this.usersService.deactivateSession(sessionToken);
+  async logout(token: string) {
+    const payload = this.jwtService.decode(token) as any;
+    if (payload && payload.sessionToken) {
+      await this.usersService.deactivateSession(payload.sessionToken);
+    }
     return { success: true };
   }
 

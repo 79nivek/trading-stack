@@ -18,10 +18,4 @@ export class UsersController {
   async updateUser(@Request() req: any, @Body() body: UpdateUserDto) {
     return this.usersService.updateUser(req.user.id, body);
   }
-
-  @Patch('config')
-  @RequireAuth()
-  async updateConfig(@Request() req: any, @Body() body: { language?: string; theme?: string }) {
-    return this.usersService.updateConfig(req.user.id, body);
-  }
 }

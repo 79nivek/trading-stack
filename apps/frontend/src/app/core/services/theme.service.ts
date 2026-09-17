@@ -47,7 +47,7 @@ export class ThemeService {
     this.theme.set(newTheme);
     if (syncWithBackend) {
       const backendApi = this.injector.get(BackendApiService);
-      backendApi.updateConfig({ theme: newTheme }).subscribe({
+      backendApi.updateSettings({ theme: newTheme }).subscribe({
         error: (err) => console.error('Failed to sync theme', err)
       });
     }

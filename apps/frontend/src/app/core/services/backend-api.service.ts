@@ -5,8 +5,6 @@ import { HttpClient } from '@angular/common/http';
 import { tap, catchError, map } from 'rxjs/operators';
 import { Observable, of, interval, Subscription } from 'rxjs';
 import { StorageService } from './storage.service';
-import { ThemeService, Theme } from './theme.service';
-import { LanguageService } from './language.service';
 import { APP_PATHS } from '../constants/routes.constants';
 import { ENV } from '../../environments';
 
@@ -16,8 +14,6 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
-  theme?: string;
-  language?: string;
 }
 
 @Injectable({
@@ -27,8 +23,6 @@ export class BackendApiService implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private storage = inject(StorageService);
   private router = inject(Router);
-  private themeService = inject(ThemeService);
-  private langService = inject(LanguageService);
 
   isAuthenticated = signal<boolean>(!!this.storage.token.get());
   currentUser = signal<UserProfile | null>(null);
@@ -136,14 +130,6 @@ export class BackendApiService implements OnInit, OnDestroy {
           this.isTokenVerified = true;
           this.isAuthenticated.set(true);
           this.currentUser.set(user);
-
-          if (user.theme) {
-            this.themeService.setTheme(user.theme as Theme, false);
-          }
-          if (user.language) {
-            this.langService.setLanguage(user.language, false);
-          }
-
           this.startPolling();
           return true;
         }),
@@ -174,9 +160,16 @@ export class BackendApiService implements OnInit, OnDestroy {
     );
   }
 
-  updateConfig(config: { language?: string; theme?: string }): Observable<any> {
+  getSettings(): Observable<any> {
+    return this.http.get(
+      `${ENV.BACKEND_URL}/api/v1/settings`,
+      this.useAuth(),
+    );
+  }
+
+  updateSettings(config: { language?: string; theme?: string; timeFrame?: string }): Observable<any> {
     return this.http.patch(
-      `${ENV.BACKEND_URL}/api/v1/users/config`,
+      `${ENV.BACKEND_URL}/api/v1/settings`,
       config,
       this.useAuth(),
     );

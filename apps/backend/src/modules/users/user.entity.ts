@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany } from 'typeorm';
-import { Session } from './session.entity';
+import { LoginSession } from './login-session.entity';
 
 @Entity('users')
 export class User {
@@ -24,14 +24,8 @@ export class User {
   @Column({ default: true })
   isActive!: boolean;
 
-  @OneToMany(() => Session, (session) => session.user)
-  sessions!: Session[];
-
-  @Column({ default: 'en' })
-  language!: string;
-
-  @Column({ default: 'auto' })
-  theme!: string;
+  @OneToMany(() => LoginSession, (session) => session.user)
+  sessions!: LoginSession[];
 
   @CreateDateColumn()
   createdAt!: Date;

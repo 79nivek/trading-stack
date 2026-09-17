@@ -1,8 +1,9 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { LangToggleComponent } from '../../shared/components/lang-toggle/lang-toggle.component';
+import { TimeframeSelectorComponent } from '../../shared/components/timeframe-selector/timeframe-selector.component';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import {
   DropdownComponent,
@@ -12,6 +13,9 @@ import { BackendApiService } from '../../core/services/backend-api.service';
 import { APP_PATHS } from '../../core/constants/routes.constants';
 import { SecretKeyService } from '../../core/services/secret-key.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ThemeService, Theme } from '../../core/services/theme.service';
+import { LanguageService } from '../../core/services/language.service';
+import { TimeframeService, Timeframe } from '../../core/services/timeframe.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -22,6 +26,7 @@ import { FormsModule } from '@angular/forms';
     RouterModule,
     ThemeToggleComponent,
     LangToggleComponent,
+    TimeframeSelectorComponent,
     TranslatePipe,
     TranslateDirective,
     DropdownComponent,
@@ -30,11 +35,15 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './authenticated-layout.component.html',
   styleUrl: './authenticated-layout.component.scss',
 })
-export class AuthenticatedLayoutComponent {
+export class AuthenticatedLayoutComponent implements OnInit {
   isSidebarOpen = signal<boolean>(true);
   private router = inject(Router);
   public secretKeyService = inject(SecretKeyService);
   private toastService = inject(ToastService);
+  
+  private themeService = inject(ThemeService);
+  private langService = inject(LanguageService);
+  private timeframeService = inject(TimeframeService);
 
   masterTokenInput = '';
   isVerifyingToken = false;
@@ -55,6 +64,21 @@ export class AuthenticatedLayoutComponent {
   ];
 
   constructor(public authService: BackendApiService) {}
+
+  ngOnInit() {
+    this.authService.getSettings().subscribe({
+      next: (settings) => {
+        if (settings) {
+          if (settings.theme) this.themeService.setTheme(settings.theme as Theme, false);
+          if (settings.language) this.langService.setLanguage(settings.language, false);
+          if (settings.timeFrame) this.timeframeService.setTimeframe(settings.timeFrame as Timeframe, false);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load user settings', err);
+      }
+    });
+  }
 
   toggleSidebar() {
     this.isSidebarOpen.update((v) => !v);

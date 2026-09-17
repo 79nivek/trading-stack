@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { Session } from './session.entity';
+import { LoginSession } from './login-session.entity';
 
 @Injectable()
-export class SessionRepository extends Repository<Session> {
+export class LoginSessionRepository extends Repository<LoginSession> {
   constructor(private dataSource: DataSource) {
-    super(Session, dataSource.createEntityManager());
+    super(LoginSession, dataSource.createEntityManager());
   }
 
-  async findByToken(token: string): Promise<Session | null> {
+  async findByToken(token: string): Promise<LoginSession | null> {
     return this.findOne({ where: { token } });
   }
 
