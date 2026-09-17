@@ -1,4 +1,7 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { injectMutation, injectQuery } from "@tanstack/angular-query-experimental";
+import { lastValueFrom } from "rxjs";
+import { effect } from "@angular/core";
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
@@ -35,12 +38,12 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './authenticated-layout.component.html',
   styleUrl: './authenticated-layout.component.scss',
 })
-export class AuthenticatedLayoutComponent implements OnInit {
+export class AuthenticatedLayoutComponent {
   isSidebarOpen = signal<boolean>(true);
   private router = inject(Router);
   public secretKeyService = inject(SecretKeyService);
   private toastService = inject(ToastService);
-  
+
   private themeService = inject(ThemeService);
   private langService = inject(LanguageService);
   private timeframeService = inject(TimeframeService);
@@ -63,19 +66,35 @@ export class AuthenticatedLayoutComponent implements OnInit {
     { label: 'HEADER_PROFILE.LOGOUT', action: 'logout' },
   ];
 
-  constructor(public authService: BackendApiService) {}
 
-  ngOnInit() {
-    this.authService.getSettings().subscribe({
-      next: (settings) => {
-        if (settings) {
-          if (settings.theme) this.themeService.setTheme(settings.theme as Theme, false);
-          if (settings.language) this.langService.setLanguage(settings.language, false);
-          if (settings.timeFrame) this.timeframeService.setTimeframe(settings.timeFrame as Timeframe, false);
-        }
-      },
-      error: (err) => {
-        console.error('Failed to load user settings', err);
+  settingsQuery = injectQuery(() => ({
+    queryKey: ['settings'],
+    queryFn: () => lastValueFrom(this.authService.getSettings())
+  }));
+
+  verifyTokenMutation = injectMutation(() => ({
+    mutationFn: (token: string) => lastValueFrom(this.authService.checkMasterToken(token)),
+    onSuccess: (res, token) => {
+      if (res.ok) {
+        this.secretKeyService.setToken(token);
+        this.masterTokenInput = '';
+        this.toastService.show('Token activated successfully', 'success');
+      } else {
+        this.toastService.show('Failed to verify token', 'danger');
+      }
+    },
+    onError: (err: any) => {
+      this.toastService.show(err.error?.message || 'Invalid Master Token', 'danger');
+    }
+  }));
+
+  constructor(public authService: BackendApiService) {
+    effect(() => {
+      const settings = this.settingsQuery.data();
+      if (settings) {
+        if (settings.theme) this.themeService.setTheme(settings.theme as Theme, false);
+        if (settings.language) this.langService.setLanguage(settings.language, false);
+        if (settings.timeFrame) this.timeframeService.setTimeframe(settings.timeFrame as Timeframe, false);
       }
     });
   }
@@ -95,23 +114,7 @@ export class AuthenticatedLayoutComponent implements OnInit {
   onSaveMasterToken() {
     const token = this.masterTokenInput.trim();
     if (token) {
-      this.isVerifyingToken = true;
-      this.authService.checkMasterToken(token).subscribe({
-        next: (res) => {
-          this.isVerifyingToken = false;
-          if (res.ok) {
-            this.secretKeyService.setToken(token);
-            this.masterTokenInput = '';
-            this.toastService.show('Token activated successfully', 'success');
-          } else {
-            this.toastService.show('Failed to verify token', 'danger');
-          }
-        },
-        error: (err) => {
-          this.isVerifyingToken = false;
-          this.toastService.show(err.error?.message || 'Invalid Master Token', 'danger');
-        }
-      });
+      this.verifyTokenMutation.mutate(token);
     }
   }
 }

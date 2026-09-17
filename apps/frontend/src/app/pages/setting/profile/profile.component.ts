@@ -7,6 +7,8 @@ import {
   FormGroup,
 } from '@angular/forms';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { injectMutation } from '@tanstack/angular-query-experimental';
+import { lastValueFrom } from 'rxjs';
 
 import { BackendApiService } from '../../../core/services/backend-api.service';
 import { ModalService } from '../../../core/services/modal.service';
@@ -34,7 +36,19 @@ export class ProfilePageComponent implements OnInit {
   private toast = inject(ToastService);
   private modal = inject(ModalService);
 
-  isSubmitting = false;
+
+  updateProfileMutation = injectMutation(() => ({
+    mutationFn: (dto: UpdateUserDto) => lastValueFrom(this.backendApi.updateProfile(dto)),
+    onSuccess: () => {
+      this.toast.show('Profile updated successfully', 'success');
+      this.form.markAsPristine();
+      // Refresh user info
+      this.backendApi.getMe().subscribe();
+    },
+    onError: (err: any) => {
+      this.toast.show(err.error?.message || 'Update failed', 'danger');
+    }
+  }));
 
   form: FormGroup = this.fb.group({
     firstName: ['', [Validators.required]],
@@ -62,8 +76,6 @@ export class ProfilePageComponent implements OnInit {
   submit() {
     if (this.form.invalid || this.form.pristine) return;
 
-    this.isSubmitting = true;
-
     // Get dirty fields only
     const dirtyValues: any = {};
     Object.keys(this.form.controls).forEach((key) => {
@@ -74,19 +86,6 @@ export class ProfilePageComponent implements OnInit {
     });
 
     const dto: UpdateUserDto = dirtyValues;
-
-    this.backendApi.updateProfile(dto).subscribe({
-      next: () => {
-        this.isSubmitting = false;
-        this.toast.show('Profile updated successfully', 'success');
-        this.form.markAsPristine();
-        // Refresh user info
-        this.backendApi.getMe().subscribe();
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.toast.show(err.error?.message || 'Update failed', 'danger');
-      },
-    });
+    this.updateProfileMutation.mutate(dto);
   }
 }

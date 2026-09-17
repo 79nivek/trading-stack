@@ -83,7 +83,8 @@
           type="submit" 
           btnType="primary" 
           size="L" 
-          [disabled]="signUpForm.invalid"
+          [disabled]="signUpForm.invalid || signUpMutation.isPending()"
+          [isLoading]="signUpMutation.isPending()"
           class="w-full block"
         >
           {{ 'SIGNUP.TITLE' | translate }}

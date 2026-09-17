@@ -1,4 +1,4 @@
-import { LoginDto, SignUpDto } from '@trading-stack/shared-dto';
+import { SignUpDto } from '@trading-stack/shared-dto';
 import {
   Injectable,
   NotFoundException,

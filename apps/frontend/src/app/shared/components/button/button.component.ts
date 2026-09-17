@@ -15,12 +15,13 @@ export class ButtonComponent {
   @Input() btnType: ButtonType = 'primary';
   @Input() size: ButtonSize = 'M';
   @Input() disabled = false;
+  @Input() isLoading = false;
   @Input() type: 'button' | 'submit' | 'reset' = 'button';
 
   @Output() btnClick = new EventEmitter<Event>();
 
   onClick(event: Event) {
-    if (!this.disabled) {
+    if (!this.disabled && !this.isLoading) {
       this.btnClick.emit(event);
     }
   }
@@ -42,6 +43,10 @@ export class ButtonComponent {
       case 'warning': base += 'btn-warning '; break;
       case 'success': base += 'btn-success '; break;
       case 'info': base += 'btn-info '; break;
+    }
+
+    if (this.isLoading) {
+      base += 'btn-loading ';
     }
 
     return base;

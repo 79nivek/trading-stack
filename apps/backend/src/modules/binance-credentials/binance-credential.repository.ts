@@ -4,7 +4,7 @@ import { BinanceCredential } from './binance-credential.entity';
 
 @Injectable()
 export class BinanceCredentialRepository extends Repository<BinanceCredential> {
-  constructor(private dataSource: DataSource) {
+  constructor(dataSource: DataSource) {
     super(BinanceCredential, dataSource.createEntityManager());
   }
 

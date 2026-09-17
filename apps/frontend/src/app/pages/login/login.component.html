@@ -37,7 +37,8 @@
           type="submit"
           btnType="primary"
           size="L"
-          [disabled]="loginForm.invalid"
+          [disabled]="loginForm.invalid || loginMutation.isPending()"
+          [isLoading]="loginMutation.isPending()"
           class="w-full block"
         >
           {{ 'AUTH.SUBMIT' | translate }}

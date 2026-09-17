@@ -4,7 +4,7 @@ import { UserSettings } from './user-settings.entity';
 
 @Injectable()
 export class UserSettingsRepository extends Repository<UserSettings> {
-  constructor(private dataSource: DataSource) {
+  constructor(dataSource: DataSource) {
     super(UserSettings, dataSource.createEntityManager());
   }
 

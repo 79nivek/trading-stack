@@ -1,85 +1,112 @@
 <div class="layout-container">
-      <!-- Sidebar -->
-      <aside 
-        [class.w-64]="isSidebarOpen()" 
-        [class.w-16]="!isSidebarOpen()" 
-        class="layout-sidebar"
+  <!-- Sidebar -->
+  <aside
+    [class.w-64]="isSidebarOpen()"
+    [class.w-16]="!isSidebarOpen()"
+    class="layout-sidebar"
+  >
+    <div class="sidebar-header">
+      <span *ngIf="isSidebarOpen()" class="sidebar-title px-4"
+        >Trading Stack</span
       >
-        <div class="sidebar-header">
-          <span *ngIf="isSidebarOpen()" class="sidebar-title px-4">Trading Stack</span>
-          <span *ngIf="!isSidebarOpen()" class="sidebar-title-short">TS</span>
-        </div>
-        
-        <nav class="sidebar-nav">
-          <ul class="space-y-1">
-            <li *ngFor="let item of menuItems">
-              <a 
-                [routerLink]="item.path" 
-                routerLinkActive="sidebar-link-active" 
-                class="sidebar-link"
-                [title]="item.label | translate"
-              >
-                <!-- Simple icon placeholder -->
-                <span class="sidebar-icon">
-                  {{ item.icon }}
-                </span>
-                <span *ngIf="isSidebarOpen()" class="sidebar-label">{{ item.label | translate }}</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-
-      <!-- Main Content -->
-      <div class="layout-main">
-        <!-- Header -->
-        <header class="main-header">
-          <button (click)="toggleSidebar()" class="sidebar-toggle-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-          </button>
-          
-          <div class="header-controls">
-            <!-- Master Token Section -->
-            <div class="flex items-center gap-2 mr-4">
-              <ng-container *ngIf="!secretKeyService.masterToken()">
-                <input 
-                  type="password" 
-                  placeholder="Master Token" 
-                  [(ngModel)]="masterTokenInput"
-                  (keyup.enter)="onSaveMasterToken()"
-                  class="px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-                <button 
-                  (click)="onSaveMasterToken()" 
-                  [disabled]="isVerifyingToken || !masterTokenInput.trim()"
-                  class="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed"
-                >
-                  {{ isVerifyingToken ? '...' : 'Apply' }}
-                </button>
-              </ng-container>
-              <ng-container *ngIf="secretKeyService.masterToken()">
-                <span class="text-xs text-green-500 font-medium">Token Active</span>
-                <button (click)="secretKeyService.clearToken()" class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600">Clear</button>
-              </ng-container>
-            </div>
-
-            <app-timeframe-selector class="mr-2"></app-timeframe-selector>
-            <app-lang-toggle></app-lang-toggle>
-            <app-theme-toggle></app-theme-toggle>
-            
-            <app-dropdown [items]="profileMenu" (action)="handleProfileMenuAction($event)">
-              <div trigger class="avatar-trigger">
-                {{ authService.currentUser()?.firstName?.charAt(0) || 'U' | uppercase }}
-              </div>
-            </app-dropdown>
-          </div>
-        </header>
-
-        <!-- Page Content -->
-        <main class="main-content">
-          <router-outlet></router-outlet>
-        </main>
-      </div>
+      <span *ngIf="!isSidebarOpen()" class="sidebar-title-short">TS</span>
     </div>
+
+    <nav class="sidebar-nav">
+      <ul class="space-y-1">
+        <li *ngFor="let item of menuItems">
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="sidebar-link-active"
+            class="sidebar-link"
+            [title]="item.label | translate"
+          >
+            <!-- Simple icon placeholder -->
+            <span class="sidebar-icon">
+              {{ item.icon }}
+            </span>
+            <span *ngIf="isSidebarOpen()" class="sidebar-label">{{
+              item.label | translate
+            }}</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="layout-main">
+    <!-- Header -->
+    <header class="main-header">
+      <button (click)="toggleSidebar()" class="sidebar-toggle-btn">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="w-6 h-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+          />
+        </svg>
+      </button>
+
+      <div class="header-controls">
+        <!-- Master Token Section -->
+        <div class="flex items-center gap-2 mr-4">
+          <ng-container *ngIf="!secretKeyService.masterToken()">
+            <input
+              type="password"
+              placeholder="Master Token"
+              [(ngModel)]="masterTokenInput"
+              (keyup.enter)="onSaveMasterToken()"
+              class="px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            />
+            <button
+              (click)="onSaveMasterToken()"
+              [disabled]="
+                verifyTokenMutation.isPending() || !masterTokenInput.trim()
+              "
+              class="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed"
+            >
+              {{ verifyTokenMutation.isPending() ? '...' : 'Apply' }}
+            </button>
+          </ng-container>
+          <ng-container *ngIf="secretKeyService.masterToken()">
+            <span class="text-xs text-green-500 font-medium">Token Active</span>
+            <button
+              (click)="secretKeyService.clearToken()"
+              class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Clear
+            </button>
+          </ng-container>
+        </div>
+
+        <app-timeframe-selector class="mr-2"></app-timeframe-selector>
+        <app-lang-toggle></app-lang-toggle>
+        <app-theme-toggle></app-theme-toggle>
+
+        <app-dropdown
+          [items]="profileMenu"
+          (action)="handleProfileMenuAction($event)"
+        >
+          <div trigger class="avatar-trigger">
+            {{
+              authService.currentUser()?.firstName?.charAt(0) || 'U' | uppercase
+            }}
+          </div>
+        </app-dropdown>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

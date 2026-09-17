@@ -1,3 +1,5 @@
+import { injectMutation } from "@tanstack/angular-query-experimental";
+import { lastValueFrom } from "rxjs";
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -35,31 +37,35 @@ export class LoginPageComponent {
     password: ['', Validators.required],
   });
 
+
+  loginMutation = injectMutation(() => ({
+    mutationFn: (credentials: any) => lastValueFrom(this.authService.login(credentials)),
+    onSuccess: () => {
+      this.router.navigate([APP_PATHS.DASHBOARD]);
+    },
+    onError: (err: any) => {
+      this.popupService.open({
+        title: 'Login Failed',
+        message: err.error?.message || 'Invalid credentials.',
+        buttons: [
+          {
+            text: 'Close',
+            type: 'danger',
+            action: () => {
+              this.popupService.close();
+            },
+          },
+        ],
+      });
+    }
+  }));
+
   onSubmit() {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
     }
 
-    this.authService.login(this.loginForm.value).subscribe({
-      next: () => {
-        this.router.navigate([APP_PATHS.DASHBOARD]);
-      },
-      error: (err) => {
-        this.popupService.open({
-          title: 'Login Failed',
-          message: err.error?.message || 'Invalid credentials.',
-          buttons: [
-            {
-              text: 'Close',
-              type: 'danger',
-              action: () => {
-                this.popupService.close();
-              },
-            },
-          ],
-        });
-      },
-    });
+    this.loginMutation.mutate(this.loginForm.value);
   }
 }

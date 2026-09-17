@@ -56,7 +56,7 @@
           {{ 'PROFILE.CHANGE_PASSWORD' | translate }}
         </app-button>
         
-        <app-button type="submit" btnType="success" [disabled]="form.pristine || form.invalid || isSubmitting">
+        <app-button type="submit" btnType="success" [disabled]="form.pristine || form.invalid || updateProfileMutation.isPending()">
           {{ 'COMMON.SAVE' | translate }}
         </app-button>
       </div>

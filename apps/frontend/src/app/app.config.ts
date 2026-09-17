@@ -8,6 +8,8 @@ import { catchError } from 'rxjs/operators';
 import { spinnerInterceptor } from './core/interceptors/spinner.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 
+import { provideAngularQuery, QueryClient } from '@tanstack/angular-query-experimental';
+
 export class CustomTranslateLoader implements TranslateLoader {
   constructor(private http: HttpClient) {}
   getTranslation(lang: string): Observable<any> {
@@ -17,10 +19,13 @@ export class CustomTranslateLoader implements TranslateLoader {
   }
 }
 
+const queryClient = new QueryClient();
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideHttpClient(withInterceptors([spinnerInterceptor, errorInterceptor])),
+    provideAngularQuery(queryClient),
     provideTranslateService({
       fallbackLang: 'en',
       lang: 'en',

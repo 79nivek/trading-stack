@@ -4,7 +4,6 @@ import {
   Get,
   Body,
   UnauthorizedException,
-  Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RequireAuth } from '../../decorators/require-auth.decorator';

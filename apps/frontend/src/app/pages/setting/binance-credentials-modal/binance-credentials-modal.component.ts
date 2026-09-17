@@ -1,3 +1,5 @@
+import { injectMutation } from "@tanstack/angular-query-experimental";
+import { lastValueFrom } from "rxjs";
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -31,28 +33,59 @@ export class BinanceCredentialsModalComponent {
     secretKey: ['', Validators.required],
   });
 
+
+  checkMutation = injectMutation(() => ({
+    mutationFn: (credentials: any) => lastValueFrom(this.api.checkBinanceCredentials(credentials)),
+    onSuccess: (res: any) => {
+      if (res && res.permissions) {
+        this.permissions = res.permissions;
+      }
+      this.toast.show('Credentials are valid!', 'success');
+    },
+    onError: (err: any) => {
+      this.permissions = null;
+      this.toast.show(err.error?.message || 'Invalid credentials.', 'danger');
+    }
+  }));
+
+  saveMutation = injectMutation(() => ({
+    mutationFn: (credentials: any) => lastValueFrom(this.api.saveBinanceCredentials(credentials)),
+    onSuccess: (res: any) => {
+      this.modalService.close();
+        
+      // Show secure token to the user
+      this.popup.open({
+        title: 'IMPORTANT: Master Token',
+        message: `Your Binance credentials have been securely encrypted. To decrypt them and execute trades, you MUST use the following Master Token:\n\n${res.token}\n\nWARNING: This token is shown ONLY ONCE. If you lose it, your credentials cannot be recovered and you will have to set them up again. Save it securely!`,
+        buttons: [
+          { 
+            text: 'Copy Token', 
+            type: 'info', 
+            action: () => {
+              navigator.clipboard.writeText(res.token).then(() => {
+                this.toast.show('Token copied to clipboard', 'success');
+              }).catch(() => {
+                this.toast.show('Failed to copy token', 'danger');
+              });
+            } 
+          },
+          { text: 'I have saved it', type: 'primary', action: () => this.popup.close() }
+        ]
+      });
+    },
+    onError: (err: any) => {
+      this.toast.show(err.error?.message || 'Failed to save credentials.', 'danger');
+    }
+  }));
+
   onCheck() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
     
-    this.isChecking = true;
     this.permissions = null; // reset before check
-    this.api.checkBinanceCredentials(this.form.value).subscribe({
-      next: (res) => {
-        this.isChecking = false;
-        if (res && res.permissions) {
-          this.permissions = res.permissions;
-        }
-        this.toast.show('Credentials are valid!', 'success');
-      },
-      error: (err) => {
-        this.isChecking = false;
-        this.permissions = null;
-        this.toast.show(err.error?.message || 'Invalid credentials.', 'danger');
-      }
-    });
+    this.checkMutation.mutate(this.form.value);
   }
 
   onSave() {
@@ -61,36 +94,6 @@ export class BinanceCredentialsModalComponent {
       return;
     }
     
-    this.isSaving = true;
-    this.api.saveBinanceCredentials(this.form.value).subscribe({
-      next: (res) => {
-        this.isSaving = false;
-        this.modalService.close();
-        
-        // Show secure token to the user
-        this.popup.open({
-          title: 'IMPORTANT: Master Token',
-          message: `Your Binance credentials have been securely encrypted. To decrypt them and execute trades, you MUST use the following Master Token:\n\n${res.token}\n\nWARNING: This token is shown ONLY ONCE. If you lose it, your credentials cannot be recovered and you will have to set them up again. Save it securely!`,
-          buttons: [
-            { 
-              text: 'Copy Token', 
-              type: 'info', 
-              action: () => {
-                navigator.clipboard.writeText(res.token).then(() => {
-                  this.toast.show('Token copied to clipboard', 'success');
-                }).catch(() => {
-                  this.toast.show('Failed to copy token', 'danger');
-                });
-              } 
-            },
-            { text: 'I have saved it', type: 'primary', action: () => this.popup.close() }
-          ]
-        });
-      },
-      error: (err) => {
-        this.isSaving = false;
-        this.toast.show(err.error?.message || 'Failed to save credentials.', 'danger');
-      }
-    });
+    this.saveMutation.mutate(this.form.value);
   }
 }

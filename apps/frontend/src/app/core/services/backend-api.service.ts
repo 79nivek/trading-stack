@@ -7,6 +7,7 @@ import { Observable, of, interval, Subscription } from 'rxjs';
 import { StorageService } from './storage.service';
 import { APP_PATHS } from '../constants/routes.constants';
 import { ENV } from '../../environments';
+import { TokenSuggestionDto } from '@trading-stack/shared-dto';
 
 export interface UserProfile {
   id: string;
@@ -55,7 +56,7 @@ export class BackendApiService implements OnInit, OnDestroy {
 
   login(credentials: any): Observable<any> {
     return this.http
-      .post(`${ENV.BACKEND_URL}/api/v1/auth/login`, credentials)
+      .post(`${ENV.BACKEND_URL}/api/v1/auth/login`, credentials, { ...skipSpinnerOptions() })
       .pipe(
         tap((response: any) => {
           if (response.access_token) {
@@ -71,7 +72,7 @@ export class BackendApiService implements OnInit, OnDestroy {
   logout() {
     if (this.storage.token.get()) {
       this.http
-        .post(`${ENV.BACKEND_URL}/api/v1/auth/logout`, {}, this.useAuth())
+        .post(`${ENV.BACKEND_URL}/api/v1/auth/logout`, {}, { ...this.useAuth(), ...skipSpinnerOptions() })
         .subscribe({
           next: () => this.clearSession(),
           error: () => this.clearSession(),
@@ -124,7 +125,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     }
 
     return this.http
-      .get<UserProfile>(`${ENV.BACKEND_URL}/api/v1/users/me`, this.useAuth())
+      .get<UserProfile>(`${ENV.BACKEND_URL}/api/v1/users/me`, { ...this.useAuth(), ...skipSpinnerOptions() })
       .pipe(
         map((user) => {
           this.isTokenVerified = true;
@@ -141,14 +142,14 @@ export class BackendApiService implements OnInit, OnDestroy {
   }
 
   signUp(data: any): Observable<any> {
-    return this.http.post(`${ENV.BACKEND_URL}/api/v1/auth/sign-up`, data);
+    return this.http.post(`${ENV.BACKEND_URL}/api/v1/auth/sign-up`, data, { ...skipSpinnerOptions() });
   }
 
   resetPassword(data: any): Observable<any> {
     return this.http.post(
       `${ENV.BACKEND_URL}/api/v1/auth/reset-password`,
       data,
-      this.useAuth(),
+      { ...this.useAuth(), ...skipSpinnerOptions() }
     );
   }
 
@@ -156,14 +157,14 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http.patch(
       `${ENV.BACKEND_URL}/api/v1/users`,
       data,
-      this.useAuth(),
+      { ...this.useAuth(), ...skipSpinnerOptions() }
     );
   }
 
   getSettings(): Observable<any> {
     return this.http.get(
       `${ENV.BACKEND_URL}/api/v1/settings`,
-      this.useAuth(),
+      { ...this.useAuth(), ...skipSpinnerOptions() }
     );
   }
 
@@ -171,7 +172,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http.patch(
       `${ENV.BACKEND_URL}/api/v1/settings`,
       config,
-      this.useAuth(),
+      { ...this.useAuth(), ...skipSpinnerOptions() }
     );
   }
 
@@ -179,7 +180,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http.post(
       `${ENV.BACKEND_URL}/api/v1/binance-credentials/check`,
       data,
-      this.useAuth(),
+      { ...this.useAuth(), ...skipSpinnerOptions() }
     );
   }
 
@@ -187,7 +188,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http.post<{ token: string }>(
       `${ENV.BACKEND_URL}/api/v1/binance-credentials/save`,
       data,
-      this.useAuth(),
+      { ...this.useAuth(), ...skipSpinnerOptions() }
     );
   }
 
@@ -195,7 +196,15 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http.post(
       `${ENV.BACKEND_URL}/api/v1/binance-credentials/check-token`,
       { masterToken },
-      this.useAuth(),
+      { ...this.useAuth(), ...skipSpinnerOptions() }
+    );
+  }
+
+  getFuturesSuggestions(limit = 10): Observable<TokenSuggestionDto[]> {
+    return this.http.get<TokenSuggestionDto[]>(
+      `${ENV.BACKEND_URL}/api/v1/suggestions/futures?limit=${limit}`,
+      { ...this.useAuth(), ...skipSpinnerOptions() }
     );
   }
 }
+

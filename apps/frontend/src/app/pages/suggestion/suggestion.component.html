@@ -1,4 +1,73 @@
-<h1 class="page-title">{{ 'MENU.SUGGESTION' | translate }}</h1>
-    <div class="page-card">
-      <p class="text-text/60">Suggestions list...</p>
+<div class="suggestion-container w-full mx-auto">
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white" translate="SUGGESTION.TITLE">Futures Suggestions</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2" translate="SUGGESTION.DESCRIPTION">
+      Top 10 tokens recommended for futures trading based on liquidity, volatility, open interest proxy, and funding rates.
+    </p>
+  </div>
+
+  <div *ngIf="suggestionsQuery.isPending()" class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+  </div>
+
+  <div *ngIf="!suggestionsQuery.isPending() && suggestionsQuery.data()?.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-10" translate="SUGGESTION.NO_DATA">
+    No suggestions available at the moment.
+  </div>
+
+  <div *ngIf="!suggestionsQuery.isPending() && suggestionsQuery.data() as suggestions" class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+    <div *ngFor="let token of suggestions; let i = index" class="suggestion-card">
+      <div class="card-header">
+        <div class="flex items-center gap-3">
+          <span class="rank-badge">#{{ i + 1 }}</span>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ token.symbol }}</h2>
+          <span class="px-2 py-1 text-xs font-semibold rounded"
+                [ngClass]="token.priceChangePercent >= 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'">
+            {{ token.priceChangePercent >= 0 ? '+' : '' }}{{ token.priceChangePercent }}%
+          </span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-sm font-bold px-3 py-1 rounded-full uppercase"
+                [ngClass]="{
+                  'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-400': token.action === 'LONG',
+                  'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400': token.action === 'SHORT',
+                  'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400': token.action === 'NEUTRAL'
+                }">
+            {{ token.action }}
+          </span>
+          <span class="text-xs text-gray-500 dark:text-gray-400" translate="SUGGESTION.ACTION_SUGGESTION">Suggested Action</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="stat-item">
+            <span class="stat-label" translate="SUGGESTION.VOLUME_24H">24h Vol (USDT)</span>
+            <span class="stat-value">{{ token.volume24h | number:'1.0-0' }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label" translate="SUGGESTION.FUNDING_RATE">Funding Rate</span>
+            <span class="stat-value">{{ token.fundingRate * 100 | number:'1.4-4' }}%</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label" translate="SUGGESTION.TRADE_COUNT">Trade Count</span>
+            <span class="stat-value">{{ token.tradeCount | number }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label" translate="SUGGESTION.SCORE">Quant Score</span>
+            <span class="stat-value text-blue-600 dark:text-blue-400">{{ token.score | number:'1.0-0' }}</span>
+          </div>
+        </div>
+
+        <div class="reasoning-box">
+          <div class="font-semibold text-sm mb-1 text-gray-700 dark:text-gray-300" translate="SUGGESTION.ANALYSIS">Analysis</div>
+          <p class="text-sm text-gray-600 dark:text-gray-400 italic">"{{ token.reason }}"</p>
+        </div>
+
+        <div class="mt-6 h-[400px]">
+          <app-chart [symbol]="token.symbol" timeFrame="1m"></app-chart>
+        </div>
+      </div>
     </div>
+  </div>
+</div>

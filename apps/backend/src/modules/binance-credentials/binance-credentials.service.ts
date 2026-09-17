@@ -20,7 +20,7 @@ export class BinanceCredentialsService {
     const timestamp = Date.now();
     // For checking API key permissions, Binance provides /sapi/v1/account/apiRestrictions
     const queryString = `timestamp=${timestamp}`;
-    
+
     const signature = generateBinanceSignature(queryString, secretKey);
     const encodedSignature = encodeURIComponent(signature);
 
@@ -39,8 +39,8 @@ export class BinanceCredentialsService {
         throw new BadRequestException('Invalid Binance credentials');
       }
 
-      const data = await response.json();
-      
+      const data: any = await response.json();
+
       // Expected payload contains:
       // enableReading, enableSpotAndMarginTrading, enableFutures
       return {
@@ -55,26 +55,26 @@ export class BinanceCredentialsService {
 
   async saveCredentials(userId: string, apiKey: string, secretKey: string): Promise<{ token: string }> {
     const token = this.encryptionService.generateMasterToken();
-    
+
     const encryptedApiKey = this.encryptionService.encrypt(apiKey, token);
     const encryptedSecretKey = this.encryptionService.encrypt(secretKey, token);
-    
+
     let credential = await this.credentialRepository.findByUserId(userId);
-    
+
     if (!credential) {
       credential = this.credentialRepository.create({ userId });
     }
-    
+
     credential.encryptedApiKey = encryptedApiKey.encryptedText;
     credential.apiKeyIv = encryptedApiKey.iv;
     credential.apiKeyAuthTag = encryptedApiKey.authTag;
-    
+
     credential.encryptedSecretKey = encryptedSecretKey.encryptedText;
     credential.secretKeyIv = encryptedSecretKey.iv;
     credential.secretKeyAuthTag = encryptedSecretKey.authTag;
-    
+
     await this.credentialRepository.save(credential);
-    
+
     return { token };
   }
 

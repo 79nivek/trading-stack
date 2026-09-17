@@ -24,6 +24,9 @@ module.exports = {
     mqtt: 'commonjs mqtt',
     ioredis: 'commonjs ioredis',
     '@nestjs/platform-socket.io': 'commonjs @nestjs/platform-socket.io',
+    '@nestjs/microservices': 'commonjs @nestjs/microservices',
+    '@nestjs/microservices/microservices-module': 'commonjs @nestjs/microservices/microservices-module',
+    '@nestjs/websockets/socket-module': 'commonjs @nestjs/websockets/socket-module',
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -38,7 +41,7 @@ module.exports = {
       sourceMap: true,
     }),
     new webpack.IgnorePlugin({
-      resourceRegExp: /^(zlib-sync|bufferutil|utf-8-validate|amqplib|amqp-connection-manager|nats|kafkajs|@grpc\/grpc-js|@grpc\/proto-loader|mqtt|ioredis|@nestjs\/platform-socket.io)$/,
+      resourceRegExp: /^(zlib-sync|bufferutil|utf-8-validate|amqplib|amqp-connection-manager|nats|kafkajs|@grpc\/grpc-js|@grpc\/proto-loader|mqtt|ioredis|@nestjs\/platform-socket\.io|@nestjs\/microservices|@nestjs\/microservices\/microservices-module|@nestjs\/websockets\/socket-module)$/,
     }),
   ],
   ignoreWarnings: [

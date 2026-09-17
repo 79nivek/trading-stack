@@ -62,5 +62,16 @@
     "NEW_PASSWORD_PLACEHOLDER": "Enter your new password",
     "CONFIRM_PASSWORD": "Confirm Password",
     "CONFIRM_PASSWORD_PLACEHOLDER": "Re-enter your new password"
+  },
+  "SUGGESTION": {
+    "TITLE": "Futures Suggestions",
+    "DESCRIPTION": "Top tokens recommended for futures trading based on quantitative parameters.",
+    "NO_DATA": "No suggestions available at the moment.",
+    "VOLUME_24H": "24h Vol (USDT)",
+    "FUNDING_RATE": "Funding Rate",
+    "TRADE_COUNT": "Trade Count",
+    "SCORE": "Quant Score",
+    "ACTION_SUGGESTION": "Suggested Action",
+    "ANALYSIS": "Analysis"
   }
 }

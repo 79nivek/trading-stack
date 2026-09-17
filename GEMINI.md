@@ -14,3 +14,4 @@
 - Shared DTOs: All input and output DTO classes/interfaces must be defined in the `@trading-stack/shared-dto` (or `/libs/shared-dto`) library to unify TypeScript types between the frontend and backend instead of using `any`.
 - Centralized API calls: On the frontend, all HTTP requests to the backend must be managed centrally within a single `BackendApiService` (e.g., `backend-api.service.ts`). Absolutely do not inject or call `HttpClient` directly within any UI Components.
 - Repository Pattern: On the backend, every Entity must have a dedicated Repository class to handle all database operations and query logic. Services must solely focus on business logic and orchestrate data through these Repositories, rather than injecting and using TypeORM's `Repository<T>` directly.
+- Database Entities: Every TypeORM entity MUST include `createdAt` (CreateDateColumn), `updatedAt` (UpdateDateColumn), and `deletedAt` (DeleteDateColumn). All table deletions must be Soft Deletes.

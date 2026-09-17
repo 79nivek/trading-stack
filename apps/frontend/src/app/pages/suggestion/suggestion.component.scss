@@ -1,8 +1,33 @@
-@reference '../../../styles.css';
+@reference "../../../styles.css";
 
-.page-title {
-  @apply text-2xl font-bold text-text;
-}
-.page-card {
-  @apply mt-4 p-4 bg-surface border border-border rounded-lg shadow-sm;
+.suggestion-card {
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col;
+
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center;
+    
+    .rank-badge {
+      @apply bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-bold px-2 py-1 rounded text-sm;
+    }
+  }
+
+  .card-body {
+    @apply p-6 flex flex-col flex-1;
+
+    .stat-item {
+      @apply flex flex-col;
+
+      .stat-label {
+        @apply text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1;
+      }
+      
+      .stat-value {
+        @apply text-lg font-bold text-gray-900 dark:text-white;
+      }
+    }
+
+    .reasoning-box {
+      @apply mt-2 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-lg;
+    }
+  }
 }

@@ -1,3 +1,5 @@
+import { injectMutation } from "@tanstack/angular-query-experimental";
+import { lastValueFrom } from "rxjs";
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
@@ -36,28 +38,28 @@ export class ResetPasswordComponent {
       ? null : { mismatch: true };
   }
 
+  resetPasswordMutation = injectMutation(() => ({
+    mutationFn: (dto: ResetPasswordDto) => lastValueFrom(this.backendApi.resetPassword(dto)),
+    onSuccess: () => {
+      this.toast.show('Password reset successful', 'success');
+      this.modalService.close();
+    },
+    onError: (err: any) => {
+      this.toast.show(err.error?.message || 'Password reset failed', 'danger');
+    }
+  }));
+
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.isSubmitting = true;
     const dto: ResetPasswordDto = {
       oldPassword: this.form.value.oldPassword,
       newPassword: this.form.value.newPassword
     };
 
-    this.backendApi.resetPassword(dto).subscribe({
-      next: () => {
-        this.isSubmitting = false;
-        this.toast.show('Password reset successful', 'success');
-        this.modalService.close();
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.toast.show(err.error?.message || 'Password reset failed', 'danger');
-      }
-    });
+    this.resetPasswordMutation.mutate(dto);
   }
 }
