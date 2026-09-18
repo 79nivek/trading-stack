@@ -22,6 +22,7 @@ export class UserSettingsService {
     if (dto.theme !== undefined) settings.theme = dto.theme;
     if (dto.language !== undefined) settings.language = dto.language;
     if (dto.timeFrame !== undefined) settings.timeFrame = dto.timeFrame;
+    if (dto.suggestionLimit !== undefined) settings.suggestionLimit = dto.suggestionLimit;
 
     return this.userSettingsRepository.save(settings);
   }

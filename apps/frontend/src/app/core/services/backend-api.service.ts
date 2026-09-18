@@ -168,7 +168,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     );
   }
 
-  updateSettings(config: { language?: string; theme?: string; timeFrame?: string }): Observable<any> {
+  updateSettings(config: { language?: string; theme?: string; timeFrame?: string; suggestionLimit?: number }): Observable<any> {
     return this.http.patch(
       `${ENV.BACKEND_URL}/api/v1/settings`,
       config,
@@ -206,5 +206,13 @@ export class BackendApiService implements OnInit, OnDestroy {
       { ...this.useAuth(), ...skipSpinnerOptions() }
     );
   }
+
+  getAiCheck(symbol: string, timeFrame = '4h'): Observable<any> {
+    return this.http.get<any>(
+      `${ENV.BACKEND_URL}/api/v1/suggestions/ai-check?symbol=${symbol}&timeFrame=${timeFrame}`,
+      { ...this.useAuth(), ...skipSpinnerOptions() }
+    );
+  }
 }
+
 

@@ -72,7 +72,9 @@
     "TRADE_COUNT": "Trade Count",
     "SCORE": "Quant Score",
     "ACTION_SUGGESTION": "Suggested Action",
-    "ANALYSIS": "Analysis"
+    "ANALYSIS": "Analysis",
+    "SHOW_ITEMS": "Show items:",
+    "REFRESH": "Refresh"
   },
   "NAV": {
     "LOGIN": "Login",

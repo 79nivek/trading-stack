@@ -71,7 +71,9 @@
     "FUNDING_RATE": "Funding Rate",
     "TRADE_COUNT": "Số GD",
     "SCORE": "Điểm Quant",
-    "ANALYSIS": "Phân tích"
+    "ANALYSIS": "Phân tích",
+    "SHOW_ITEMS": "Hiển thị:",
+    "REFRESH": "Làm mới"
   },
   "NAV": {
     "LOGIN": "Đăng nhập",

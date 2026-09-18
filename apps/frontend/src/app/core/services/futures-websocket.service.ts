@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { KlineData } from '@trading-stack/shared-dto';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Observable, Subject, Subscription, timer } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { ENV } from '../../environments';
@@ -39,6 +39,7 @@ type StreamPayload = {
 export class FuturesWebsocketService implements OnDestroy {
   private wsSubject: WebSocketSubject<any> | null = null;
   private wsSubscription: Subscription | null = null;
+  private timeoutSubscription: Subscription | null = null;
 
   private tokens = new Set<string>();
   private interval = '1m'; // default timeframe
@@ -96,40 +97,46 @@ export class FuturesWebsocketService implements OnDestroy {
    * Closes the current connection and reconnects with the updated stream list.
    */
   private reconnect() {
-    this.disconnect();
-
-    if (this.tokens.size === 0) {
-      return;
+    if (this.timeoutSubscription) {
+      this.timeoutSubscription.unsubscribe();
     }
 
-    const streams = Array.from(this.tokens)
-      .map((t) => `${t}@kline_${this.interval}`)
-      .join('/');
+    this.timeoutSubscription = timer(200).subscribe(() => {
+      this.disconnect();
 
-    const url = `${ENV.BINANCE_FUTURES_WS_URL}/market/stream?streams=${streams}`;
+      if (this.tokens.size === 0) {
+        return;
+      }
 
-    this.wsSubject = webSocket({
-      url,
-      deserializer: (e) => JSON.parse(e.data),
-    });
+      const streams = Array.from(this.tokens)
+        .map((t) => `${t}@kline_${this.interval}`)
+        .join('/');
 
-    this.wsSubscription = this.wsSubject.subscribe({
-      next: (msg: StreamPayload) => {
-        const kline = msg.data.k;
-        // Normalize symbol to uppercase for consistent object mapping
-        const data: KlineData = {
-          time: Math.floor(kline.t / 1000), // convert ms to s for lightweight-charts
-          open: parseFloat(kline.o),
-          high: parseFloat(kline.h),
-          low: parseFloat(kline.l),
-          close: parseFloat(kline.c),
-          volume: parseFloat(kline.v),
-          normalizedToken: msg.stream,
-        };
-        this.messageSubject.next(data);
-      },
-      error: (err) => console.error('WebSocket Error:', err),
-      complete: () => console.log('WebSocket Connection Closed'),
+      const url = `${ENV.BINANCE_FUTURES_WS_URL}/market/stream?streams=${streams}`;
+
+      this.wsSubject = webSocket({
+        url,
+        deserializer: (e) => JSON.parse(e.data),
+      });
+
+      this.wsSubscription = this.wsSubject.subscribe({
+        next: (msg: StreamPayload) => {
+          const kline = msg.data.k;
+          // Normalize symbol to uppercase for consistent object mapping
+          const data: KlineData = {
+            time: Math.floor(kline.t / 1000), // convert ms to s for lightweight-charts
+            open: parseFloat(kline.o),
+            high: parseFloat(kline.h),
+            low: parseFloat(kline.l),
+            close: parseFloat(kline.c),
+            volume: parseFloat(kline.v),
+            normalizedToken: msg.stream,
+          };
+          this.messageSubject.next(data);
+        },
+        error: (err) => console.error('WebSocket Error:', err),
+        complete: () => console.log('WebSocket Connection Closed'),
+      });
     });
   }
 

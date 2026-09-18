@@ -31,6 +31,9 @@ export class UserSettings {
   @Column({ default: '1h' })
   timeFrame!: string;
 
+  @Column({ type: 'int', default: 10 })
+  suggestionLimit!: number;
+
   @CreateDateColumn()
   createdAt!: Date;
 

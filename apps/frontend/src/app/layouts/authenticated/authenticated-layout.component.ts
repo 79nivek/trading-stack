@@ -46,7 +46,7 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './authenticated-layout.component.scss',
 })
 export class AuthenticatedLayoutComponent {
-  isSidebarOpen = signal<boolean>(true);
+  isSidebarOpen = signal<boolean>(false);
   private router = inject(Router);
   public secretKeyService = inject(SecretKeyService);
   private toastService = inject(ToastService);

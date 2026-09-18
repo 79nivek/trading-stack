@@ -15,11 +15,12 @@ import {
 
 import { createChart, IChartApi, ISeriesApi, Time, CandlestickSeries, HistogramSeries, LineSeries } from 'lightweight-charts';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
+import { lastValueFrom, Subscription } from 'rxjs';
 import { BinanceFuturesApiService } from '../../../core/services/binance-futures-api.service';
 import { FuturesWebsocketService } from '../../../core/services/futures-websocket.service';
-import { Subscription } from 'rxjs';
 import { ThemeService } from '../../../core/services/theme.service';
+import { ChartSyncService } from '../../../core/services/chart-sync.service';
+import { TimeframeService } from '../../../core/services/timeframe.service';
 
 @Component({
   selector: 'app-chart',
@@ -30,7 +31,8 @@ import { ThemeService } from '../../../core/services/theme.service';
 })
 export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() symbol = '';
-  @Input() timeFrame = '1m';
+  /** syncGroup để đồng bộ zoom/crosshair giữa các chart cùng nhóm. */
+  @Input() syncGroup = '';
 
   @ViewChild('chartContainer') chartContainer!: ElementRef;
 
@@ -44,16 +46,36 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   hoveredData = signal<any>(null);
 
-
   private binanceApi = inject(BinanceFuturesApiService);
   private wsService = inject(FuturesWebsocketService);
   private themeService = inject(ThemeService);
+  private chartSync = inject(ChartSyncService);
+  private timeframeService = inject(TimeframeService);
 
   private wsSubscription: Subscription | null = null;
+  private syncCrosshairSub: Subscription | null = null;
+  private syncZoomSub: Subscription | null = null;
+
+  /** Unique ID để phân biệt source khi broadcast sync events. */
+  private readonly instanceId = `chart-${Math.random().toString(36).slice(2)}`;
+
+  /** Flag để tránh vòng lặp vô hạn khi đang apply sync từ service. */
+  private isSyncingCrosshair = false;
+  private isSyncingZoom = false;
 
   constructor() {
     effect(() => {
       this.applyTheme(this.themeService.theme());
+    });
+
+    // Reactive: tự động reload khi global timeframe thay đổi
+    effect(() => {
+      this.timeframeService.timeframe(); // đọc signal để đăng ký reactive dependency
+      if (this.chart) {
+        this.loadHistoricalData();
+        this.applyBinanceFormatting();
+        this.subscribeToRealtimeData();
+      }
     });
   }
 
@@ -63,19 +85,86 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.loadHistoricalData();
       this.applyBinanceFormatting();
       this.subscribeToRealtimeData();
+      this.subscribeSyncEvents();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if ((changes['symbol'] && !changes['symbol'].firstChange) ||
-        (changes['timeFrame'] && !changes['timeFrame'].firstChange)) {
+    const symbolChanged = changes['symbol'] && !changes['symbol'].firstChange;
+    const syncGroupChanged = changes['syncGroup'] && !changes['syncGroup'].firstChange;
+
+    if (symbolChanged) {
       if (this.chart) {
         this.loadHistoricalData();
         this.applyBinanceFormatting();
         this.subscribeToRealtimeData();
       }
     }
+
+    if (syncGroupChanged) {
+      this.subscribeSyncEvents();
+    }
   }
+
+  ngOnDestroy(): void {
+    this.syncCrosshairSub?.unsubscribe();
+    this.syncZoomSub?.unsubscribe();
+    if (this.wsSubscription) {
+      this.wsSubscription.unsubscribe();
+    }
+    if (this.symbol) {
+      this.wsService.unregister(this.symbol);
+    }
+    if (this.chart) {
+      this.chart.remove();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sync
+  // ---------------------------------------------------------------------------
+
+  private subscribeSyncEvents(): void {
+    // Hủy subscriptions cũ trước khi đăng ký lại
+    this.syncCrosshairSub?.unsubscribe();
+    this.syncZoomSub?.unsubscribe();
+    this.syncCrosshairSub = null;
+    this.syncZoomSub = null;
+
+    if (!this.syncGroup || !this.chart) return;
+
+    // Nhận crosshair từ chart khác → apply lên chart này
+    this.syncCrosshairSub = this.chartSync
+      .onCrosshair(this.syncGroup, this.instanceId)
+      .subscribe((event) => {
+        if (!this.chart) return;
+        this.isSyncingCrosshair = true;
+        if (event.time !== null) {
+          this.chart.setCrosshairPosition(
+            0,
+            event.time as Time,
+            this.candlestickSeries!
+          );
+        } else {
+          this.chart.clearCrosshairPosition();
+        }
+        this.isSyncingCrosshair = false;
+      });
+
+    // Nhận zoom từ chart khác → apply lên chart này
+    this.syncZoomSub = this.chartSync
+      .onZoom(this.syncGroup, this.instanceId)
+      .subscribe((event) => {
+        if (!this.chart || !event.range) return;
+        this.isSyncingZoom = true;
+        this.chart.timeScale().setVisibleLogicalRange(event.range);
+        this.isSyncingZoom = false;
+      });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Chart init
+  // ---------------------------------------------------------------------------
 
   private async applyBinanceFormatting(): Promise<void> {
     if (!this.symbol) return;
@@ -83,7 +172,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       const info = await this.queryClient.fetchQuery({
         queryKey: ['exchangeInfo', this.symbol],
         queryFn: () => lastValueFrom(this.binanceApi.getExchangeInfo(this.symbol!)),
-        staleTime: Infinity, // Exchange info rarely changes
+        staleTime: Infinity,
       });
       if (this.candlestickSeries) {
         this.candlestickSeries.applyOptions({
@@ -96,18 +185,6 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       }
     } catch (err) {
       console.error('Failed to get exchange info', err);
-    }
-  }
-
-  ngOnDestroy(): void {
-    if (this.wsSubscription) {
-      this.wsSubscription.unsubscribe();
-    }
-    if (this.symbol) {
-      this.wsService.unregister(this.symbol);
-    }
-    if (this.chart) {
-      this.chart.remove();
     }
   }
 
@@ -153,28 +230,35 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       priceScaleId: '',
     });
 
-
     this.ma7Series = this.chart.addSeries(LineSeries, { color: '#f59e0b', lineWidth: 1, crosshairMarkerVisible: false, lastValueVisible: false, priceLineVisible: false });
     this.ma25Series = this.chart.addSeries(LineSeries, { color: '#3b82f6', lineWidth: 1, crosshairMarkerVisible: false, lastValueVisible: false, priceLineVisible: false });
     this.ma99Series = this.chart.addSeries(LineSeries, { color: '#ec4899', lineWidth: 1, crosshairMarkerVisible: false, lastValueVisible: false, priceLineVisible: false });
 
-    // Crosshair move for legend
+    // Crosshair move: cập nhật legend + broadcast sync
     this.chart.subscribeCrosshairMove((param) => {
-      if (
+      const isOutside =
         param.point === undefined ||
         !param.time ||
         param.point.x < 0 ||
         param.point.x > this.chartContainer.nativeElement.clientWidth ||
         param.point.y < 0 ||
-        param.point.y > 400
-      ) {
-        // Fallback to the latest candle if not hovering properly
+        param.point.y > 400;
+
+      if (isOutside) {
         if (this.currentData.length > 0) {
-
-
-           this.updateHoveredDataWithLatest();
+          this.updateHoveredDataWithLatest();
         } else {
-           this.hoveredData.set(null);
+          this.hoveredData.set(null);
+        }
+
+        // Broadcast clear crosshair khi ra ngoài chart
+        if (!this.isSyncingCrosshair && this.syncGroup) {
+          this.chartSync.emitCrosshair({
+            groupId: this.syncGroup,
+            sourceId: this.instanceId,
+            time: null,
+            point: null,
+          });
         }
       } else {
         const candleData = param.seriesData.get(this.candlestickSeries!);
@@ -190,6 +274,16 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
             ma7: (ma7 as any)?.value,
             ma25: (ma25 as any)?.value,
             ma99: (ma99 as any)?.value,
+          });
+        }
+
+        // Broadcast crosshair position sang chart khác
+        if (!this.isSyncingCrosshair && this.syncGroup && param.time) {
+          this.chartSync.emitCrosshair({
+            groupId: this.syncGroup,
+            sourceId: this.instanceId,
+            time: param.time as number,
+            point: param.point ?? null,
           });
         }
       }
@@ -211,11 +305,24 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     });
     resizeObserver.observe(this.chartContainer.nativeElement);
 
+    // Zoom/pan: load thêm dữ liệu + broadcast sync
     this.chart.timeScale().subscribeVisibleLogicalRangeChange(logicalRange => {
       if (logicalRange !== null && logicalRange.from < 10) {
         this.loadMoreHistoricalData();
       }
+
+      // Broadcast zoom sang chart khác
+      if (!this.isSyncingZoom && this.syncGroup) {
+        this.chartSync.emitZoom({
+          groupId: this.syncGroup,
+          sourceId: this.instanceId,
+          range: logicalRange,
+        });
+      }
     });
+
+    // Đăng ký sync events sau khi chart đã khởi tạo xong
+    this.subscribeSyncEvents();
   }
 
   private applyTheme(theme: string): void {
@@ -241,7 +348,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   private queryClient = injectQueryClient();
 
-  private calculateSMA(data: any[], period: number): {time: Time, value: number}[] {
+  private calculateSMA(data: any[], period: number): { time: Time; value: number }[] {
     const smaData = [];
     for (let i = period - 1; i < data.length; i++) {
       let sum = 0;
@@ -263,24 +370,21 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private updateHoveredDataWithLatest(): void {
     if (this.currentData.length === 0) return;
 
-
-
-    // Calculate last MAs
     const getSma = (period: number) => {
-        if (this.currentData.length < period) return undefined;
-        let sum = 0;
-        for (let j = 0; j < period; j++) {
-            sum += this.currentData[this.currentData.length - 1 - j].close;
-        }
-        return sum / period;
+      if (this.currentData.length < period) return undefined;
+      let sum = 0;
+      for (let j = 0; j < period; j++) {
+        sum += this.currentData[this.currentData.length - 1 - j].close;
+      }
+      return sum / period;
     };
 
     this.hoveredData.set({
-        candle: this.currentData[this.currentData.length - 1],
-        vol: this.currentVolumeData[this.currentVolumeData.length - 1]?.value,
-        ma7: getSma(7),
-        ma25: getSma(25),
-        ma99: getSma(99),
+      candle: this.currentData[this.currentData.length - 1],
+      vol: this.currentVolumeData[this.currentVolumeData.length - 1]?.value,
+      ma7: getSma(7),
+      ma25: getSma(25),
+      ma99: getSma(99),
     });
   }
 
@@ -290,13 +394,14 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private currentVolumeData: any[] = [];
 
   private async loadHistoricalData(): Promise<void> {
-    if (!this.symbol || !this.timeFrame) return;
+    const tf = this.timeframeService.timeframe();
+    if (!this.symbol || !tf) return;
 
     try {
       const data = await this.queryClient.fetchQuery({
-        queryKey: ['klines', this.symbol, this.timeFrame, 500, 'latest'],
-        queryFn: () => lastValueFrom(this.binanceApi.getKlines(this.symbol!, this.timeFrame!)),
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        queryKey: ['klines', this.symbol, tf, 500, 'latest'],
+        queryFn: () => lastValueFrom(this.binanceApi.getKlines(this.symbol!, tf)),
+        staleTime: 1000 * 60 * 5,
       });
 
       if (this.candlestickSeries && this.volumeSeries && data.length > 0) {
@@ -318,7 +423,6 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.candlestickSeries.setData(this.currentData);
         this.volumeSeries.setData(this.currentVolumeData);
         this.updateMAs();
-        this.updateMAs();
         this.updateHoveredDataWithLatest();
       }
     } catch (err) {
@@ -327,17 +431,17 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private async loadMoreHistoricalData(): Promise<void> {
-    if (!this.symbol || !this.timeFrame || this.isLoadingMore || !this.earliestTime) return;
+    const tf = this.timeframeService.timeframe();
+    if (!this.symbol || !tf || this.isLoadingMore || !this.earliestTime) return;
 
     this.isLoadingMore = true;
-    // Binance API requires endTime in ms
     const endTime = (this.earliestTime * 1000) - 1;
 
     try {
       const data = await this.queryClient.fetchQuery({
-        queryKey: ['klines', this.symbol, this.timeFrame, 500, endTime],
-        queryFn: () => lastValueFrom(this.binanceApi.getKlines(this.symbol!, this.timeFrame!, 500, endTime)),
-        staleTime: Infinity, // Historical past data never changes
+        queryKey: ['klines', this.symbol, tf, 500, endTime],
+        queryFn: () => lastValueFrom(this.binanceApi.getKlines(this.symbol!, tf, 500, endTime)),
+        staleTime: Infinity,
       });
 
       if (this.candlestickSeries && this.volumeSeries && data.length > 0) {
@@ -356,7 +460,6 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
           color: d.close >= d.open ? '#26a69a80' : '#ef535080'
         }));
 
-        // Prepend older data
         this.currentData = [...olderCandles, ...this.currentData];
         this.currentVolumeData = [...olderVolumes, ...this.currentVolumeData];
 
@@ -371,14 +474,15 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private subscribeToRealtimeData(): void {
-    if (!this.symbol || !this.timeFrame) return;
+    const tf = this.timeframeService.timeframe();
+    if (!this.symbol || !tf) return;
 
     if (this.wsSubscription) {
       this.wsSubscription.unsubscribe();
     }
 
-    this.wsService.setTimeFrame(this.timeFrame);
-    this.wsSubscription = this.wsService.register(this.symbol, this.timeFrame).subscribe({
+    this.wsService.setTimeFrame(tf);
+    this.wsSubscription = this.wsService.register(this.symbol, tf).subscribe({
       next: (kline) => {
         if (this.candlestickSeries && this.volumeSeries) {
           const candle = {
@@ -397,7 +501,6 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
           this.candlestickSeries.update(candle);
           this.volumeSeries.update(volume);
 
-          // Update current data arrays to keep them in sync
           const lastCandleIndex = this.currentData.length - 1;
           if (lastCandleIndex >= 0 && this.currentData[lastCandleIndex].time === candle.time) {
             this.currentData[lastCandleIndex] = candle;
@@ -408,7 +511,6 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
           }
 
           this.updateMAs();
-          // Only update hover with latest if not hovering elsewhere
           if (!this.hoveredData() || this.hoveredData()?.candle?.time === candle.time) {
             this.updateHoveredDataWithLatest();
           }

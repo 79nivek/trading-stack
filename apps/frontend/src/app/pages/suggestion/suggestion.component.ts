@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateDirective } from '@ngx-translate/core';
 import { BackendApiService } from '../../core/services/backend-api.service';
 import { ChartComponent } from '../../shared/components/chart/chart.component';
-import { injectQuery } from '@tanstack/angular-query-experimental';
+import { injectQuery, injectMutation, injectQueryClient } from '@tanstack/angular-query-experimental';
+import { effect } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 
 @Component({
@@ -15,9 +16,91 @@ import { lastValueFrom } from 'rxjs';
 })
 export class SuggestionPageComponent {
   private backendApi = inject(BackendApiService);
-  
-  suggestionsQuery = injectQuery(() => ({
-    queryKey: ['suggestions', 'futures'],
-    queryFn: () => lastValueFrom(this.backendApi.getFuturesSuggestions(10))
+  private queryClient = injectQueryClient();
+
+  /** Set chứa symbol đang được expand (mở chi tiết). Mặc định rỗng = tất cả collapsed. */
+  expandedCards = signal<Set<string>>(new Set());
+
+  limit = signal<number>(10);
+
+  settingsQuery = injectQuery(() => ({
+    queryKey: ['settings'],
+    queryFn: () => lastValueFrom(this.backendApi.getSettings()),
+    staleTime: Infinity,
   }));
+
+  updateSettingsMutation = injectMutation(() => ({
+    mutationFn: (limit: number) => lastValueFrom(this.backendApi.updateSettings({ suggestionLimit: limit })),
+    onSuccess: () => this.queryClient.invalidateQueries({ queryKey: ['settings'] })
+  }));
+
+  constructor() {
+    effect(() => {
+      const settings = this.settingsQuery.data();
+      if (settings?.suggestionLimit) {
+        // Prevent unnecessary updates if it's already the same
+        if (this.limit() !== settings.suggestionLimit) {
+            this.limit.set(settings.suggestionLimit);
+        }
+      }
+    }, { allowSignalWrites: true });
+  }
+
+
+  suggestionsQuery = injectQuery(() => ({
+    queryKey: ['suggestions', 'futures', this.limit()],
+    queryFn: () => lastValueFrom(this.backendApi.getFuturesSuggestions(this.limit()))
+  }));
+
+  onRefresh() {
+    this.suggestionsQuery.refetch();
+  }
+
+  onLimitChange(event: Event) {
+    const value = (event.target as HTMLSelectElement).value;
+    this.limit.set(Number(value));
+    this.updateSettingsMutation.mutate(Number(value));
+  }
+
+
+  aiChecks = signal<Record<string, { loading: boolean, data?: any, error?: boolean }>>({});
+
+  async onAiCheck(symbol: string) {
+    // Set loading
+    this.aiChecks.update(state => ({
+      ...state,
+      [symbol]: { ...state[symbol], loading: true, error: false }
+    }));
+
+    try {
+      const timeFrame = this.settingsQuery.data()?.timeFrame;
+      const data = await lastValueFrom(this.backendApi.getAiCheck(symbol, timeFrame));
+      this.aiChecks.update(state => ({
+        ...state,
+        [symbol]: { loading: false, data, error: false }
+      }));
+    } catch (err) {
+      this.aiChecks.update(state => ({
+        ...state,
+        [symbol]: { loading: false, error: true }
+      }));
+    }
+  }
+
+  isCollapsed(symbol: string): boolean {
+
+    return !this.expandedCards().has(symbol);
+  }
+
+  toggleCollapse(symbol: string): void {
+    this.expandedCards.update(set => {
+      const next = new Set(set);
+      if (next.has(symbol)) {
+        next.delete(symbol);
+      } else {
+        next.add(symbol);
+      }
+      return next;
+    });
+  }
 }
