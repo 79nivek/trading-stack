@@ -100,5 +100,15 @@
     "SUGGESTION": "Gợi ý",
     "SETTING": "Cài đặt",
     "PROFILE": "Hồ sơ"
+  },
+  "FOLLOWED": {
+    "TITLE": "Symbol Đang Theo Dõi",
+    "SEARCH_PLACEHOLDER": "Tìm symbol (VD: BTCUSDT)…",
+    "NO_DATA": "Chưa theo dõi symbol nào. Dùng ô tìm kiếm phía trên để thêm.",
+    "REMOVE": "Xóa",
+    "AI_CHECK": "AI Kiểm tra",
+    "POSITION": "Vị thế",
+    "ADD_SYMBOL": "Thêm Symbol",
+    "LOADING_SYMBOLS": "Đang tải danh sách…"
   }
 }

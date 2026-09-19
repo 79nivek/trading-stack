@@ -1,13 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, shareReplay } from 'rxjs/operators';
 import { KlineData } from '@trading-stack/shared-dto';
 
 import { skipSpinnerOptions } from '../../interceptors/spinner.interceptor';
+import { TradingFormatter } from '../../../shared/classes/trading-formater';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class BinanceFuturesApiService {
   private http = inject(HttpClient);
@@ -16,49 +17,86 @@ export class BinanceFuturesApiService {
   // Note: Binance API may require CORS, usually fapi.binance.com allows CORS.
   private readonly BASE_URL = 'https://fapi.binance.com/fapi/v1';
 
-  getKlines(symbol: string, interval: string, limit = 500, endTime?: number): Observable<KlineData[]> {
+  /** Cached USDT perpetual symbol list — fetched once per service lifetime */
+  private symbolList$: Observable<string[]> | null = null;
+
+  getKlines(
+    symbol: string,
+    query: {
+      interval: string;
+      limit?: number;
+      endTime?: number;
+    },
+    formatOptions: {
+      tickSize: string | number;
+      pricePrecision: number;
+    } = {
+      tickSize: '1',
+      pricePrecision: 0,
+    },
+  ): Observable<KlineData[]> {
+
+    if (query.limit === undefined) query.limit = 500;
+
     const params: any = {
       symbol: symbol.toUpperCase(),
-      interval,
-      limit: limit.toString()
+      interval: query.interval,
+      limit: query.limit.toString(),
     };
 
-    if (endTime) {
-      params.endTime = endTime.toString();
+    if (query.endTime) {
+      params.endTime = query.endTime.toString();
     }
 
-    return this.http.get<any[][]>(`${this.BASE_URL}/klines`, {
-      params,
-      ...skipSpinnerOptions()
-    }).pipe(
-      map(data => {
-        return data.map(kline => ({
-          time: Math.floor(kline[0] / 1000), // convert ms to s for lightweight-charts
-          open: parseFloat(kline[1]),
-          high: parseFloat(kline[2]),
-          low: parseFloat(kline[3]),
-          close: parseFloat(kline[4]),
-          volume: parseFloat(kline[5]),
-          normalizedToken: `${symbol.toLowerCase()}@kline_${interval}`
-        }));
+    return this.http
+      .get<any[][]>(`${this.BASE_URL}/klines`, {
+        params,
+        ...skipSpinnerOptions(),
       })
+      .pipe(
+        map((data) => {
+          return data.map((kline) => ({
+            time: Math.floor(kline[0] / 1000), // convert ms to s for lightweight-charts
+            open: TradingFormatter.formatPrice(kline[1], formatOptions),
+            high: TradingFormatter.formatPrice(kline[2], formatOptions),
+            low: TradingFormatter.formatPrice(kline[3], formatOptions),
+            close: TradingFormatter.formatPrice(kline[4], formatOptions),
+            volume: TradingFormatter.formatPrice(kline[5], formatOptions),
+            normalizedToken: `${symbol.toLowerCase()}@kline_${query.interval}`,
+          }));
+        }),
+      );
+  }
+
+  getExchangeInfo(): Observable<any> {
+    return this.http.get<any>(
+      `${this.BASE_URL}/exchangeInfo`,
+      skipSpinnerOptions(),
     );
   }
 
-  getExchangeInfo(symbol: string): Observable<{ tickSize: string, pricePrecision: number }> {
-    return this.http.get<any>(`${this.BASE_URL}/exchangeInfo`, skipSpinnerOptions()).pipe(
-      map(res => {
-        const symbolInfo = res.symbols.find((s: any) => s.symbol === symbol.toUpperCase());
-        if (!symbolInfo) {
-          throw new Error(`Symbol ${symbol} not found in exchangeInfo`);
-        }
-
-        const priceFilter = symbolInfo.filters.find((f: any) => f.filterType === 'PRICE_FILTER');
-        return {
-          tickSize: priceFilter ? priceFilter.tickSize : '0.01',
-          pricePrecision: symbolInfo.pricePrecision || 2
-        };
-      })
-    );
+  /**
+   * Returns the list of all USDT-perpetual futures symbol names from Binance.
+   * The result is cached for the lifetime of the service instance.
+   */
+  getFuturesSymbolList(): Observable<string[]> {
+    if (!this.symbolList$) {
+      this.symbolList$ = this.http
+        .get<any>(`${this.BASE_URL}/exchangeInfo`, skipSpinnerOptions())
+        .pipe(
+          map((res) =>
+            res.symbols
+              .filter(
+                (s: any) =>
+                  s.symbol.endsWith('USDT') &&
+                  s.contractType === 'PERPETUAL' &&
+                  s.status === 'TRADING',
+              )
+              .map((s: any) => s.symbol as string),
+          ),
+          shareReplay(1),
+        );
+    }
+    return this.symbolList$;
   }
 }

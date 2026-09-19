@@ -2,7 +2,6 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateDirective } from '@ngx-translate/core';
 import { BackendApiService } from '../../core/services/api/backend-api.service';
-import { ChartComponent } from '../../shared/components/chart/chart.component';
 import { SuggestionPositionModal } from './suggestion-position/suggestion-position.modal';
 import {
   injectQuery,
@@ -13,11 +12,15 @@ import { effect } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { ModalService } from '../../core/services/modal.service';
 import { BaseLayoutComponent } from '../../shared/classes/base-layout';
+import {
+  TokenCardComponent,
+  AiCheckState,
+} from '../../shared/components/token-card/token-card.component';
 
 @Component({
   selector: 'app-suggestion-page',
   standalone: true,
-  imports: [CommonModule, TranslateDirective, ChartComponent],
+  imports: [CommonModule, TranslateDirective, TokenCardComponent],
   templateUrl: './suggestion.component.html',
   styleUrl: './suggestion.component.scss',
 })
@@ -25,9 +28,6 @@ export class SuggestionPageComponent extends BaseLayoutComponent {
   private backendApi = inject(BackendApiService);
   private queryClient = inject(QueryClient);
   private modalService = inject(ModalService);
-
-  /** Set chứa symbol đang được expand (mở chi tiết). Mặc định rỗng = tất cả collapsed. */
-  expandedCards = signal<Set<string>>(new Set());
 
   limit = signal<number>(10);
 
@@ -50,7 +50,6 @@ export class SuggestionPageComponent extends BaseLayoutComponent {
       () => {
         const settings = this.settingsQuery.data();
         if (settings?.suggestionLimit) {
-          // Prevent unnecessary updates if it's already the same
           if (this.limit() !== settings.suggestionLimit) {
             this.limit.set(settings.suggestionLimit);
           }
@@ -76,12 +75,9 @@ export class SuggestionPageComponent extends BaseLayoutComponent {
     this.updateSettingsMutation.mutate(Number(value));
   }
 
-  aiChecks = signal<
-    Record<string, { loading: boolean; data?: any; error?: boolean }>
-  >({});
+  aiChecks = signal<Record<string, AiCheckState>>({});
 
   async onAiCheck(symbol: string) {
-    // Set loading
     this.aiChecks.update((state) => ({
       ...state,
       [symbol]: { ...state[symbol], loading: true, error: false },
@@ -96,7 +92,7 @@ export class SuggestionPageComponent extends BaseLayoutComponent {
         ...state,
         [symbol]: { loading: false, data, error: false },
       }));
-    } catch (err) {
+    } catch {
       this.aiChecks.update((state) => ({
         ...state,
         [symbol]: { loading: false, error: true },
@@ -104,28 +100,7 @@ export class SuggestionPageComponent extends BaseLayoutComponent {
     }
   }
 
-  showPositionModal = signal<boolean>(false);
-  selectedPositionSymbol = signal<string>('');
-
   openPositionModal(symbol: string) {
-    this.modalService.open(SuggestionPositionModal, {
-      symbol,
-    });
-  }
-
-  isCollapsed(symbol: string): boolean {
-    return !this.expandedCards().has(symbol);
-  }
-
-  toggleCollapse(symbol: string): void {
-    this.expandedCards.update((set) => {
-      const next = new Set(set);
-      if (next.has(symbol)) {
-        next.delete(symbol);
-      } else {
-        next.add(symbol);
-      }
-      return next;
-    });
+    this.modalService.open(SuggestionPositionModal, { symbol });
   }
 }

@@ -1,0 +1,237 @@
+<div class="token-card">
+  <!-- ===== HEADER ===== -->
+  <div
+    class="card-header"
+    [class.has-drag-handle]="draggable"
+    (click)="toggleCollapse()"
+    role="button"
+    [attr.aria-expanded]="!isCollapsed()"
+  >
+    <!-- Left: drag handle (optional) + rank + symbol + price change -->
+    <div class="flex items-center gap-3">
+      @if (draggable) {
+        <span
+          class="drag-handle"
+          title="Drag to reorder"
+          (mouseenter)="dragHover.emit(true)"
+          (mouseleave)="dragHover.emit(false)"
+          (click)="$event.stopPropagation()"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="0" y1="6" x2="24" y2="6"></line>
+            <line x1="0" y1="12" x2="24" y2="12"></line>
+            <line x1="0" y1="18" x2="24" y2="18"></line>
+          </svg>
+        </span>
+      }
+
+      @if (index !== undefined) {
+        <span class="rank-badge">#{{ index + 1 }}</span>
+      }
+      <h2 class="token-symbol">{{ token.symbol }}</h2>
+      <span
+        class="price-change-badge"
+        [ngClass]="
+          token.priceChangePercent >= 0
+            ? 'bg-success/10 text-success'
+            : 'bg-danger/10 text-danger'
+        "
+      >
+        {{ token.priceChangePercent >= 0 ? '+' : ''
+        }}{{ token.priceChangePercent }}%
+      </span>
+    </div>
+
+    <!-- Right: action badge + buttons + collapse icon -->
+    <div class="flex items-center gap-2">
+      <span
+        class="action-badge"
+        [ngClass]="{
+          'bg-success/10 text-success': token.action === 'LONG',
+          'bg-danger/10 text-danger': token.action === 'SHORT',
+          'bg-black/10 text-text dark:bg-white/10': token.action === 'NEUTRAL',
+        }"
+      >
+        {{ token.action }}
+      </span>
+
+      <!-- AI Check Button -->
+      <button
+        (click)="onAiCheck($event)"
+        [disabled]="aiCheckState?.loading"
+        class="header-btn header-btn--primary"
+        [attr.title]="'FOLLOWED.AI_CHECK' | translate"
+      >
+        @if (aiCheckState?.loading) {
+          <svg
+            class="animate-spin h-3 w-3"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        }
+        <span translate="FOLLOWED.AI_CHECK">AI Check</span>
+      </button>
+
+      <!-- Position Button -->
+      <button
+        (click)="onOpenPosition($event)"
+        class="header-btn header-btn--outline"
+        [attr.title]="'FOLLOWED.POSITION' | translate"
+      >
+        <span translate="FOLLOWED.POSITION">Position</span>
+      </button>
+
+      <!-- Remove Button (optional) -->
+      @if (showRemoveButton) {
+        <button
+          (click)="onRemove($event)"
+          class="header-btn header-btn--danger"
+          [attr.title]="'FOLLOWED.REMOVE' | translate"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+            <path d="M10 11v6"></path>
+            <path d="M14 11v6"></path>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+          </svg>
+        </button>
+      }
+
+      <span class="collapse-icon" [class.rotated]="isCollapsed()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </span>
+    </div>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="card-body" [class.is-collapsed]="isCollapsed()">
+    <div class="detail-section">
+      <div class="detail-inner">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="stat-item">
+            <span class="stat-label" translate="SUGGESTION.VOLUME_24H"
+              >24h Vol (USDT)</span
+            >
+            <span class="stat-value">{{
+              token.volume24h | number: '1.0-0'
+            }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label" translate="SUGGESTION.FUNDING_RATE"
+              >Funding Rate</span
+            >
+            <span class="stat-value"
+              >{{ token.fundingRate * 100 | number: '1.4-4' }}%</span
+            >
+          </div>
+          <div class="stat-item">
+            <span class="stat-label" translate="SUGGESTION.TRADE_COUNT"
+              >Trade Count</span
+            >
+            <span class="stat-value">{{ token.tradeCount | number }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label" translate="SUGGESTION.SCORE"
+              >Quant Score</span
+            >
+            <span class="stat-value text-primary">{{
+              token.score | number: '1.0-0'
+            }}</span>
+          </div>
+        </div>
+
+        <!-- Analysis -->
+        <div class="reasoning-box mb-4">
+          <div
+            class="font-semibold text-sm mb-1 text-text"
+            translate="SUGGESTION.ANALYSIS"
+          >
+            Analysis
+          </div>
+          <p class="text-sm text-text-muted italic">"{{ token.reason }}"</p>
+        </div>
+
+        <!-- AI Check Result Section -->
+        <div class="ai-check-box">
+          @if (aiCheckState?.data; as aiResult) {
+            <div class="text-sm">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-text-muted">AI Suggestion:</span>
+                <span
+                  class="font-bold"
+                  [ngClass]="{
+                    'text-success': aiResult.action === 'LONG',
+                    'text-danger': aiResult.action === 'SHORT',
+                    'text-text': aiResult.action === 'NEUTRAL',
+                  }"
+                >
+                  {{ aiResult.action }}
+                </span>
+              </div>
+              <p class="text-text-muted italic">"{{ aiResult.reasoning }}"</p>
+            </div>
+          }
+          @if (aiCheckState?.error) {
+            <div class="text-sm text-danger">
+              Failed to get AI suggestion. Please try again.
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart (always visible) -->
+    <div class="chart-section">
+      <app-chart [symbol]="token.symbol" [syncGroup]="syncGroup"></app-chart>
+    </div>
+  </div>
+</div>

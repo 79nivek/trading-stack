@@ -1,8 +1,78 @@
-@reference '../../../styles.css';
+@reference "../../../styles.css";
 
-.page-title {
-  @apply text-2xl font-bold text-text;
+.followed-container {
+  /* Page-level container only */
 }
-.page-card {
-  @apply mt-4 p-4 bg-surface border border-border rounded-lg shadow-sm;
+
+/* ─── Cards grid ────────────────────────────────────────────────────────────── */
+.cards-grid {
+  @apply grid grid-cols-1 xl:grid-cols-2 gap-4;
+}
+
+/* ─── Drag-and-drop card wrapper ────────────────────────────────────────────── */
+.followed-card-wrapper {
+  @apply rounded-xl transition-all duration-200;
+
+  /* While being dragged — ghost effect */
+  &.dragging {
+    @apply opacity-40 scale-[0.98];
+  }
+
+  /* Drop target indicator — glowing border */
+  &.drag-over {
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
+    outline: 2px dashed var(--color-primary);
+    outline-offset: 4px;
+  }
+}
+
+/* ─── Autocomplete ──────────────────────────────────────────────────────────── */
+.autocomplete-wrapper {
+  @apply relative;
+}
+
+.search-input-wrap {
+  @apply flex items-center gap-2 bg-surface border border-border rounded-md
+         px-3 py-1.5 focus-within:ring-1 focus-within:ring-primary
+         focus-within:border-primary transition-all;
+
+  .search-icon {
+    @apply text-text-muted shrink-0;
+  }
+
+  .search-input {
+    @apply bg-transparent text-text text-sm outline-none w-48 placeholder:text-text-muted;
+  }
+
+  .clear-btn {
+    @apply text-text-muted text-xs hover:text-danger transition-colors shrink-0;
+  }
+}
+
+.autocomplete-dropdown {
+  @apply absolute top-full left-0 mt-1 z-50
+         bg-surface border border-border rounded-lg shadow-lg
+         max-h-60 overflow-y-auto min-w-full;
+
+  .dropdown-loading {
+    @apply flex items-center gap-2 px-4 py-3 text-sm text-text-muted;
+  }
+
+  .dropdown-item {
+    @apply px-4 py-2 text-sm text-text cursor-pointer
+           hover:bg-primary/10 hover:text-primary transition-colors;
+
+    &:first-child {
+      @apply rounded-t-lg;
+    }
+
+    &:last-child {
+      @apply rounded-b-lg;
+    }
+  }
+}
+
+/* ─── Empty state ───────────────────────────────────────────────────────────── */
+.empty-state {
+  @apply flex flex-col items-center justify-center text-center py-24;
 }

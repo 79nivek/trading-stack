@@ -10,24 +10,33 @@ import {
   ViewChild,
   inject,
   signal,
-  effect
+  effect,
 } from '@angular/core';
 
-import { createChart, IChartApi, ISeriesApi, Time, CandlestickSeries, HistogramSeries, LineSeries } from 'lightweight-charts';
-import { injectQueryClient } from '@tanstack/angular-query-experimental';
+import {
+  createChart,
+  IChartApi,
+  ISeriesApi,
+  Time,
+  CandlestickSeries,
+  HistogramSeries,
+  LineSeries,
+} from 'lightweight-charts';
 import { lastValueFrom, Subscription } from 'rxjs';
 import { BinanceFuturesApiService } from '../../../core/services/api/binance-futures-api.service';
 import { FuturesWebsocketService } from '../../../core/services/api/futures-websocket.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { ChartSyncService } from '../../../core/services/chart-sync.service';
 import { TimeframeService } from '../../../core/services/timeframe.service';
+import { ExchangeInfoService } from '../../../core/services/exchange.service';
+import { QueryClient } from '@tanstack/angular-query-experimental';
 
 @Component({
   selector: 'app-chart',
   standalone: true,
   imports: [DecimalPipe],
   templateUrl: './chart.component.html',
-  styleUrl: './chart.component.scss'
+  styleUrl: './chart.component.scss',
 })
 export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() symbol = '';
@@ -51,6 +60,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private themeService = inject(ThemeService);
   private chartSync = inject(ChartSyncService);
   private timeframeService = inject(TimeframeService);
+  exchangeInfoService = inject(ExchangeInfoService);
 
   private wsSubscription: Subscription | null = null;
   private syncCrosshairSub: Subscription | null = null;
@@ -91,7 +101,8 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     const symbolChanged = changes['symbol'] && !changes['symbol'].firstChange;
-    const syncGroupChanged = changes['syncGroup'] && !changes['syncGroup'].firstChange;
+    const syncGroupChanged =
+      changes['syncGroup'] && !changes['syncGroup'].firstChange;
 
     if (symbolChanged) {
       if (this.chart) {
@@ -143,7 +154,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
           this.chart.setCrosshairPosition(
             0,
             event.time as Time,
-            this.candlestickSeries!
+            this.candlestickSeries!,
           );
         } else {
           this.chart.clearCrosshairPosition();
@@ -169,18 +180,14 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private async applyBinanceFormatting(): Promise<void> {
     if (!this.symbol) return;
     try {
-      const info = await this.queryClient.fetchQuery({
-        queryKey: ['exchangeInfo', this.symbol],
-        queryFn: () => lastValueFrom(this.binanceApi.getExchangeInfo(this.symbol!)),
-        staleTime: Infinity,
-      });
+      const info = await this.exchangeInfoService.getExchangeInfo(this.symbol);
       if (this.candlestickSeries) {
         this.candlestickSeries.applyOptions({
           priceFormat: {
             type: 'price',
-            precision: info.pricePrecision,
-            minMove: parseFloat(info.tickSize),
-          }
+            precision: info?.pricePrecision,
+            minMove: info?.tickSize ?? 0,
+          },
         });
       }
     } catch (err) {
@@ -199,8 +206,12 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         textColor: isDark ? '#d1d5db' : '#374151',
       },
       grid: {
-        vertLines: { color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)' },
-        horzLines: { color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)' },
+        vertLines: {
+          color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+        },
+        horzLines: {
+          color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+        },
       },
       rightPriceScale: {
         borderColor: isDark ? 'rgba(197, 203, 206, 0.8)' : 'rgba(0, 0, 0, 0.2)',
@@ -230,9 +241,27 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       priceScaleId: '',
     });
 
-    this.ma7Series = this.chart.addSeries(LineSeries, { color: '#f59e0b', lineWidth: 1, crosshairMarkerVisible: false, lastValueVisible: false, priceLineVisible: false });
-    this.ma25Series = this.chart.addSeries(LineSeries, { color: '#3b82f6', lineWidth: 1, crosshairMarkerVisible: false, lastValueVisible: false, priceLineVisible: false });
-    this.ma99Series = this.chart.addSeries(LineSeries, { color: '#ec4899', lineWidth: 1, crosshairMarkerVisible: false, lastValueVisible: false, priceLineVisible: false });
+    this.ma7Series = this.chart.addSeries(LineSeries, {
+      color: '#f59e0b',
+      lineWidth: 1,
+      crosshairMarkerVisible: false,
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+    this.ma25Series = this.chart.addSeries(LineSeries, {
+      color: '#3b82f6',
+      lineWidth: 1,
+      crosshairMarkerVisible: false,
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+    this.ma99Series = this.chart.addSeries(LineSeries, {
+      color: '#ec4899',
+      lineWidth: 1,
+      crosshairMarkerVisible: false,
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
 
     // Crosshair move: cập nhật legend + broadcast sync
     this.chart.subscribeCrosshairMove((param) => {
@@ -296,30 +325,38 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       },
     });
 
-    const resizeObserver = new ResizeObserver(entries => {
-      if (entries.length === 0 || entries[0].target !== this.chartContainer.nativeElement) {
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (
+        entries.length === 0 ||
+        entries[0].target !== this.chartContainer.nativeElement
+      ) {
         return;
       }
       const newRect = entries[0].contentRect;
-      this.chart?.applyOptions({ width: newRect.width, height: newRect.height });
+      this.chart?.applyOptions({
+        width: newRect.width,
+        height: newRect.height,
+      });
     });
     resizeObserver.observe(this.chartContainer.nativeElement);
 
     // Zoom/pan: load thêm dữ liệu + broadcast sync
-    this.chart.timeScale().subscribeVisibleLogicalRangeChange(logicalRange => {
-      if (logicalRange !== null && logicalRange.from < 10) {
-        this.loadMoreHistoricalData();
-      }
+    this.chart
+      .timeScale()
+      .subscribeVisibleLogicalRangeChange((logicalRange) => {
+        if (logicalRange !== null && logicalRange.from < 10) {
+          this.loadMoreHistoricalData();
+        }
 
-      // Broadcast zoom sang chart khác
-      if (!this.isSyncingZoom && this.syncGroup) {
-        this.chartSync.emitZoom({
-          groupId: this.syncGroup,
-          sourceId: this.instanceId,
-          range: logicalRange,
-        });
-      }
-    });
+        // Broadcast zoom sang chart khác
+        if (!this.isSyncingZoom && this.syncGroup) {
+          this.chartSync.emitZoom({
+            groupId: this.syncGroup,
+            sourceId: this.instanceId,
+            range: logicalRange,
+          });
+        }
+      });
 
     // Đăng ký sync events sau khi chart đã khởi tạo xong
     this.subscribeSyncEvents();
@@ -334,21 +371,28 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         textColor: isDark ? '#d1d5db' : '#374151',
       },
       grid: {
-        vertLines: { color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)' },
-        horzLines: { color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)' },
+        vertLines: {
+          color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+        },
+        horzLines: {
+          color: isDark ? 'rgba(42, 46, 57, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+        },
       },
       rightPriceScale: {
         borderColor: isDark ? 'rgba(197, 203, 206, 0.8)' : 'rgba(0, 0, 0, 0.2)',
       },
       timeScale: {
         borderColor: isDark ? 'rgba(197, 203, 206, 0.8)' : 'rgba(0, 0, 0, 0.2)',
-      }
+      },
     });
   }
 
-  private queryClient = injectQueryClient();
+  private queryClient = inject(QueryClient);
 
-  private calculateSMA(data: any[], period: number): { time: Time; value: number }[] {
+  private calculateSMA(
+    data: any[],
+    period: number,
+  ): { time: Time; value: number }[] {
     const smaData = [];
     for (let i = period - 1; i < data.length; i++) {
       let sum = 0;
@@ -410,26 +454,42 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     if (this.ma99Series) this.ma99Series.setData([]);
 
     try {
-      const data = await this.queryClient.fetchQuery({
+      const exchangeInfo = await this.exchangeInfoService.getExchangeInfo(
+        this.symbol,
+      );
+      const data = await this.queryClient.query({
         queryKey: ['klines', this.symbol, tf, 500, 'latest'],
-        queryFn: () => lastValueFrom(this.binanceApi.getKlines(this.symbol!, tf)),
+        queryFn: () =>
+          lastValueFrom(
+            this.binanceApi.getKlines(
+              this.symbol,
+              {
+                interval: tf,
+                limit: 500,
+              },
+              {
+                pricePrecision: exchangeInfo.pricePrecision,
+                tickSize: exchangeInfo.tickSize,
+              },
+            ),
+          ),
         staleTime: 1000 * 60 * 5,
       });
 
       if (this.candlestickSeries && this.volumeSeries && data.length > 0) {
         this.earliestTime = data[0].time as number;
 
-        this.currentData = data.map(d => ({
+        this.currentData = data.map((d) => ({
           time: d.time as Time,
           open: d.open,
           high: d.high,
           low: d.low,
           close: d.close,
         }));
-        this.currentVolumeData = data.map(d => ({
+        this.currentVolumeData = data.map((d) => ({
           time: d.time as Time,
           value: d.volume,
-          color: d.close >= d.open ? '#26a69a80' : '#ef535080'
+          color: d.close >= d.open ? '#26a69a80' : '#ef535080',
         }));
 
         this.candlestickSeries.setData(this.currentData);
@@ -449,29 +509,46 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     if (!this.symbol || !tf || this.isLoadingMore || !this.earliestTime) return;
 
     this.isLoadingMore = true;
-    const endTime = (this.earliestTime * 1000) - 1;
+    const endTime = this.earliestTime * 1000 - 1;
 
     try {
-      const data = await this.queryClient.fetchQuery({
+      const exchangeInfo = await this.exchangeInfoService.getExchangeInfo(
+        this.symbol,
+      );
+      const data = await this.queryClient.query({
         queryKey: ['klines', this.symbol, tf, 500, endTime],
-        queryFn: () => lastValueFrom(this.binanceApi.getKlines(this.symbol!, tf, 500, endTime)),
+        queryFn: () =>
+          lastValueFrom(
+            this.binanceApi.getKlines(
+              this.symbol!,
+              {
+                interval: tf,
+                limit: 500,
+                endTime,
+              },
+              {
+                pricePrecision: exchangeInfo.pricePrecision,
+                tickSize: exchangeInfo.tickSize,
+              },
+            ),
+          ),
         staleTime: Infinity,
       });
 
       if (this.candlestickSeries && this.volumeSeries && data.length > 0) {
         this.earliestTime = data[0].time as number;
 
-        const olderCandles = data.map(d => ({
+        const olderCandles = data.map((d) => ({
           time: d.time as Time,
           open: d.open,
           high: d.high,
           low: d.low,
           close: d.close,
         }));
-        const olderVolumes = data.map(d => ({
+        const olderVolumes = data.map((d) => ({
           time: d.time as Time,
           value: d.volume,
-          color: d.close >= d.open ? '#26a69a80' : '#ef535080'
+          color: d.close >= d.open ? '#26a69a80' : '#ef535080',
         }));
 
         this.currentData = [...olderCandles, ...this.currentData];
@@ -510,7 +587,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
           const volume = {
             time: kline.time as Time,
             value: kline.volume,
-            color: kline.close >= kline.open ? '#26a69a80' : '#ef535080'
+            color: kline.close >= kline.open ? '#26a69a80' : '#ef535080',
           };
 
           // Prevent Lightweight Charts assertion error for out-of-order ticks
@@ -519,7 +596,9 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
             const lastTime = this.currentData[lastCandleIndex].time as number;
             const newTime = candle.time as number;
             if (newTime < lastTime) {
-              console.warn(`[Chart WS] Ignoring out-of-order tick for ${this.symbol}. Last: ${lastTime}, New: ${newTime}`);
+              console.warn(
+                `[Chart WS] Ignoring out-of-order tick for ${this.symbol}. Last: ${lastTime}, New: ${newTime}`,
+              );
               return;
             }
           }
@@ -538,7 +617,9 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
               this.currentVolumeData.push(volume);
             } else {
               // Out of order: find correct position or update existing
-              const existingIndex = this.currentData.findIndex(c => c.time === candle.time);
+              const existingIndex = this.currentData.findIndex(
+                (c) => c.time === candle.time,
+              );
               if (existingIndex !== -1) {
                 this.currentData[existingIndex] = candle;
                 this.currentVolumeData[existingIndex] = volume;
@@ -546,8 +627,12 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
                 this.currentData.push(candle);
                 this.currentVolumeData.push(volume);
                 // Re-sort to enforce strict ascending order
-                this.currentData.sort((a, b) => (a.time as number) - (b.time as number));
-                this.currentVolumeData.sort((a, b) => (a.time as number) - (b.time as number));
+                this.currentData.sort(
+                  (a, b) => (a.time as number) - (b.time as number),
+                );
+                this.currentVolumeData.sort(
+                  (a, b) => (a.time as number) - (b.time as number),
+                );
               }
             }
           } else {
@@ -556,14 +641,17 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
           }
 
           this.updateMAs();
-          if (!this.hoveredData() || this.hoveredData()?.candle?.time === candle.time) {
+          if (
+            !this.hoveredData() ||
+            this.hoveredData()?.candle?.time === candle.time
+          ) {
             this.updateHoveredDataWithLatest();
           }
         }
       },
       error: (err) => {
         console.error(`WebSocket error for ${this.symbol}:`, err);
-      }
+      },
     });
   }
 }

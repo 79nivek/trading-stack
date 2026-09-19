@@ -9,6 +9,7 @@ import { UsersModule } from '../modules/users/users.module';
 import { BinanceCredentialsModule } from '../modules/binance-credentials/binance-credentials.module';
 import { UserSettingsModule } from '../modules/user-settings/user-settings.module';
 import { SuggestionsModule } from '../modules/suggestions/suggestions.module';
+import { FollowedSymbolsModule } from '../modules/followed-symbols/followed-symbols.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
@@ -37,6 +38,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     BinanceCredentialsModule,
     UserSettingsModule,
     SuggestionsModule,
+    FollowedSymbolsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

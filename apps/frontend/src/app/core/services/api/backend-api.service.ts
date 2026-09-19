@@ -13,6 +13,9 @@ import {
   TokenSuggestionDto,
   SuggestionPositionResponseDto,
   PlacePositionDto,
+  FollowedSymbolDto,
+  CreateFollowedSymbolDto,
+  ReorderFollowedSymbolsDto,
 } from '@trading-stack/shared-dto';
 
 export interface UserProfile {
@@ -270,7 +273,46 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http.post<any>(
       `${ENV.BACKEND_URL}/api/v1/binance-credentials/place-position`,
       setup,
-      { ...this.useAuth() },
+      { ...this.useAuth(true) },
+    );
+  }
+
+  // ─── Followed Symbols ─────────────────────────────────────────────────────
+
+  getFollowedSymbols(): Observable<FollowedSymbolDto[]> {
+    return this.http.get<FollowedSymbolDto[]>(
+      `${ENV.BACKEND_URL}/api/v1/followed-symbols`,
+      { ...this.useAuth(), ...skipSpinnerOptions() },
+    );
+  }
+
+  addFollowedSymbol(dto: CreateFollowedSymbolDto): Observable<FollowedSymbolDto> {
+    return this.http.post<FollowedSymbolDto>(
+      `${ENV.BACKEND_URL}/api/v1/followed-symbols`,
+      dto,
+      { ...this.useAuth(), ...skipSpinnerOptions() },
+    );
+  }
+
+  removeFollowedSymbol(id: string): Observable<void> {
+    return this.http.delete<void>(
+      `${ENV.BACKEND_URL}/api/v1/followed-symbols/${id}`,
+      { ...this.useAuth(), ...skipSpinnerOptions() },
+    );
+  }
+
+  getFollowedSymbolsData(): Observable<TokenSuggestionDto[]> {
+    return this.http.get<TokenSuggestionDto[]>(
+      `${ENV.BACKEND_URL}/api/v1/followed-symbols/data`,
+      { ...this.useAuth(), ...skipSpinnerOptions() },
+    );
+  }
+
+  reorderFollowedSymbols(dto: ReorderFollowedSymbolsDto): Observable<void> {
+    return this.http.patch<void>(
+      `${ENV.BACKEND_URL}/api/v1/followed-symbols/reorder`,
+      dto,
+      { ...this.useAuth(), ...skipSpinnerOptions() },
     );
   }
 }

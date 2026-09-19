@@ -101,5 +101,15 @@
     "SUGGESTION": "Suggestions",
     "SETTING": "Settings",
     "PROFILE": "Profile"
+  },
+  "FOLLOWED": {
+    "TITLE": "Followed Symbols",
+    "SEARCH_PLACEHOLDER": "Search symbol (e.g. BTCUSDT)…",
+    "NO_DATA": "No followed symbols yet. Use the search above to add one.",
+    "REMOVE": "Remove",
+    "AI_CHECK": "AI Check",
+    "POSITION": "Position",
+    "ADD_SYMBOL": "Add Symbol",
+    "LOADING_SYMBOLS": "Loading symbols…"
   }
 }

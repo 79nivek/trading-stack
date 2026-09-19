@@ -1,0 +1,132 @@
+@reference "../../../../styles.css";
+
+.token-card {
+  @apply bg-surface rounded-xl shadow-sm border border-border overflow-hidden flex flex-col;
+
+  .card-header {
+    @apply px-6 py-4 border-b border-border bg-black/5 dark:bg-white/5
+           flex justify-between items-center cursor-pointer select-none
+           transition-colors duration-150 flex-wrap gap-2;
+
+    &:hover {
+      @apply bg-black/10 dark:bg-white/10;
+    }
+
+    /* When card has a drag handle, only the handle triggers drag — header still collapses on click */
+    &.has-drag-handle {
+      @apply cursor-default;
+    }
+
+    .drag-handle {
+      @apply text-text-muted cursor-grab active:cursor-grabbing
+             hover:text-primary transition-colors shrink-0 flex items-center
+             px-1 py-1 rounded;
+
+      &:hover {
+        @apply bg-primary/10;
+      }
+    }
+
+    .rank-badge {
+      @apply bg-primary/10 text-primary font-bold px-2 py-1 rounded text-sm;
+    }
+
+    .token-symbol {
+      @apply text-xl font-bold text-text;
+    }
+
+    .price-change-badge {
+      @apply px-2 py-1 text-xs font-semibold rounded;
+    }
+
+    .action-badge {
+      @apply text-sm font-bold px-3 py-1 rounded-full uppercase;
+    }
+
+    .header-btn {
+      @apply px-3 py-1 text-xs font-medium rounded transition-colors
+             flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed;
+
+      &--primary {
+        @apply bg-primary text-white hover:bg-primary/90;
+      }
+
+      &--outline {
+        @apply bg-surface border border-primary text-primary hover:bg-primary/10;
+      }
+
+      &--danger {
+        @apply bg-danger/10 text-danger border border-danger/20
+               hover:bg-danger/20;
+      }
+    }
+
+    .collapse-icon {
+      @apply text-text-muted transition-transform duration-300 flex items-center;
+
+      &.rotated {
+        @apply rotate-180;
+      }
+    }
+  }
+
+  .card-body {
+    @apply flex flex-col flex-1;
+
+    /* Detail section: slide up/down with CSS grid trick */
+    .detail-section {
+      display: grid;
+      grid-template-rows: 1fr;
+      overflow: hidden;
+      transition:
+        grid-template-rows 0.3s ease,
+        opacity 0.3s ease,
+        margin-bottom 0.3s ease;
+      opacity: 1;
+    }
+
+    /* When collapsed: hide detail */
+    &.is-collapsed {
+      .detail-section {
+        grid-template-rows: 0fr;
+        opacity: 0;
+        margin-bottom: 0;
+      }
+
+      .detail-section .detail-inner {
+        padding: 0;
+      }
+    }
+
+    /* Inner wrapper needs overflow: hidden for grid trick to work */
+    .detail-section .detail-inner {
+      overflow: hidden;
+      min-height: 0;
+      padding: 1rem;
+    }
+
+    .chart-section {
+      @apply h-[400px];
+    }
+
+    .stat-item {
+      @apply flex flex-col;
+
+      .stat-label {
+        @apply text-xs font-medium text-text-muted uppercase tracking-wider mb-1;
+      }
+
+      .stat-value {
+        @apply text-lg font-bold text-text;
+      }
+    }
+
+    .reasoning-box {
+      @apply mt-2 p-4 bg-primary/5 border border-primary/20 rounded-lg;
+    }
+
+    .ai-check-box {
+      @apply bg-surface/50 border border-border p-4 rounded-lg;
+    }
+  }
+}
