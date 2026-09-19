@@ -3,7 +3,7 @@ import { KlineData } from '@trading-stack/shared-dto';
 import { Observable, Subject, Subscription, timer } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { ENV } from '../../environments';
+import { ENV } from '../../../environments';
 
 type StreamPayload = {
   stream: string; //  "stream" = vthousdt@kline_1m;

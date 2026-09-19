@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { KlineData } from '@trading-stack/shared-dto';
 
-import { skipSpinnerOptions } from '../interceptors/spinner.interceptor';
+import { skipSpinnerOptions } from '../../interceptors/spinner.interceptor';
 
 @Injectable({
   providedIn: 'root'

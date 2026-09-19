@@ -3,7 +3,7 @@ import { lastValueFrom } from "rxjs";
 import { Component, inject } from '@angular/core';
 
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { BackendApiService } from '../../core/services/backend-api.service';
+import { BackendApiService } from '../../core/services/api/backend-api.service';
 import { Router, RouterModule } from '@angular/router';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { ButtonComponent } from '../../shared/components/button/button.component';

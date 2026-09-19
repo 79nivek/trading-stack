@@ -6,7 +6,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { PopupService } from '../../core/services/popup.service';
-import { BackendApiService } from '../../core/services/backend-api.service';
+import { BackendApiService } from '../../core/services/api/backend-api.service';
 import { REGEX } from '../../core/constants/regex.constants';
 import { ERROR_MESSAGES } from '../../core/constants/error.constants';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';

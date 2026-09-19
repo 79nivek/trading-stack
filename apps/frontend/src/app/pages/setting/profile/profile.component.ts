@@ -10,7 +10,7 @@ import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { injectMutation } from '@tanstack/angular-query-experimental';
 import { lastValueFrom } from 'rxjs';
 
-import { BackendApiService } from '../../../core/services/backend-api.service';
+import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import { ModalService } from '../../../core/services/modal.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ResetPasswordComponent } from '../../reset-password/reset-password.component';

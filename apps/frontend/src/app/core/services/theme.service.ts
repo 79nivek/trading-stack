@@ -1,6 +1,6 @@
 import { Injectable, signal, effect, inject, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
-import { BackendApiService } from './backend-api.service';
+import { BackendApiService } from './api/backend-api.service';
 
 export type Theme = 'light' | 'dark' | 'auto';
 
@@ -10,7 +10,7 @@ export type Theme = 'light' | 'dark' | 'auto';
 export class ThemeService {
   private storage = inject(StorageService);
   private injector = inject(Injector);
-  
+
   theme = signal<Theme>((this.storage.theme.get() as Theme) || 'auto');
 
   constructor() {
@@ -59,7 +59,7 @@ export class ThemeService {
     if (current === 'light') next = 'dark';
     else if (current === 'dark') next = 'auto';
     else if (current === 'auto') next = 'light';
-    
+
     this.setTheme(next);
   }
 }

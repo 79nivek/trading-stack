@@ -1,7 +1,7 @@
 import { Injectable, signal, effect, inject, Injector } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { StorageService } from './storage.service';
-import { BackendApiService } from './backend-api.service';
+import { BackendApiService } from './api/backend-api.service';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +16,7 @@ export class LanguageService {
   constructor() {
     this.translate.addLangs(['en', 'vi']);
     this.translate.setFallbackLang('en');
-    
+
     effect(() => {
       const currentLang = this.language();
       this.translate.use(currentLang);

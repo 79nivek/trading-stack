@@ -16,7 +16,7 @@ import {
   DropdownComponent,
   DropdownItem,
 } from '../../shared/components/dropdown/dropdown.component';
-import { BackendApiService } from '../../core/services/backend-api.service';
+import { BackendApiService } from '../../core/services/api/backend-api.service';
 import { APP_PATHS } from '../../core/constants/routes.constants';
 import { SecretKeyService } from '../../core/services/secret-key.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -27,6 +27,7 @@ import {
   Timeframe,
 } from '../../core/services/timeframe.service';
 import { FormsModule } from '@angular/forms';
+import { LayoutService } from '../../core/services/layout.service';
 
 @Component({
   selector: 'app-authenticated-layout',
@@ -55,6 +56,8 @@ export class AuthenticatedLayoutComponent {
   private langService = inject(LanguageService);
   private timeframeService = inject(TimeframeService);
   public pageTitleStrategy = inject(PageTitleStrategy);
+
+  public layoutService = inject(LayoutService);
 
   masterTokenInput = '';
   isVerifyingToken = false;

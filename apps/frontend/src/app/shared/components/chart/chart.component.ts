@@ -16,8 +16,8 @@ import {
 import { createChart, IChartApi, ISeriesApi, Time, CandlestickSeries, HistogramSeries, LineSeries } from 'lightweight-charts';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
 import { lastValueFrom, Subscription } from 'rxjs';
-import { BinanceFuturesApiService } from '../../../core/services/binance-futures-api.service';
-import { FuturesWebsocketService } from '../../../core/services/futures-websocket.service';
+import { BinanceFuturesApiService } from '../../../core/services/api/binance-futures-api.service';
+import { FuturesWebsocketService } from '../../../core/services/api/futures-websocket.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { ChartSyncService } from '../../../core/services/chart-sync.service';
 import { TimeframeService } from '../../../core/services/timeframe.service';
@@ -390,12 +390,24 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   private earliestTime: number | null = null;
   private isLoadingMore = false;
+  private isInitializing = false;
   private currentData: any[] = [];
   private currentVolumeData: any[] = [];
 
   private async loadHistoricalData(): Promise<void> {
     const tf = this.timeframeService.timeframe();
     if (!this.symbol || !tf) return;
+
+    // Clear existing data immediately to prevent race conditions during fetch
+    this.currentData = [];
+    this.currentVolumeData = [];
+    this.earliestTime = null;
+    this.isInitializing = true;
+    if (this.candlestickSeries) this.candlestickSeries.setData([]);
+    if (this.volumeSeries) this.volumeSeries.setData([]);
+    if (this.ma7Series) this.ma7Series.setData([]);
+    if (this.ma25Series) this.ma25Series.setData([]);
+    if (this.ma99Series) this.ma99Series.setData([]);
 
     try {
       const data = await this.queryClient.fetchQuery({
@@ -427,6 +439,8 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       }
     } catch (err) {
       console.error(`Failed to load historical data for ${this.symbol}:`, err);
+    } finally {
+      this.isInitializing = false;
     }
   }
 
@@ -484,6 +498,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.wsService.setTimeFrame(tf);
     this.wsSubscription = this.wsService.register(this.symbol, tf).subscribe({
       next: (kline) => {
+        if (this.isInitializing) return; // Skip realtime ticks while fetching history to prevent out-of-order data
         if (this.candlestickSeries && this.volumeSeries) {
           const candle = {
             time: kline.time as Time,
@@ -498,13 +513,43 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
             color: kline.close >= kline.open ? '#26a69a80' : '#ef535080'
           };
 
+          // Prevent Lightweight Charts assertion error for out-of-order ticks
+          const lastCandleIndex = this.currentData.length - 1;
+          if (lastCandleIndex >= 0) {
+            const lastTime = this.currentData[lastCandleIndex].time as number;
+            const newTime = candle.time as number;
+            if (newTime < lastTime) {
+              console.warn(`[Chart WS] Ignoring out-of-order tick for ${this.symbol}. Last: ${lastTime}, New: ${newTime}`);
+              return;
+            }
+          }
+
           this.candlestickSeries.update(candle);
           this.volumeSeries.update(volume);
+          if (lastCandleIndex >= 0) {
+            const lastTime = this.currentData[lastCandleIndex].time as number;
+            const newTime = candle.time as number;
 
-          const lastCandleIndex = this.currentData.length - 1;
-          if (lastCandleIndex >= 0 && this.currentData[lastCandleIndex].time === candle.time) {
-            this.currentData[lastCandleIndex] = candle;
-            this.currentVolumeData[lastCandleIndex] = volume;
+            if (newTime === lastTime) {
+              this.currentData[lastCandleIndex] = candle;
+              this.currentVolumeData[lastCandleIndex] = volume;
+            } else if (newTime > lastTime) {
+              this.currentData.push(candle);
+              this.currentVolumeData.push(volume);
+            } else {
+              // Out of order: find correct position or update existing
+              const existingIndex = this.currentData.findIndex(c => c.time === candle.time);
+              if (existingIndex !== -1) {
+                this.currentData[existingIndex] = candle;
+                this.currentVolumeData[existingIndex] = volume;
+              } else {
+                this.currentData.push(candle);
+                this.currentVolumeData.push(volume);
+                // Re-sort to enforce strict ascending order
+                this.currentData.sort((a, b) => (a.time as number) - (b.time as number));
+                this.currentVolumeData.sort((a, b) => (a.time as number) - (b.time as number));
+              }
+            }
           } else {
             this.currentData.push(candle);
             this.currentVolumeData.push(volume);

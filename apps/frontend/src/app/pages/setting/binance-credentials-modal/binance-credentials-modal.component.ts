@@ -6,7 +6,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ModalService } from '../../../core/services/modal.service';
-import { BackendApiService } from '../../../core/services/backend-api.service';
+import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PopupService } from '../../../core/services/popup.service';
 
@@ -52,22 +52,22 @@ export class BinanceCredentialsModalComponent {
     mutationFn: (credentials: any) => lastValueFrom(this.api.saveBinanceCredentials(credentials)),
     onSuccess: (res: any) => {
       this.modalService.close();
-        
+
       // Show secure token to the user
       this.popup.open({
         title: 'IMPORTANT: Master Token',
         message: `Your Binance credentials have been securely encrypted. To decrypt them and execute trades, you MUST use the following Master Token:\n\n${res.token}\n\nWARNING: This token is shown ONLY ONCE. If you lose it, your credentials cannot be recovered and you will have to set them up again. Save it securely!`,
         buttons: [
-          { 
-            text: 'Copy Token', 
-            type: 'info', 
+          {
+            text: 'Copy Token',
+            type: 'info',
             action: () => {
               navigator.clipboard.writeText(res.token).then(() => {
                 this.toast.show('Token copied to clipboard', 'success');
               }).catch(() => {
                 this.toast.show('Failed to copy token', 'danger');
               });
-            } 
+            }
           },
           { text: 'I have saved it', type: 'primary', action: () => this.popup.close() }
         ]
@@ -83,7 +83,7 @@ export class BinanceCredentialsModalComponent {
       this.form.markAllAsTouched();
       return;
     }
-    
+
     this.permissions = null; // reset before check
     this.checkMutation.mutate(this.form.value);
   }
@@ -93,7 +93,7 @@ export class BinanceCredentialsModalComponent {
       this.form.markAllAsTouched();
       return;
     }
-    
+
     this.saveMutation.mutate(this.form.value);
   }
 }

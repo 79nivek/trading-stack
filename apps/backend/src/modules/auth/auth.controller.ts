@@ -12,7 +12,7 @@ import {
   ResetPasswordDto,
   SignUpDto,
 } from '@trading-stack/shared-dto';
-import { Token } from '../../decorators/token.decorator';
+import { BearerToken } from '../../decorators/bearer-token.decorator';
 import { GetUser } from '../../decorators/user.decorator';
 import { User } from '../users/user.entity';
 
@@ -39,7 +39,7 @@ export class AuthController {
 
   @Post('logout')
   @RequireAuth()
-  async logout(@Token() token: string) {
+  async logout(@BearerToken() token: string) {
     return this.authService.logout(token);
   }
 

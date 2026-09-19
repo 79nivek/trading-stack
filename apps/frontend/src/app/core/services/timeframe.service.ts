@@ -1,6 +1,6 @@
 import { Injectable, signal, inject, Injector } from '@angular/core';
 
-import { BackendApiService } from './backend-api.service';
+import { BackendApiService } from './api/backend-api.service';
 
 export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '6h' | '12h' | '24h' | '1d';
 const TIMEFRAMES: Timeframe[] = ['1m', '5m', '15m', '30m', '1h', '4h', '6h', '12h', '1d'];

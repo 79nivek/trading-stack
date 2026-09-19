@@ -8,7 +8,7 @@ import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { ModalService } from '../../core/services/modal.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BackendApiService } from '../../core/services/backend-api.service';
+import { BackendApiService } from '../../core/services/api/backend-api.service';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { ResetPasswordDto } from '@trading-stack/shared-dto';
 

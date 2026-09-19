@@ -20,22 +20,6 @@ class Configuration {
   @IsOptional()
   JWT_SECRET = process.env['JWT_SECRET'] || 'default-secret';
 
-  // Binance API credentials — Ed25519 (for User Data Stream via WebSocket API v3)
-  @IsString()
-  @IsOptional()
-  BINANCE_API_KEY = process.env['BINANCE_API_KEY'] || '';
-
-  @IsString()
-  @IsOptional()
-  BINANCE_PRIVATE_KEY = (process.env['BINANCE_PRIVATE_KEY'] || '').replace(
-    /\\n/g,
-    '\n',
-  );
-
-  @IsString()
-  @IsOptional()
-  DISCORD_TOKEN = process.env['DISCORD_TOKEN'] || '';
-
   // Postgres Configuration
   @IsString()
   @IsOptional()
@@ -59,34 +43,11 @@ class Configuration {
 
   @IsString()
   @IsOptional()
-  DISCORD_WEBHOOK_SPOT = process.env['DISCORD_WEBHOOK_SPOT'] || '';
+  OLLAMA_HOST = process.env['OLLAMA_HOST'] || '';
 
   @IsString()
   @IsOptional()
-  DISCORD_WEBHOOK_FUTURES = process.env['DISCORD_WEBHOOK_FUTURES'] || '';
-
-  @IsString()
-  @IsOptional()
-  DISCORD_WEBHOOK_FUTURES_EVENT =
-    process.env['DISCORD_WEBHOOK_FUTURES_EVENT'] || '';
-
-  @IsNumber()
-  @IsOptional()
-  MAX_OPEN_POSITIONS = Number(process.env['MAX_OPEN_POSITIONS'] || 3);
-
-  @IsNumber()
-  @IsOptional()
-  QUICK_TAKE_PROFIT_USDT = Number(process.env['QUICK_TAKE_PROFIT_USDT'] || 10);
-
-  @IsNumber()
-  @IsOptional()
-  ULTIMATE_INSURANCE_BALANCE_USDT = Number(
-    process.env['ULTIMATE_INSURANCE_BALANCE_USDT'] || 1950,
-  );
-
-  @IsNumber()
-  @IsOptional()
-  TOKEN_COOLDOWN_MINUTES = Number(process.env['TOKEN_COOLDOWN_MINUTES'] || 15);
+  OLLAMA_MODEL = process.env['OLLAMA_MODEL'] || '';
 
   validate(): void {
     const errors = validateSync(this);

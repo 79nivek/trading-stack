@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { BackendApiService } from '../services/backend-api.service';
+import { BackendApiService } from '../services/api/backend-api.service';
 import { APP_PATHS } from '../constants/routes.constants';
 import { map } from 'rxjs/operators';
 
