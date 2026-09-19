@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateDirective } from '@ngx-translate/core';
 import { BackendApiService } from '../../core/services/api/backend-api.service';
@@ -21,10 +21,7 @@ import { BaseLayoutComponent } from '../../shared/classes/base-layout';
   templateUrl: './suggestion.component.html',
   styleUrl: './suggestion.component.scss',
 })
-export class SuggestionPageComponent
-  extends BaseLayoutComponent
-  implements OnInit
-{
+export class SuggestionPageComponent extends BaseLayoutComponent {
   private backendApi = inject(BackendApiService);
   private queryClient = inject(QueryClient);
   private modalService = inject(ModalService);
@@ -47,7 +44,8 @@ export class SuggestionPageComponent
       this.queryClient.invalidateQueries({ queryKey: ['settings'] }),
   }));
 
-  ngOnInit(): void {
+  constructor() {
+    super();
     effect(
       () => {
         const settings = this.settingsQuery.data();
