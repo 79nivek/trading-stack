@@ -2,7 +2,7 @@ import {
   Component,
   inject,
   signal,
-  computed,
+  OnInit,
   OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -13,8 +13,7 @@ import {
   injectMutation,
   QueryClient,
 } from '@tanstack/angular-query-experimental';
-import { Subject, lastValueFrom } from 'rxjs';
-import { debounceTime, takeUntil } from 'rxjs/operators';
+import { lastValueFrom } from 'rxjs';
 
 import { BackendApiService } from '../../core/services/api/backend-api.service';
 import { BinanceFuturesApiService } from '../../core/services/api/binance-futures-api.service';
@@ -27,6 +26,7 @@ import {
 } from '../../shared/components/token-card/token-card.component';
 import { SuggestionPositionModal } from '../suggestion/suggestion-position/suggestion-position.modal';
 import { TokenSuggestionDto, FollowedSymbolDto } from '@trading-stack/shared-dto';
+import { AutoCompleteComponent } from '../../shared/components/auto-complete/auto-complete.component';
 
 /** Pairs token market data with its followed-symbol record for rendering */
 export interface FollowedTokenEntry {
@@ -43,33 +43,21 @@ export interface FollowedTokenEntry {
     TranslateDirective,
     TranslatePipe,
     TokenCardComponent,
-  ],
+    AutoCompleteComponent
+],
   templateUrl: './followed.component.html',
   styleUrl: './followed.component.scss',
 })
-export class FollowedPageComponent extends BaseLayoutComponent implements OnDestroy {
+export class FollowedPageComponent extends BaseLayoutComponent implements OnInit, OnDestroy {
   private backendApi = inject(BackendApiService);
   private binanceApi = inject(BinanceFuturesApiService);
   private modalService = inject(ModalService);
   private toastService = inject(ToastService);
   private queryClient = inject(QueryClient);
-  private destroy$ = new Subject<void>();
-
   // ─── Search / Autocomplete ─────────────────────────────────────────────────
 
-  searchText = signal<string>('');
   allBinanceSymbols = signal<string[]>([]);
   symbolsLoaded = signal<boolean>(false);
-  showDropdown = signal<boolean>(false);
-
-  private searchSubject = new Subject<string>();
-
-  filteredSymbols = computed<string[]>(() => {
-    const query = this.searchText().toUpperCase().trim();
-    const all = this.allBinanceSymbols();
-    if (!query || all.length === 0) return all.slice(0, 30);
-    return all.filter((s) => s.includes(query)).slice(0, 30);
-  });
 
   // ─── Drag-and-drop state ───────────────────────────────────────────────────
 
@@ -82,15 +70,24 @@ export class FollowedPageComponent extends BaseLayoutComponent implements OnDest
 
   constructor() {
     super();
-    this.searchSubject
-      .pipe(debounceTime(200), takeUntil(this.destroy$))
-      .subscribe((value) => this.searchText.set(value));
+  }
+
+  ngOnInit(): void {
+    this.binanceApi.getFuturesSymbolList().subscribe({
+      next: (symbols) => {
+        this.allBinanceSymbols.set(symbols);
+        this.symbolsLoaded.set(true);
+      },
+      error: () => this.symbolsLoaded.set(true),
+    });
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this.destroy$.next();
-    this.destroy$.complete();
+  }
+
+  onSymbolSelected(item: any): void {
+    this.selectSymbol(item.value);
   }
 
   // ─── Build ordered entries when query data arrives ─────────────────────────
@@ -105,30 +102,6 @@ export class FollowedPageComponent extends BaseLayoutComponent implements OnDest
         followedId: f.id,
         token: tokenData.find((t) => t.symbol === f.symbol)!,
       }));
-  }
-
-  // ─── Search ───────────────────────────────────────────────────────────────
-
-  onFocusInput(): void {
-    this.showDropdown.set(true);
-    if (!this.symbolsLoaded()) {
-      this.binanceApi
-        .getFuturesSymbolList()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((symbols) => {
-          this.allBinanceSymbols.set(symbols);
-          this.symbolsLoaded.set(true);
-        });
-    }
-  }
-
-  onBlurInput(): void {
-    setTimeout(() => this.showDropdown.set(false), 200);
-  }
-
-  onInputChange(value: string): void {
-    this.searchSubject.next(value);
-    this.showDropdown.set(true);
   }
 
   // ─── Queries / Mutations ──────────────────────────────────────────────────
@@ -202,9 +175,6 @@ export class FollowedPageComponent extends BaseLayoutComponent implements OnDest
     } else {
       this.addMutation.mutate(symbol);
     }
-
-    this.searchText.set('');
-    this.showDropdown.set(false);
   }
 
   onRemove(id: string): void {

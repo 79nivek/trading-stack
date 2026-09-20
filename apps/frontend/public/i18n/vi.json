@@ -13,7 +13,9 @@
     "CLOSE": "Đóng",
     "SAVE": "Lưu",
     "CANCEL": "Hủy",
-    "SUBMIT": "Gửi"
+    "SUBMIT": "Gửi",
+    "LOADING": "Dang Tải ...",
+    "AUTO_COMPLETE_PLACEHOLDER": "Tìm ..."
   },
   "AUTH": {
     "LOGIN": "Đăng nhập",

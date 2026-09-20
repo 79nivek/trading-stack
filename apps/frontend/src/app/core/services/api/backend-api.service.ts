@@ -282,29 +282,31 @@ export class BackendApiService implements OnInit, OnDestroy {
   getFollowedSymbols(): Observable<FollowedSymbolDto[]> {
     return this.http.get<FollowedSymbolDto[]>(
       `${ENV.BACKEND_URL}/api/v1/followed-symbols`,
-      { ...this.useAuth(), ...skipSpinnerOptions() },
+      { ...this.useAuth() },
     );
   }
 
-  addFollowedSymbol(dto: CreateFollowedSymbolDto): Observable<FollowedSymbolDto> {
+  addFollowedSymbol(
+    dto: CreateFollowedSymbolDto,
+  ): Observable<FollowedSymbolDto> {
     return this.http.post<FollowedSymbolDto>(
       `${ENV.BACKEND_URL}/api/v1/followed-symbols`,
       dto,
-      { ...this.useAuth(), ...skipSpinnerOptions() },
+      { ...this.useAuth() },
     );
   }
 
   removeFollowedSymbol(id: string): Observable<void> {
     return this.http.delete<void>(
       `${ENV.BACKEND_URL}/api/v1/followed-symbols/${id}`,
-      { ...this.useAuth(), ...skipSpinnerOptions() },
+      { ...this.useAuth() },
     );
   }
 
   getFollowedSymbolsData(): Observable<TokenSuggestionDto[]> {
     return this.http.get<TokenSuggestionDto[]>(
       `${ENV.BACKEND_URL}/api/v1/followed-symbols/data`,
-      { ...this.useAuth(), ...skipSpinnerOptions() },
+      { ...this.useAuth() },
     );
   }
 

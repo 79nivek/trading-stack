@@ -1,0 +1,61 @@
+<div class="autocomplete-wrapper">
+  <div class="search-input-wrap">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="search-icon"
+    >
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input
+      id="symbolSearch"
+      type="text"
+      class="search-input"
+      [value]="searchText()"
+      (input)="onInput($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      [attr.placeholder]="placeholderKey | translate"
+      autocomplete="off"
+    />
+    @if (searchText()) {
+      <button
+        class="clear-btn"
+        (mousedown)="clearSearch($event)"
+      >
+        ✕
+      </button>
+    }
+  </div>
+
+  <!-- Dropdown -->
+  @if (showDropdown() && (filteredData().length > 0 || isLoading)) {
+    <ul class="autocomplete-dropdown" role="listbox">
+      @if (isLoading) {
+        <li class="dropdown-loading">
+          <div
+            class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"
+          ></div>
+          <span [translate]="loadingKey">Loading…</span>
+        </li>
+      }
+      @for (sym of filteredData(); track sym.value) {
+        <li
+          class="dropdown-item"
+          role="option"
+          (mousedown)="selectItem($event, sym)"
+        >
+          {{ sym.label }}
+        </li>
+      }
+    </ul>
+  }
+</div>

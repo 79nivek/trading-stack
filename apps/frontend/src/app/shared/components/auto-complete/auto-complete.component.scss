@@ -1,0 +1,46 @@
+@reference '../../../../styles.css';
+
+.autocomplete-wrapper {
+  @apply relative;
+}
+
+.search-input-wrap {
+  @apply flex items-center gap-2 bg-surface border border-border rounded-md
+         px-3 py-1.5 focus-within:ring-1 focus-within:ring-primary
+         focus-within:border-primary transition-all;
+
+  .search-icon {
+    @apply text-text-muted shrink-0;
+  }
+
+  .search-input {
+    @apply bg-transparent text-text text-sm outline-none w-48 placeholder:text-text-muted;
+  }
+
+  .clear-btn {
+    @apply text-text-muted text-xs hover:text-danger transition-colors shrink-0;
+  }
+}
+
+.autocomplete-dropdown {
+  @apply absolute top-full left-0 mt-1 z-50
+         bg-surface border border-border rounded-lg shadow-lg
+         max-h-60 overflow-y-auto min-w-full;
+
+  .dropdown-loading {
+    @apply flex items-center gap-2 px-4 py-3 text-sm text-text-muted;
+  }
+
+  .dropdown-item {
+    @apply px-4 py-2 text-sm text-text cursor-pointer
+           hover:bg-primary/10 hover:text-primary transition-colors;
+
+    &:first-child {
+      @apply rounded-t-lg;
+    }
+
+    &:last-child {
+      @apply rounded-b-lg;
+    }
+  }
+}

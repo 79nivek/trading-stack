@@ -2,67 +2,11 @@
   <!-- ===== Header section (injected into layout header) ===== -->
   <ng-template #HeaderSection>
     <div class="flex items-center gap-3">
-      <!-- Autocomplete Search -->
-      <div class="autocomplete-wrapper">
-        <div class="search-input-wrap">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="search-icon"
-          >
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            id="symbolSearch"
-            type="text"
-            class="search-input"
-            [value]="searchText()"
-            (input)="onInputChange($any($event.target).value)"
-            (focus)="onFocusInput()"
-            (blur)="onBlurInput()"
-            [attr.placeholder]="'FOLLOWED.SEARCH_PLACEHOLDER' | translate"
-            autocomplete="off"
-          />
-          @if (searchText()) {
-            <button
-              class="clear-btn"
-              (mousedown)="$event.preventDefault(); searchText.set(''); showDropdown.set(false)"
-            >
-              ✕
-            </button>
-          }
-        </div>
-
-        <!-- Dropdown -->
-        @if (showDropdown() && filteredSymbols().length > 0) {
-          <ul class="autocomplete-dropdown" role="listbox">
-            @if (!symbolsLoaded()) {
-              <li class="dropdown-loading">
-                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                <span translate="FOLLOWED.LOADING_SYMBOLS">Loading symbols…</span>
-              </li>
-            }
-            @for (sym of filteredSymbols(); track sym) {
-              <li
-                class="dropdown-item"
-                role="option"
-                (mousedown)="$event.preventDefault(); selectSymbol(sym)"
-              >
-                {{ sym }}
-              </li>
-            }
-          </ul>
-        }
-      </div>
-
+      <app-auto-complete
+        [data]="allBinanceSymbols()"
+        [isLoading]="!symbolsLoaded()"
+        (itemSelected)="onSymbolSelected($event)"
+      ></app-auto-complete>
       <!-- Refresh button -->
       <button
         (click)="onRefreshData()"
@@ -90,14 +34,20 @@
   </ng-template>
 
   <!-- ===== Loading state ===== -->
-  @if (followedDataQuery.isPending() && (followedQuery.data()?.length ?? 0) > 0) {
+  @if (
+    followedDataQuery.isPending() && (followedQuery.data()?.length ?? 0) > 0
+  ) {
     <div class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
+      ></div>
     </div>
   }
 
   <!-- ===== Empty state ===== -->
-  @if (!followedQuery.isPending() && (followedQuery.data()?.length ?? 0) === 0) {
+  @if (
+    !followedQuery.isPending() && (followedQuery.data()?.length ?? 0) === 0
+  ) {
     <div class="empty-state">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -112,7 +62,9 @@
         class="text-text-muted mx-auto mb-4"
       >
         <path d="M12 20h9"></path>
-        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        <path
+          d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"
+        ></path>
       </svg>
       <p class="text-text-muted" translate="FOLLOWED.NO_DATA">
         No followed symbols yet. Use the search above to add one.

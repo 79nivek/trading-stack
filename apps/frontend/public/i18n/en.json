@@ -13,7 +13,9 @@
     "CLOSE": "Close",
     "SAVE": "Save",
     "CANCEL": "Cancel",
-    "SUBMIT": "Submit"
+    "SUBMIT": "Submit",
+    "LOADING": "Loading ...",
+    "AUTO_COMPLETE_PLACEHOLDER": "Search ..."
   },
   "AUTH": {
     "LOGIN": "Login",
