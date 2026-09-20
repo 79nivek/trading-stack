@@ -1,6 +1,13 @@
 import { skipSpinnerOptions } from '../../interceptors/spinner.interceptor';
 import { Router } from '@angular/router';
 import { Injectable, OnDestroy, OnInit, inject, signal } from '@angular/core';
+
+export interface BaseResponse<T> {
+  id: string;
+  result: T;
+  duration: number;
+}
+
 import { HttpClient } from '@angular/common/http';
 import { tap, catchError, map } from 'rxjs/operators';
 import { Observable, of, interval, Subscription } from 'rxjs';
@@ -76,10 +83,11 @@ export class BackendApiService implements OnInit, OnDestroy {
 
   login(credentials: any): Observable<any> {
     return this.http
-      .post(`${ENV.BACKEND_URL}/api/v1/auth/login`, credentials, {
-        ...skipSpinnerOptions(),
-      })
+      .post<
+        BaseResponse<any>
+      >(`${ENV.BACKEND_URL}/api/v1/auth/login`, credentials)
       .pipe(
+        map((res) => res.result),
         tap((response: any) => {
           if (response.access_token) {
             this.storage.token.set(response.access_token);
@@ -94,11 +102,9 @@ export class BackendApiService implements OnInit, OnDestroy {
   logout() {
     if (this.storage.token.get()) {
       this.http
-        .post(
-          `${ENV.BACKEND_URL}/api/v1/auth/logout`,
-          {},
-          { ...this.useAuth(), ...skipSpinnerOptions() },
-        )
+        .post<
+          BaseResponse<any>
+        >(`${ENV.BACKEND_URL}/api/v1/auth/logout`, {}, { ...this.useAuth(), ...skipSpinnerOptions() })
         .subscribe({
           next: () => this.clearSession(),
           error: () => this.clearSession(),
@@ -126,7 +132,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     }
     this.pollSub = interval(60000).subscribe(() => {
       this.http
-        .get(`${ENV.BACKEND_URL}/api/v1/auth/check`, {
+        .get<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/auth/check`, {
           ...this.useAuth(),
           ...skipSpinnerOptions(),
         })
@@ -151,11 +157,12 @@ export class BackendApiService implements OnInit, OnDestroy {
     }
 
     return this.http
-      .get<UserProfile>(`${ENV.BACKEND_URL}/api/v1/users/me`, {
+      .get<BaseResponse<UserProfile>>(`${ENV.BACKEND_URL}/api/v1/users/me`, {
         ...this.useAuth(),
         ...skipSpinnerOptions(),
       })
       .pipe(
+        map((res) => res.result),
         map((user) => {
           this.isTokenVerified = true;
           this.isAuthenticated.set(true);
@@ -171,31 +178,37 @@ export class BackendApiService implements OnInit, OnDestroy {
   }
 
   signUp(data: any): Observable<any> {
-    return this.http.post(`${ENV.BACKEND_URL}/api/v1/auth/sign-up`, data, {
-      ...skipSpinnerOptions(),
-    });
+    return this.http
+      .post<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/auth/sign-up`, data, {
+        ...skipSpinnerOptions(),
+      })
+      .pipe(map((res) => res.result));
   }
 
   resetPassword(data: any): Observable<any> {
-    return this.http.post(
-      `${ENV.BACKEND_URL}/api/v1/auth/reset-password`,
-      data,
-      { ...this.useAuth(), ...skipSpinnerOptions() },
-    );
+    return this.http
+      .post<
+        BaseResponse<any>
+      >(`${ENV.BACKEND_URL}/api/v1/auth/reset-password`, data, { ...this.useAuth(), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
   }
 
   updateProfile(data: any): Observable<any> {
-    return this.http.patch(`${ENV.BACKEND_URL}/api/v1/users`, data, {
-      ...this.useAuth(),
-      ...skipSpinnerOptions(),
-    });
+    return this.http
+      .patch<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/users`, data, {
+        ...this.useAuth(),
+        ...skipSpinnerOptions(),
+      })
+      .pipe(map((res) => res.result));
   }
 
   getSettings(): Observable<any> {
-    return this.http.get(`${ENV.BACKEND_URL}/api/v1/settings`, {
-      ...this.useAuth(),
-      ...skipSpinnerOptions(),
-    });
+    return this.http
+      .get<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/settings`, {
+        ...this.useAuth(),
+        ...skipSpinnerOptions(),
+      })
+      .pipe(map((res) => res.result));
   }
 
   updateSettings(config: {
@@ -204,55 +217,60 @@ export class BackendApiService implements OnInit, OnDestroy {
     timeFrame?: string;
     suggestionLimit?: number;
   }): Observable<any> {
-    return this.http.patch(`${ENV.BACKEND_URL}/api/v1/settings`, config, {
-      ...this.useAuth(),
-      ...skipSpinnerOptions(),
-    });
+    return this.http
+      .patch<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/settings`, config, {
+        ...this.useAuth(),
+        ...skipSpinnerOptions(),
+      })
+      .pipe(map((res) => res.result));
   }
 
   checkBinanceCredentials(data: any): Observable<any> {
-    return this.http.post(
-      `${ENV.BACKEND_URL}/api/v1/binance-credentials/check`,
-      data,
-      { ...this.useAuth(), ...skipSpinnerOptions() },
-    );
+    return this.http
+      .post<
+        BaseResponse<any>
+      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/check`, data, { ...this.useAuth(), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
   }
 
   saveBinanceCredentials(data: any): Observable<{ token: string }> {
-    return this.http.post<{ token: string }>(
-      `${ENV.BACKEND_URL}/api/v1/binance-credentials/save`,
-      data,
-      { ...this.useAuth(), ...skipSpinnerOptions() },
-    );
+    return this.http
+      .post<
+        BaseResponse<{ token: string }>
+      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/save`, data, { ...this.useAuth(), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
   }
 
   checkMasterToken(masterToken: string): Observable<any> {
-    return this.http.post(
-      `${ENV.BACKEND_URL}/api/v1/binance-credentials/check-token`,
-      { masterToken },
-      { ...this.useAuth(), ...skipSpinnerOptions() },
-    );
+    return this.http
+      .post<
+        BaseResponse<any>
+      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/check-token`, { masterToken }, { ...this.useAuth(), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
   }
 
   getFuturesSuggestions(limit = 10): Observable<TokenSuggestionDto[]> {
-    return this.http.get<TokenSuggestionDto[]>(
-      `${ENV.BACKEND_URL}/api/v1/suggestions/futures?limit=${limit}`,
-      { ...this.useAuth(), ...skipSpinnerOptions() },
-    );
+    return this.http
+      .get<
+        BaseResponse<TokenSuggestionDto[]>
+      >(`${ENV.BACKEND_URL}/api/v1/suggestions/futures?limit=${limit}`, { ...this.useAuth(), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
   }
 
   getAiCheck(symbol: string, timeFrame = '4h'): Observable<any> {
-    return this.http.get<any>(
-      `${ENV.BACKEND_URL}/api/v1/suggestions/ai-check?symbol=${symbol}&timeFrame=${timeFrame}`,
-      { ...this.useAuth(), ...skipSpinnerOptions() },
-    );
+    return this.http
+      .get<
+        BaseResponse<any>
+      >(`${ENV.BACKEND_URL}/api/v1/suggestions/ai-check?symbol=${symbol}&timeFrame=${timeFrame}`, { ...this.useAuth(), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
   }
 
   getBinanceFuturesBalance(): Observable<{ ok: boolean; balance: number }> {
-    return this.http.post<{ ok: boolean; balance: number }>(
-      `${ENV.BACKEND_URL}/api/v1/binance-credentials/futures/balance`,
-      { ...this.useAuth(true) },
-    );
+    return this.http
+      .post<
+        BaseResponse<{ ok: boolean; balance: number }>
+      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/futures/balance`, { ...this.useAuth(true) })
+      .pipe(map((res) => res.result));
   }
 
   getSuggestionPosition(
@@ -262,59 +280,62 @@ export class BackendApiService implements OnInit, OnDestroy {
     const payload: any = { symbol };
     if (balance) payload.balance = balance;
 
-    return this.http.post<SuggestionPositionResponseDto>(
-      `${ENV.BACKEND_URL}/api/v1/suggestions/position`,
-      payload,
-      { ...this.useAuth(true) },
-    );
+    return this.http
+      .post<
+        BaseResponse<SuggestionPositionResponseDto>
+      >(`${ENV.BACKEND_URL}/api/v1/suggestions/position`, payload, { ...this.useAuth(true) })
+      .pipe(map((res) => res.result));
   }
 
   placeFuturesPosition(setup: PlacePositionDto): Observable<any> {
-    return this.http.post<any>(
-      `${ENV.BACKEND_URL}/api/v1/binance-credentials/place-position`,
-      setup,
-      { ...this.useAuth(true) },
-    );
+    return this.http
+      .post<
+        BaseResponse<any>
+      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/place-position`, setup, { ...this.useAuth(true) })
+      .pipe(map((res) => res.result));
   }
 
   // ─── Followed Symbols ─────────────────────────────────────────────────────
 
   getFollowedSymbols(): Observable<FollowedSymbolDto[]> {
-    return this.http.get<FollowedSymbolDto[]>(
-      `${ENV.BACKEND_URL}/api/v1/followed-symbols`,
-      { ...this.useAuth() },
-    );
+    return this.http
+      .get<
+        BaseResponse<FollowedSymbolDto[]>
+      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols`, { ...this.useAuth() })
+      .pipe(map((res) => res.result));
   }
 
   addFollowedSymbol(
     dto: CreateFollowedSymbolDto,
   ): Observable<FollowedSymbolDto> {
-    return this.http.post<FollowedSymbolDto>(
-      `${ENV.BACKEND_URL}/api/v1/followed-symbols`,
-      dto,
-      { ...this.useAuth() },
-    );
+    return this.http
+      .post<
+        BaseResponse<FollowedSymbolDto>
+      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols`, dto, { ...this.useAuth() })
+      .pipe(map((res) => res.result));
   }
 
   removeFollowedSymbol(id: string): Observable<void> {
-    return this.http.delete<void>(
-      `${ENV.BACKEND_URL}/api/v1/followed-symbols/${id}`,
-      { ...this.useAuth() },
-    );
+    return this.http
+      .delete<
+        BaseResponse<void>
+      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/${id}`, { ...this.useAuth() })
+      .pipe(map((res) => res.result));
   }
 
   getFollowedSymbolsData(): Observable<TokenSuggestionDto[]> {
-    return this.http.get<TokenSuggestionDto[]>(
-      `${ENV.BACKEND_URL}/api/v1/followed-symbols/data`,
-      { ...this.useAuth() },
-    );
+    return this.http
+      .get<
+        BaseResponse<TokenSuggestionDto[]>
+      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/data`, { ...this.useAuth() })
+      .pipe(map((res) => res.result));
   }
 
   reorderFollowedSymbols(dto: ReorderFollowedSymbolsDto): Observable<void> {
-    return this.http.patch<void>(
-      `${ENV.BACKEND_URL}/api/v1/followed-symbols/reorder`,
-      dto,
-      { ...this.useAuth(), ...skipSpinnerOptions() },
-    );
+    return this.http
+      .patch<
+        BaseResponse<void>
+      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/reorder`, dto, { ...this.useAuth(), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
   }
 }

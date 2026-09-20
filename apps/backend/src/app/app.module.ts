@@ -12,6 +12,10 @@ import { SuggestionsModule } from '../modules/suggestions/suggestions.module';
 import { FollowedSymbolsModule } from '../modules/followed-symbols/followed-symbols.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggerInterceptor } from '../core/interceptors/logger.interceptor';
+import { TransformInterceptor } from '../core/interceptors/transform.interceptor';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -41,6 +45,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     FollowedSymbolsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggerInterceptor,
+    },
+  ],
 })
 export class AppModule {}
