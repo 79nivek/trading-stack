@@ -201,7 +201,7 @@
         </div>
 
         <!-- AI Check Result Section -->
-        <div class="ai-check-box">
+        <div class="ai-check-box" [class.hidden]="!aiCheckState?.data">
           @if (aiCheckState?.data; as aiResult) {
             <div class="text-sm">
               <div class="flex items-center gap-2 mb-2">

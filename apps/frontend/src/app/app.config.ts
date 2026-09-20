@@ -29,7 +29,15 @@ export class CustomTranslateLoader implements TranslateLoader {
   }
 }
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60,
+      retry: 2,
+    },
+  },
+});
 
 export const appConfig: ApplicationConfig = {
   providers: [
