@@ -27,12 +27,7 @@
       autocomplete="off"
     />
     @if (searchText()) {
-      <button
-        class="clear-btn"
-        (mousedown)="clearSearch($event)"
-      >
-        ✕
-      </button>
+      <button class="clear-btn" (mousedown)="clearSearch($event)">✕</button>
     }
   </div>
 

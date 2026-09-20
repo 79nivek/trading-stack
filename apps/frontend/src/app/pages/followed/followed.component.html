@@ -6,6 +6,7 @@
         [data]="allBinanceSymbols()"
         [isLoading]="!symbolsLoaded()"
         (itemSelected)="onSymbolSelected($event)"
+        placeholderKey="FOLLOWED.SEARCH_PLACEHOLDER"
       ></app-auto-complete>
       <!-- Refresh button -->
       <button
@@ -32,17 +33,6 @@
       </button>
     </div>
   </ng-template>
-
-  <!-- ===== Loading state ===== -->
-  @if (
-    followedDataQuery.isPending() && (followedQuery.data()?.length ?? 0) > 0
-  ) {
-    <div class="flex justify-center items-center h-64">
-      <div
-        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
-      ></div>
-    </div>
-  }
 
   <!-- ===== Empty state ===== -->
   @if (

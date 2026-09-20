@@ -1,10 +1,4 @@
-import {
-  Component,
-  inject,
-  signal,
-  OnInit,
-  OnDestroy,
-} from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateDirective, TranslatePipe } from '@ngx-translate/core';
@@ -25,7 +19,10 @@ import {
   AiCheckState,
 } from '../../shared/components/token-card/token-card.component';
 import { SuggestionPositionModal } from '../suggestion/suggestion-position/suggestion-position.modal';
-import { TokenSuggestionDto, FollowedSymbolDto } from '@trading-stack/shared-dto';
+import {
+  TokenSuggestionDto,
+  FollowedSymbolDto,
+} from '@trading-stack/shared-dto';
 import { AutoCompleteComponent } from '../../shared/components/auto-complete/auto-complete.component';
 
 /** Pairs token market data with its followed-symbol record for rendering */
@@ -43,12 +40,15 @@ export interface FollowedTokenEntry {
     TranslateDirective,
     TranslatePipe,
     TokenCardComponent,
-    AutoCompleteComponent
-],
+    AutoCompleteComponent,
+  ],
   templateUrl: './followed.component.html',
   styleUrl: './followed.component.scss',
 })
-export class FollowedPageComponent extends BaseLayoutComponent implements OnInit, OnDestroy {
+export class FollowedPageComponent
+  extends BaseLayoutComponent
+  implements OnInit, OnDestroy
+{
   private backendApi = inject(BackendApiService);
   private binanceApi = inject(BinanceFuturesApiService);
   private modalService = inject(ModalService);
@@ -114,7 +114,9 @@ export class FollowedPageComponent extends BaseLayoutComponent implements OnInit
   followedDataQuery = injectQuery(() => ({
     queryKey: ['followed-symbols', 'data'],
     queryFn: async () => {
-      const data = await lastValueFrom(this.backendApi.getFollowedSymbolsData());
+      const data = await lastValueFrom(
+        this.backendApi.getFollowedSymbolsData(),
+      );
       // Sync orderedEntries whenever fresh data arrives
       const followed = this.followedQuery.data() ?? [];
       this.orderedEntries.set(this.buildOrderedEntries(followed, data));
@@ -153,9 +155,7 @@ export class FollowedPageComponent extends BaseLayoutComponent implements OnInit
 
   reorderMutation = injectMutation(() => ({
     mutationFn: (orderedIds: string[]) =>
-      lastValueFrom(
-        this.backendApi.reorderFollowedSymbols({ orderedIds }),
-      ),
+      lastValueFrom(this.backendApi.reorderFollowedSymbols({ orderedIds })),
     onError: () => {
       // On failure, restore from server by re-fetching
       this.queryClient.invalidateQueries({ queryKey: ['followed-symbols'] });
@@ -192,7 +192,9 @@ export class FollowedPageComponent extends BaseLayoutComponent implements OnInit
     event.dataTransfer?.setData('text/plain', String(index));
     // Small delay so the ghost image captures the card before .dragging class applies
     requestAnimationFrame(() => {
-      const el = (event.target as HTMLElement).closest('.followed-card-wrapper');
+      const el = (event.target as HTMLElement).closest(
+        '.followed-card-wrapper',
+      );
       el?.classList.add('dragging');
     });
   }
