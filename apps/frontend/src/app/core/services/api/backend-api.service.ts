@@ -124,7 +124,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     if (this.pollSub) {
       this.pollSub.unsubscribe();
     }
-    this.pollSub = interval(10000).subscribe(() => {
+    this.pollSub = interval(60000).subscribe(() => {
       this.http
         .get(`${ENV.BACKEND_URL}/api/v1/auth/check`, {
           ...this.useAuth(),

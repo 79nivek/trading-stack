@@ -182,11 +182,14 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     try {
       const info = await this.exchangeInfoService.getExchangeInfo(this.symbol);
       if (this.candlestickSeries) {
+        const precision = info?.pricePrecision ?? 2;
+        const minMove = info?.minMove ?? 1;
+
         this.candlestickSeries.applyOptions({
           priceFormat: {
             type: 'price',
-            precision: info?.pricePrecision,
-            minMove: info?.tickSize ?? 0,
+            precision: precision,
+            minMove: minMove,
           },
         });
       }

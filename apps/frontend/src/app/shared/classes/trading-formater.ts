@@ -21,6 +21,7 @@ export class TradingFormatter {
    stepSize: number;
    pricePrecision: number;
    qtyPrecision: number;
+   minMove: number;
 
   constructor(exchangeInfo: SymbolExchangeInfo) {
     this.pricePrecision = exchangeInfo.pricePrecision;
@@ -35,6 +36,15 @@ export class TradingFormatter {
 
     this.tickSize = parseFloat(priceFilter?.tickSize || '0');
     this.stepSize = parseFloat(lotSizeFilter?.stepSize || '0');
+
+    // Calculate actual display precision based on tickSize instead of raw Binance pricePrecision.
+    // E.g. tickSize 0.00001 -> precision 5. This prevents Lightweight Charts scaling bugs.
+    if (this.tickSize > 0) {
+      this.pricePrecision = Math.max(0, -Math.floor(Math.log10(this.tickSize)));
+    }
+    
+    // Lightweight Charts requires minMove to be the exact float step size
+    this.minMove = this.tickSize;
   }
 
   static formatPrice(
