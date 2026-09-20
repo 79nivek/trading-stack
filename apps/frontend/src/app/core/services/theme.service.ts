@@ -2,7 +2,14 @@ import { Injectable, signal, effect, inject, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
 import { BackendApiService } from './api/backend-api.service';
 
-export type Theme = 'light' | 'dark' | 'auto';
+export enum THEME {
+  // eslint-disable-next-line no-unused-vars
+  LIGHT = 'light',
+  // eslint-disable-next-line no-unused-vars
+  DARK = 'dark',
+  // eslint-disable-next-line no-unused-vars
+  AUTO = 'auto'
+}
 
 @Injectable({
   providedIn: 'root'
@@ -11,13 +18,13 @@ export class ThemeService {
   private storage = inject(StorageService);
   private injector = inject(Injector);
 
-  theme = signal<Theme>((this.storage.theme.get() as Theme) || 'auto');
+  theme = signal<THEME>((this.storage.theme.get() as THEME) ||  THEME.AUTO);
 
   constructor() {
     // Listen for OS theme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (this.theme() === 'auto') {
-        this.applyTheme('auto');
+      if (this.theme() === THEME.AUTO) {
+        this.applyTheme(THEME.AUTO);
       }
     });
 
@@ -28,22 +35,22 @@ export class ThemeService {
     });
   }
 
-  private applyTheme(themeType: Theme) {
+  private applyTheme(themeType: THEME) {
     let isDark = false;
-    if (themeType === 'auto') {
+    if (themeType === THEME.AUTO) {
       isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     } else {
-      isDark = themeType === 'dark';
+      isDark = themeType === THEME.DARK;
     }
 
     if (isDark) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add(THEME.DARK);
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove(THEME.DARK);
     }
   }
 
-  setTheme(newTheme: Theme, syncWithBackend = true) {
+  setTheme(newTheme: THEME, syncWithBackend = true) {
     this.theme.set(newTheme);
     if (syncWithBackend) {
       const backendApi = this.injector.get(BackendApiService);
@@ -55,10 +62,10 @@ export class ThemeService {
 
   toggleTheme() {
     const current = this.theme();
-    let next: Theme = 'auto';
-    if (current === 'light') next = 'dark';
-    else if (current === 'dark') next = 'auto';
-    else if (current === 'auto') next = 'light';
+    let next: THEME = THEME.AUTO;
+    if (current === THEME.LIGHT) next = THEME.DARK;
+    else if (current === THEME.DARK) next = THEME.AUTO;
+    else if (current === THEME.AUTO) next = THEME.LIGHT;
 
     this.setTheme(next);
   }

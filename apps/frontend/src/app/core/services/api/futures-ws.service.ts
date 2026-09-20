@@ -122,6 +122,7 @@ export class FuturesWebsocketService implements OnDestroy {
       this.wsSubscription = this.wsSubject.subscribe({
         next: (msg: StreamPayload) => {
           const kline = msg.data.k;
+
           // Normalize symbol to uppercase for consistent object mapping
           const data: KlineData = {
             time: Math.floor(kline.t / 1000), // convert ms to s for lightweight-charts
@@ -129,7 +130,7 @@ export class FuturesWebsocketService implements OnDestroy {
             high: parseFloat(kline.h),
             low: parseFloat(kline.l),
             close: parseFloat(kline.c),
-            volume: parseFloat(kline.v),
+            volume: parseFloat(kline.q),
             normalizedToken: msg.stream,
           };
           this.messageSubject.next(data);

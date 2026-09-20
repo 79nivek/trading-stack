@@ -20,7 +20,7 @@ import { BackendApiService } from '../../core/services/api/backend-api.service';
 import { APP_PATHS } from '../../core/constants/routes.constants';
 import { SecretKeyService } from '../../core/services/secret-key.service';
 import { ToastService } from '../../core/services/toast.service';
-import { ThemeService, Theme } from '../../core/services/theme.service';
+import { ThemeService, THEME } from '../../core/services/theme.service';
 import { LanguageService } from '../../core/services/language.service';
 import {
   TimeframeService,
@@ -112,7 +112,7 @@ export class AuthenticatedLayoutComponent {
       const settings = this.settingsQuery.data();
       if (settings) {
         if (settings.theme)
-          this.themeService.setTheme(settings.theme as Theme, false);
+          this.themeService.setTheme(settings.theme as THEME, false);
         if (settings.language)
           this.langService.setLanguage(settings.language, false);
         if (settings.timeFrame)

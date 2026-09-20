@@ -61,7 +61,7 @@ export class BinanceFuturesApiService {
             high: TradingFormatter.formatPrice(kline[2], formatOptions),
             low: TradingFormatter.formatPrice(kline[3], formatOptions),
             close: TradingFormatter.formatPrice(kline[4], formatOptions),
-            volume: TradingFormatter.formatPrice(kline[5], formatOptions),
+            volume: TradingFormatter.formatPrice(kline[7], formatOptions),
             normalizedToken: `${symbol.toLowerCase()}@kline_${query.interval}`,
           }));
         }),

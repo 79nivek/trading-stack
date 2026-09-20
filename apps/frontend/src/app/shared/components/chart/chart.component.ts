@@ -24,12 +24,13 @@ import {
 } from 'lightweight-charts';
 import { lastValueFrom, Subscription } from 'rxjs';
 import { BinanceFuturesApiService } from '../../../core/services/api/binance-futures-api.service';
-import { FuturesWebsocketService } from '../../../core/services/api/futures-websocket.service';
-import { ThemeService } from '../../../core/services/theme.service';
+import { FuturesWebsocketService } from '../../../core/services/api/futures-ws.service';
+import { THEME, ThemeService } from '../../../core/services/theme.service';
 import { ChartSyncService } from '../../../core/services/chart-sync.service';
 import { TimeframeService } from '../../../core/services/timeframe.service';
 import { ExchangeInfoService } from '../../../core/services/exchange.service';
 import { QueryClient } from '@tanstack/angular-query-experimental';
+import { calculateSMA } from '../../../core/utils/currency.util';
 
 @Component({
   selector: 'app-chart',
@@ -199,7 +200,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private initChart(): void {
-    const isDark = this.themeService.theme() === 'dark';
+    const isDark = this.themeService.theme() === THEME.DARK;
 
     const chartOptions = {
       width: this.chartContainer.nativeElement.clientWidth,
@@ -365,9 +366,9 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.subscribeSyncEvents();
   }
 
-  private applyTheme(theme: string): void {
+  private applyTheme(theme: THEME): void {
     if (!this.chart) return;
-    const isDark = theme === 'dark';
+    const isDark = theme === THEME.DARK;
     this.chart.applyOptions({
       layout: {
         background: { color: 'transparent' },
@@ -392,26 +393,12 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   private queryClient = inject(QueryClient);
 
-  private calculateSMA(
-    data: any[],
-    period: number,
-  ): { time: Time; value: number }[] {
-    const smaData = [];
-    for (let i = period - 1; i < data.length; i++) {
-      let sum = 0;
-      for (let j = 0; j < period; j++) {
-        sum += data[i - j].close;
-      }
-      smaData.push({ time: data[i].time, value: sum / period });
-    }
-    return smaData;
-  }
 
   private updateMAs(): void {
     if (!this.ma7Series || !this.ma25Series || !this.ma99Series) return;
-    this.ma7Series.setData(this.calculateSMA(this.currentData, 7));
-    this.ma25Series.setData(this.calculateSMA(this.currentData, 25));
-    this.ma99Series.setData(this.calculateSMA(this.currentData, 99));
+    this.ma7Series.setData(calculateSMA(this.currentData, 7));
+    this.ma25Series.setData(calculateSMA(this.currentData, 25));
+    this.ma99Series.setData(calculateSMA(this.currentData, 99));
   }
 
   private updateHoveredDataWithLatest(): void {
