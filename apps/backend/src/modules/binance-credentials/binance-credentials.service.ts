@@ -187,6 +187,91 @@ export class BinanceCredentialsService {
     }
   }
 
+  async getListenKey(userId: string, masterToken: string): Promise<string> {
+    const { apiKey } = await this.getSecret(userId, masterToken);
+    try {
+      const response = await fetch(
+        'https://fapi.binance.com/fapi/v1/listenKey',
+        {
+          method: 'POST',
+          headers: {
+            'X-MBX-APIKEY': apiKey,
+          },
+        },
+      );
+      if (!response.ok) {
+        throw new Error('Failed to create listen key');
+      }
+      const data: any = await response.json();
+      return data.listenKey;
+    } catch (error: any) {
+      throw new BadRequestException('Failed to get listen key');
+    }
+  }
+
+  async getFuturesAccountInfo(
+    userId: string,
+    masterToken: string,
+  ): Promise<{
+    futureBalance: number;
+    unrealizedPnl: number;
+    realizedPnlToday: number;
+    positions?: any[];
+  }> {
+    try {
+      const { apiKey, secretKey } = await this.getSecret(userId, masterToken);
+      const client = new DerivativesTradingUsdsFutures({
+        configurationRestAPI: {
+          apiKey: apiKey,
+          privateKey: secretKey,
+        },
+      });
+
+      const accountData = await client.restAPI
+        .accountInformationV3()
+        .then((res) => res.data());
+
+      const futureBalance = parseFloat(accountData.totalWalletBalance || '0');
+      const unrealizedPnl = parseFloat(
+        accountData.totalUnrealizedProfit || '0',
+      );
+
+      const now = new Date();
+      const startTime = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        0,
+        0,
+        0,
+        0,
+      );
+
+      const incomeData = await client.restAPI
+        .getIncomeHistory({
+          incomeType: 'REALIZED_PNL' as any,
+          startTime,
+          limit: 1000,
+        })
+        .then((res) => res.data());
+
+      const realizedPnlToday = (incomeData || []).reduce(
+        (sum: number, item: any) => sum + parseFloat(item.income || '0'),
+        0,
+      );
+
+      return {
+        futureBalance,
+        unrealizedPnl,
+        realizedPnlToday,
+        positions: accountData.positions,
+      };
+    } catch (error) {
+      console.error('Error in getFuturesAccountInfo:', error);
+      throw new BadRequestException('Failed to get futures account info');
+    }
+  }
+
   async getFuturesBalance(
     userId: string,
     masterToken: string,

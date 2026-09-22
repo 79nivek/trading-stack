@@ -265,9 +265,30 @@ export class BackendApiService implements OnInit, OnDestroy {
       .pipe(map((res) => res.result));
   }
 
+  getListenKey(): Observable<string> {
+    return this.http
+      .get<
+        BaseResponse<{ listenKey: string }>
+      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/listen-key`, { ...this.useAuth(true), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result.listenKey));
+  }
+
+  getFuturesAccountInfo(): Observable<{
+    ok: boolean;
+    futureBalance: number;
+    unrealizedPnl: number;
+    realizedPnlToday: number;
+  }> {
+    return this.http
+      .get<
+        BaseResponse<any>
+      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/futures/account-info`, { ...this.useAuth(true), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
+  }
+
   getBinanceFuturesBalance(): Observable<{ ok: boolean; balance: number }> {
     return this.http
-      .post<
+      .get<
         BaseResponse<{ ok: boolean; balance: number }>
       >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/futures/balance`, { ...this.useAuth(true) })
       .pipe(map((res) => res.result));

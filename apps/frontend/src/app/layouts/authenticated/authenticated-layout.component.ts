@@ -29,6 +29,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { LayoutService } from '../../core/services/layout.service';
 
+import { UserDataWsService } from '../../core/services/api/user-data-ws.service';
 @Component({
   selector: 'app-authenticated-layout',
   standalone: true,
@@ -61,6 +62,8 @@ export class AuthenticatedLayoutComponent {
 
   masterTokenInput = '';
   isVerifyingToken = false;
+
+  userDataWs = inject(UserDataWsService);
 
   menuItems = [
     { path: APP_PATHS.DASHBOARD, label: 'MENU.DASHBOARD', icon: 'D' },

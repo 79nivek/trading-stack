@@ -35,9 +35,84 @@
           </li>
         }
       </ul>
+
     </nav>
 
+    <!-- Futures Account Info Section -->
+    <div class="p-3 border-t border-border flex flex-col gap-2 text-sm overflow-hidden whitespace-nowrap">
+      @if (secretKeyService.hasToken) {
+        @if (userDataWs.accountData(); as data) {
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between items-center" [class.justify-center]="!isSidebarOpen()">
+              @if (isSidebarOpen()) {
+                <span class="text-text-muted text-xs">Balance</span>
+                <span class="font-medium">{{ data.futureBalance | number:'1.2-2' }}</span>
+              } @else {
+                <span class="font-medium text-xs" title="Balance">{{ data.futureBalance | number:'1.0-0' }}</span>
+              }
+            </div>
+            <div class="flex justify-between items-center" [class.justify-center]="!isSidebarOpen()">
+              @if (isSidebarOpen()) {
+                <span class="text-text-muted text-xs">Realized (Day)</span>
+                <span class="font-medium" [class.text-success]="data.realizedPnlToday > 0" [class.text-danger]="data.realizedPnlToday < 0">
+                  {{ data.realizedPnlToday > 0 ? '+' : '' }}{{ data.realizedPnlToday | number:'1.2-2' }}
+                </span>
+              } @else {
+                <span class="font-medium text-xs" [class.text-success]="data.realizedPnlToday > 0" [class.text-danger]="data.realizedPnlToday < 0" title="Realized (Day)">
+                  {{ data.realizedPnlToday > 0 ? '+' : '' }}{{ data.realizedPnlToday | number:'1.0-0' }}
+                </span>
+              }
+            </div>
+            <div class="flex justify-between items-center" [class.justify-center]="!isSidebarOpen()">
+              @if (isSidebarOpen()) {
+                <span class="text-text-muted text-xs">Unrealized</span>
+                <span class="font-medium" [class.text-success]="data.unrealizedPnl > 0" [class.text-danger]="data.unrealizedPnl < 0">
+                  {{ data.unrealizedPnl > 0 ? '+' : '' }}{{ data.unrealizedPnl | number:'1.2-2' }}
+                </span>
+              } @else {
+                <span class="font-medium text-xs" [class.text-success]="data.unrealizedPnl > 0" [class.text-danger]="data.unrealizedPnl < 0" title="Unrealized">
+                  {{ data.unrealizedPnl > 0 ? '+' : '' }}{{ data.unrealizedPnl | number:'1.0-0' }}
+                </span>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="flex flex-col gap-1 items-center justify-center opacity-50 py-2">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+          </div>
+        }
+      } @else {
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between items-center" [class.justify-center]="!isSidebarOpen()">
+            @if (isSidebarOpen()) {
+              <span class="text-text-muted text-xs">Balance</span>
+              <span class="font-medium text-text-muted">---</span>
+            } @else {
+              <span class="font-medium text-xs text-text-muted" title="Balance">---</span>
+            }
+          </div>
+          <div class="flex justify-between items-center" [class.justify-center]="!isSidebarOpen()">
+            @if (isSidebarOpen()) {
+              <span class="text-text-muted text-xs">Realized (Day)</span>
+              <span class="font-medium text-text-muted">---</span>
+            } @else {
+              <span class="font-medium text-xs text-text-muted" title="Realized (Day)">---</span>
+            }
+          </div>
+          <div class="flex justify-between items-center" [class.justify-center]="!isSidebarOpen()">
+            @if (isSidebarOpen()) {
+              <span class="text-text-muted text-xs">Unrealized</span>
+              <span class="font-medium text-text-muted">---</span>
+            } @else {
+              <span class="font-medium text-xs text-text-muted" title="Unrealized">---</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
     <div class="sidebar-header-toggle">
+
       <button (click)="toggleSidebar()" class="sidebar-toggle-btn">
         <svg
           xmlns="http://www.w3.org/2000/svg"

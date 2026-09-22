@@ -6,6 +6,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Get,
 } from '@nestjs/common';
 import { BinanceCredentialsService } from './binance-credentials.service';
 import {
@@ -58,16 +59,42 @@ export class BinanceCredentialsController {
     return { ok: true, permissions };
   }
 
-  @Post('futures/balance')
+
+  @Get('listen-key')
+  @HttpCode(HttpStatus.OK)
+  @RequireMasterToken()
+  async getListenKey(
+    @Request() req: any,
+    @MasterToken() masterToken: string,
+  ) {
+    const listenKey = await this.binanceCredentialsService.getListenKey(
+      req.user.id,
+      masterToken,
+    );
+    return { listenKey };
+  }
+
+  @Get('futures/account-info')
+  @HttpCode(HttpStatus.OK)
+  @RequireMasterToken()
+  async getFuturesAccountInfo(
+    @Request() req: any,
+    @MasterToken() masterToken: string,
+  ) {
+    const info = await this.binanceCredentialsService.getFuturesAccountInfo(
+      req.user.id,
+      masterToken,
+    );
+    return { ok: true, ...info };
+  }
+
+  @Get('futures/balance')
   @HttpCode(HttpStatus.OK)
   @RequireMasterToken()
   async getFuturesBalance(
     @Request() req: any,
     @MasterToken() masterToken: string,
   ) {
-    if (!masterToken) {
-      return { ok: false, balance: 0 };
-    }
     const balance = await this.binanceCredentialsService.getFuturesBalance(
       req.user.id,
       masterToken,
