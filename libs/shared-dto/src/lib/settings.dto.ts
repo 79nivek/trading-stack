@@ -19,9 +19,9 @@ export class UpdateSettingsDto {
   suggestionLimit?: number;
 }
 
-export class UserSettingsDto {
+export class UserSettingsResDto {
   theme!: string;
   language!: string;
   timeFrame!: string;
-  suggestionLimit?: number;
+  suggestionLimit!: number;
 }

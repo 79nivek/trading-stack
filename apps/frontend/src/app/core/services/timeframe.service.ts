@@ -1,22 +1,20 @@
 import { Injectable, signal, inject, Injector } from '@angular/core';
 
 import { BackendApiService } from './api/backend-api.service';
-
-export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '6h' | '12h' | '24h' | '1d';
-const TIMEFRAMES: Timeframe[] = ['1m', '5m', '15m', '30m', '1h', '4h', '6h', '12h', '1d'];
+import { TIME_FRAME, TIME_FRAMES } from '@trading-stack/shared-dto';
 
 @Injectable({ providedIn: 'root' })
 export class TimeframeService {
   private injector = inject(Injector);
 
-  timeframe = signal<Timeframe>('1h');
+  timeframe = signal<TIME_FRAME>(TIME_FRAME.ONE_H);
 
-  get availableTimeframes(): Timeframe[] {
-    return TIMEFRAMES;
+  get availableTimeframes(): TIME_FRAME[] {
+    return TIME_FRAMES;
   }
 
-  setTimeframe(tf: Timeframe, saveToBackend = true) {
-    if (TIMEFRAMES.includes(tf)) {
+  setTimeframe(tf: TIME_FRAME, saveToBackend = true) {
+    if (TIME_FRAMES.includes(tf)) {
       this.timeframe.set(tf);
       if (saveToBackend) {
         const backendApi = this.injector.get(BackendApiService);

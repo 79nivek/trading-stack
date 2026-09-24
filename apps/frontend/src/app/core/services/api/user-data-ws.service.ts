@@ -1,30 +1,25 @@
-import { Injectable, inject, signal, OnDestroy } from '@angular/core';
-import { BackendApiService } from './backend-api.service';
+import { Injectable, inject, OnDestroy } from '@angular/core';
 import { SecretKeyService } from '../secret-key.service';
 import { effect } from '@angular/core';
-
-export interface FuturesAccountData {
-  futureBalance: number;
-  unrealizedPnl: number;
-  realizedPnlToday: number;
-}
+import { BackendApiService } from './backend-api.service';
+import { AccountService } from '../account.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserDataWsService implements OnDestroy {
-  private backendApi = inject(BackendApiService);
   private secretKeyService = inject(SecretKeyService);
+
+  private backendApi = inject(BackendApiService);
+  private accountServ = inject(AccountService);
 
   private ws: WebSocket | null = null;
   private listenKey: string | null = null;
   private pingInterval: any = null;
   private positionMap = new Map<string, number>();
 
-
-  public accountData = signal<FuturesAccountData | null>(null);
-
   constructor() {
+    console.log('log UserDataWsService');
     effect(() => {
       const token = this.secretKeyService.token;
       if (token) {
@@ -35,22 +30,13 @@ export class UserDataWsService implements OnDestroy {
     });
   }
 
+  temp() {
+    // TODO: implement
+  }
+
   private startWatching() {
     this.stopWatching(); // ensure clean state
-
     // 1. Fetch initial account info
-    this.backendApi.getFuturesAccountInfo().subscribe({
-      next: (info) => {
-        if (info.ok) {
-          this.accountData.set({
-            futureBalance: info.futureBalance,
-            unrealizedPnl: info.unrealizedPnl,
-            realizedPnlToday: info.realizedPnlToday,
-          });
-        }
-      },
-      error: (err) => console.error('Failed to get account info', err)
-    });
 
     // 2. Fetch listenKey and connect WS
     this.backendApi.getListenKey().subscribe({
@@ -58,19 +44,20 @@ export class UserDataWsService implements OnDestroy {
         if (listenKey) {
           this.listenKey = listenKey;
           this.connectWs();
-
           // Reconnect every 50 mins to keep listenKey fresh (Binance expires in 60 mins)
-          this.pingInterval = setInterval(() => {
-            this.startWatching();
-          }, 50 * 60 * 1000);
+          this.pingInterval = setInterval(
+            () => {
+              this.startWatching();
+            },
+            50 * 60 * 1000,
+          );
         }
       },
-      error: (err) => console.error('Failed to get listen key', err)
+      error: (err) => console.error('Failed to get listen key', err),
     });
   }
 
-
-  private connectWs() {
+  connectWs() {
     if (!this.listenKey) return;
 
     const wsUrl = `wss://fstream.binance.com/private/ws/${this.listenKey}`;
@@ -104,46 +91,11 @@ export class UserDataWsService implements OnDestroy {
     if (!data || !data.e) return;
 
     if (data.e === 'ACCOUNT_UPDATE') {
-      const update = data.a;
-      this.accountData.update(prev => {
-        if (!prev) prev = { futureBalance: 0, unrealizedPnl: 0, realizedPnlToday: 0 };
-        const next = { ...prev };
-
-        if (update.B && update.B.length > 0) {
-          const usdtBalance = update.B.find((b: any) => b.a === 'USDT');
-          if (usdtBalance) {
-            next.futureBalance = parseFloat(usdtBalance.wb || '0');
-          }
-        }
-
-        if (update.P && update.P.length > 0) {
-          update.P.forEach((p: any) => {
-            this.positionMap.set(p.s, parseFloat(p.up || '0'));
-          });
-
-          let totalUp = 0;
-          this.positionMap.forEach(up => totalUp += up);
-          next.unrealizedPnl = totalUp;
-        }
-
-        return next;
-      });
+      this.accountServ.fetchInfo();
     }
 
     if (data.e === 'ORDER_TRADE_UPDATE') {
-      const order = data.o;
-      if (order && order.x === 'TRADE') {
-        const realizedProfit = parseFloat(order.rp || '0');
-        if (realizedProfit !== 0) {
-          this.accountData.update(prev => {
-            if (!prev) prev = { futureBalance: 0, unrealizedPnl: 0, realizedPnlToday: 0 };
-            return {
-              ...prev,
-              realizedPnlToday: prev.realizedPnlToday + realizedProfit
-            };
-          });
-        }
-      }
+      // TODO: handle order trade update
     }
   }
 
@@ -159,7 +111,6 @@ export class UserDataWsService implements OnDestroy {
       this.ws = null;
     }
     this.listenKey = null;
-    this.accountData.set(null);
   }
 
   ngOnDestroy() {

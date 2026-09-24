@@ -52,7 +52,7 @@ export class FuturesWebsocketService implements OnDestroy {
   /**
    * Registers a token and returns an observable that emits its kline data.
    */
-  register(token: string, timeFrame: string): Observable<KlineData> {
+  register(token: string): Observable<KlineData> {
     const normalizedToken = token.trim().toLowerCase();
 
     if (!this.tokens.has(normalizedToken)) {
@@ -65,9 +65,7 @@ export class FuturesWebsocketService implements OnDestroy {
       filter((msg) => {
         // Combined stream message format: { stream: 'btcusdt@kline_1m', data: { ... } }
         if (!msg || !msg.normalizedToken) return false;
-        return msg.normalizedToken.startsWith(
-          `${normalizedToken}@kline_${timeFrame}`,
-        );
+        return msg.normalizedToken.startsWith(normalizedToken);
       }),
     );
   }
@@ -130,7 +128,7 @@ export class FuturesWebsocketService implements OnDestroy {
             high: parseFloat(kline.h),
             low: parseFloat(kline.l),
             close: parseFloat(kline.c),
-            volume: parseFloat(kline.q),
+            volume: parseFloat(kline.v),
             normalizedToken: msg.stream,
           };
           this.messageSubject.next(data);

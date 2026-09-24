@@ -16,6 +16,7 @@ import {
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { MasterToken } from '../../decorators/master-token.decorator';
 import { RequireMasterToken } from '../../decorators/require-master-token.decorator';
+import { IgnoreLog } from '../../core/decorators/ignore-log.decorator';
 
 @Controller('binance-credentials')
 @UseGuards(JwtAuthGuard)
@@ -48,6 +49,7 @@ export class BinanceCredentialsController {
 
   @Post('check-token')
   @HttpCode(HttpStatus.OK)
+  @IgnoreLog({ ignoreBody: true })
   async checkToken(@Request() req: any, @Body() body: { masterToken: string }) {
     if (!body.masterToken) {
       return { ok: false };
@@ -59,14 +61,10 @@ export class BinanceCredentialsController {
     return { ok: true, permissions };
   }
 
-
   @Get('listen-key')
   @HttpCode(HttpStatus.OK)
   @RequireMasterToken()
-  async getListenKey(
-    @Request() req: any,
-    @MasterToken() masterToken: string,
-  ) {
+  async getListenKey(@Request() req: any, @MasterToken() masterToken: string) {
     const listenKey = await this.binanceCredentialsService.getListenKey(
       req.user.id,
       masterToken,
@@ -81,11 +79,10 @@ export class BinanceCredentialsController {
     @Request() req: any,
     @MasterToken() masterToken: string,
   ) {
-    const info = await this.binanceCredentialsService.getFuturesAccountInfo(
+    return this.binanceCredentialsService.getFuturesAccountInfo(
       req.user.id,
       masterToken,
     );
-    return { ok: true, ...info };
   }
 
   @Get('futures/balance')
@@ -113,11 +110,10 @@ export class BinanceCredentialsController {
     if (!body.symbol) {
       return { ok: false, message: 'Missing parameters' };
     }
-    const result = await this.binanceCredentialsService.placeFuturesPosition(
+    return this.binanceCredentialsService.placeFuturesPosition(
       req.user.id,
       body,
       masterToken,
     );
-    return { ok: true, result };
   }
 }

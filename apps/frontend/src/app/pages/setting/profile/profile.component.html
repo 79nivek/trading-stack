@@ -1,52 +1,52 @@
 <div class="profile-container">
   <h1 class="page-title">{{ 'SETTING.PROFILE' | translate }}</h1>
-  
+
   <div class="card">
     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
-      
+
       <!-- Username -->
       <div class="form-group">
-        <label for="profile-username" class="form-label">{{ 'SIGNUP.USERNAME' | translate }}</label>
-        <input 
-          id="profile-username" 
-          type="text" 
-          formControlName="username" 
-          class="form-input" 
+        <label for="profile-username" class="form-label">{{ 'PROFILE.USERNAME' | translate }}</label>
+        <input
+          id="profile-username"
+          type="text"
+          formControlName="username"
+          class="form-input"
         >
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- First Name -->
         <div class="form-group">
-          <label for="profile-firstname" class="form-label">{{ 'SIGNUP.FIRST_NAME' | translate }}</label>
-          <input 
-            id="profile-firstname" 
-            type="text" 
-            formControlName="firstName" 
-            class="form-input" 
+          <label for="profile-firstname" class="form-label">{{ 'PROFILE.FIRST_NAME' | translate }}</label>
+          <input
+            id="profile-firstname"
+            type="text"
+            formControlName="firstName"
+            class="form-input"
           >
         </div>
 
         <!-- Last Name -->
         <div class="form-group">
-          <label for="profile-lastname" class="form-label">{{ 'SIGNUP.LAST_NAME' | translate }}</label>
-          <input 
-            id="profile-lastname" 
-            type="text" 
-            formControlName="lastName" 
-            class="form-input" 
+          <label for="profile-lastname" class="form-label">{{ 'PROFILE.LAST_NAME' | translate }}</label>
+          <input
+            id="profile-lastname"
+            type="text"
+            formControlName="lastName"
+            class="form-input"
           >
         </div>
       </div>
 
       <!-- Email (Disabled) -->
       <div class="form-group">
-        <label for="profile-email" class="form-label">{{ 'SIGNUP.EMAIL' | translate }}</label>
-        <input 
-          id="profile-email" 
-          type="email" 
-          formControlName="email" 
-          class="form-input opacity-60 cursor-not-allowed" 
+        <label for="profile-email" class="form-label">{{ 'PROFILE.EMAIL' | translate }}</label>
+        <input
+          id="profile-email"
+          type="email"
+          formControlName="email"
+          class="form-input opacity-60 cursor-not-allowed"
         >
       </div>
 
@@ -55,7 +55,7 @@
         <app-button type="button" btnType="primary" (click)="openResetPassword()">
           {{ 'PROFILE.CHANGE_PASSWORD' | translate }}
         </app-button>
-        
+
         <app-button type="submit" btnType="success" [disabled]="form.pristine || form.invalid || updateProfileMutation.isPending()">
           {{ 'COMMON.SAVE' | translate }}
         </app-button>

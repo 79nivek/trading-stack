@@ -4,7 +4,11 @@ import { EncryptionService } from '../encryption/encryption.service';
 import { BinanceCredentialRepository } from './binance-credential.repository';
 import { generateBinanceSignature } from './binance-signature.util';
 import { directionToOppositeSide } from '../../utils';
-import { Direction } from '@trading-stack/shared-dto';
+import {
+  AccountInfoResponse,
+  Direction,
+  Position,
+} from '@trading-stack/shared-dto';
 
 export interface BinancePermissions {
   readAccount: boolean;
@@ -212,12 +216,7 @@ export class BinanceCredentialsService {
   async getFuturesAccountInfo(
     userId: string,
     masterToken: string,
-  ): Promise<{
-    futureBalance: number;
-    unrealizedPnl: number;
-    realizedPnlToday: number;
-    positions?: any[];
-  }> {
+  ): Promise<AccountInfoResponse> {
     try {
       const { apiKey, secretKey } = await this.getSecret(userId, masterToken);
       const client = new DerivativesTradingUsdsFutures({
@@ -227,9 +226,10 @@ export class BinanceCredentialsService {
         },
       });
 
-      const accountData = await client.restAPI
-        .accountInformationV3()
-        .then((res) => res.data());
+      const [accountData, positionsData] = await Promise.all([
+        client.restAPI.accountInformationV3().then((res) => res.data()),
+        client.restAPI.positionInformationV3().then((res) => res.data()),
+      ]);
 
       const futureBalance = parseFloat(accountData.totalWalletBalance || '0');
       const unrealizedPnl = parseFloat(
@@ -264,7 +264,7 @@ export class BinanceCredentialsService {
         futureBalance,
         unrealizedPnl,
         realizedPnlToday,
-        positions: accountData.positions,
+        positions: positionsData as Position[],
       };
     } catch (error) {
       console.error('Error in getFuturesAccountInfo:', error);

@@ -10,6 +10,7 @@ import { BinanceCredentialsModule } from '../modules/binance-credentials/binance
 import { UserSettingsModule } from '../modules/user-settings/user-settings.module';
 import { SuggestionsModule } from '../modules/suggestions/suggestions.module';
 import { FollowedSymbolsModule } from '../modules/followed-symbols/followed-symbols.module';
+import { MarketDataModule } from '../modules/market-data/market-data.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { APP_INTERCEPTOR } from '@nestjs/core';
@@ -43,6 +44,7 @@ import { TransformInterceptor } from '../core/interceptors/transform.interceptor
     UserSettingsModule,
     SuggestionsModule,
     FollowedSymbolsModule,
+    MarketDataModule,
   ],
   controllers: [AppController],
   providers: [

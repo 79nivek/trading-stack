@@ -1,3 +1,25 @@
-export function sharedDto(): string {
-  return 'shared-dto';
+export enum TIME_FRAME {
+  ONE_M = '1m',
+  FIVE_M = '5m',
+  FIFTEEN_M = '15m',
+  THIRTY_M = '30m',
+  ONE_H = '1h',
+  FOUR_H = '4h',
+  SIX_H = '6h',
+  TWELVE_H = '12h',
+  TWENTY_FOUR_H = '24h',
+  ONE_D = '1d',
 }
+
+export const TIME_FRAMES: TIME_FRAME[] = [
+  TIME_FRAME.ONE_M,
+  TIME_FRAME.FIVE_M,
+  TIME_FRAME.FIFTEEN_M,
+  TIME_FRAME.THIRTY_M,
+  TIME_FRAME.ONE_H,
+  TIME_FRAME.FOUR_H,
+  TIME_FRAME.SIX_H,
+  TIME_FRAME.TWELVE_H,
+  TIME_FRAME.TWENTY_FOUR_H,
+  TIME_FRAME.ONE_D,
+];

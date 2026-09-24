@@ -1,3 +1,4 @@
+import { MicrostructureExitService } from './position.service';
 import {
   Controller,
   Get,
@@ -18,7 +19,6 @@ import {
   SuggestionPositionResponseDto,
 } from '@trading-stack/shared-dto';
 import { MasterToken } from '../../decorators/master-token.decorator';
-import { MasterTokenGuard } from '../../guards/master-token.guard';
 import { RequireMasterToken } from '../../decorators/require-master-token.decorator';
 
 @Controller('suggestions')
@@ -28,6 +28,7 @@ export class SuggestionsController {
     private readonly suggestionsService: SuggestionsService,
     private readonly llmService: LlmService,
     private readonly binanceService: BinanceCredentialsService,
+    private readonly microstructureExitService: MicrostructureExitService,
   ) {}
 
   @Get('futures')

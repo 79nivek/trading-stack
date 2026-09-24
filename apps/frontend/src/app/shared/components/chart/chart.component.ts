@@ -23,14 +23,13 @@ import {
   LineSeries,
 } from 'lightweight-charts';
 import { lastValueFrom, Subscription } from 'rxjs';
-import { BinanceFuturesApiService } from '../../../core/services/api/binance-futures-api.service';
 import { FuturesWebsocketService } from '../../../core/services/api/futures-ws.service';
 import { THEME, ThemeService } from '../../../core/services/theme.service';
 import { ChartSyncService } from '../../../core/services/chart-sync.service';
-import { TimeframeService } from '../../../core/services/timeframe.service';
 import { ExchangeInfoService } from '../../../core/services/exchange.service';
 import { QueryClient } from '@tanstack/angular-query-experimental';
 import { calculateSMA } from '../../../core/utils/currency.util';
+import { BackendApiService } from '../../../core/services/api/backend-api.service';
 
 @Component({
   selector: 'app-chart',
@@ -56,11 +55,10 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   hoveredData = signal<any>(null);
 
-  private binanceApi = inject(BinanceFuturesApiService);
+  private backendServ = inject(BackendApiService);
   private wsService = inject(FuturesWebsocketService);
   private themeService = inject(ThemeService);
   private chartSync = inject(ChartSyncService);
-  private timeframeService = inject(TimeframeService);
   exchangeInfoService = inject(ExchangeInfoService);
 
   private wsSubscription: Subscription | null = null;
@@ -81,7 +79,6 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     // Reactive: tự động reload khi global timeframe thay đổi
     effect(() => {
-      this.timeframeService.timeframe(); // đọc signal để đăng ký reactive dependency
       if (this.chart) {
         this.loadHistoricalData();
         this.applyBinanceFormatting();
@@ -393,7 +390,6 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   private queryClient = inject(QueryClient);
 
-
   private updateMAs(): void {
     if (!this.ma7Series || !this.ma25Series || !this.ma99Series) return;
     this.ma7Series.setData(calculateSMA(this.currentData, 7));
@@ -429,9 +425,6 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private currentVolumeData: any[] = [];
 
   private async loadHistoricalData(): Promise<void> {
-    const tf = this.timeframeService.timeframe();
-    if (!this.symbol || !tf) return;
-
     // Clear existing data immediately to prevent race conditions during fetch
     this.currentData = [];
     this.currentVolumeData = [];
@@ -448,13 +441,12 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.symbol,
       );
       const data = await this.queryClient.query({
-        queryKey: ['klines', this.symbol, tf, 500, 'latest'],
+        queryKey: ['klines', this.symbol, 500, 'latest'],
         queryFn: () =>
           lastValueFrom(
-            this.binanceApi.getKlines(
+            this.backendServ.getKlines(
               this.symbol,
               {
-                interval: tf,
                 limit: 500,
               },
               {
@@ -495,8 +487,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private async loadMoreHistoricalData(): Promise<void> {
-    const tf = this.timeframeService.timeframe();
-    if (!this.symbol || !tf || this.isLoadingMore || !this.earliestTime) return;
+    if (!this.symbol || this.isLoadingMore || !this.earliestTime) return;
 
     this.isLoadingMore = true;
     const endTime = this.earliestTime * 1000 - 1;
@@ -506,13 +497,12 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.symbol,
       );
       const data = await this.queryClient.query({
-        queryKey: ['klines', this.symbol, tf, 500, endTime],
+        queryKey: ['klines', this.symbol, 500, endTime],
         queryFn: () =>
           lastValueFrom(
-            this.binanceApi.getKlines(
+            this.backendServ.getKlines(
               this.symbol!,
               {
-                interval: tf,
                 limit: 500,
                 endTime,
               },
@@ -555,15 +545,11 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private subscribeToRealtimeData(): void {
-    const tf = this.timeframeService.timeframe();
-    if (!this.symbol || !tf) return;
-
     if (this.wsSubscription) {
       this.wsSubscription.unsubscribe();
     }
 
-    this.wsService.setTimeFrame(tf);
-    this.wsSubscription = this.wsService.register(this.symbol, tf).subscribe({
+    this.wsSubscription = this.wsService.register(this.symbol).subscribe({
       next: (kline) => {
         if (this.isInitializing) return; // Skip realtime ticks while fetching history to prevent out-of-order data
         if (this.candlestickSeries && this.volumeSeries) {

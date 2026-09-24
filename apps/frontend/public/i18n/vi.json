@@ -63,6 +63,10 @@
     "NEW_PASSWORD": "Mật khẩu mới",
     "NEW_PASSWORD_PLACEHOLDER": "Nhập mật khẩu mới",
     "CONFIRM_PASSWORD": "Xác nhận mật khẩu",
+    "USERNAME": "Tên đăng nhập",
+    "EMAIL": "Email",
+    "FIRST_NAME": "Tên",
+    "LAST_NAME": "Họ",
     "CONFIRM_PASSWORD_PLACEHOLDER": "Nhập lại mật khẩu mới"
   },
   "SUGGESTION": {

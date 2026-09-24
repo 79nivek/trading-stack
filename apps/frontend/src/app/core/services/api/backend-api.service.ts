@@ -23,7 +23,12 @@ import {
   FollowedSymbolDto,
   CreateFollowedSymbolDto,
   ReorderFollowedSymbolsDto,
+  KlineData,
+  AccountInfoResponse,
+  UserSettingsResDto,
 } from '@trading-stack/shared-dto';
+import { TradingFormatter } from '../../../shared/classes/trading-formater';
+import { TimeframeService } from '../timeframe.service';
 
 export interface UserProfile {
   id: string;
@@ -41,6 +46,8 @@ export class BackendApiService implements OnInit, OnDestroy {
   private storage = inject(StorageService);
   private secretKeyService = inject(SecretKeyService);
   private router = inject(Router);
+
+  private timeframeServ = inject(TimeframeService);
 
   isAuthenticated = signal<boolean>(!!this.storage.token.get());
   currentUser = signal<UserProfile | null>(null);
@@ -146,6 +153,57 @@ export class BackendApiService implements OnInit, OnDestroy {
     });
   }
 
+  getKlines(
+    symbol: string,
+    query: {
+      limit?: number;
+      endTime?: number;
+    },
+    formatOptions: {
+      tickSize: string | number;
+      pricePrecision: number;
+    } = {
+      tickSize: '1',
+      pricePrecision: 0,
+    },
+  ): Observable<KlineData[]> {
+    if (query.limit === undefined) query.limit = 500;
+    const tf = this.timeframeServ.timeframe();
+
+    const params: any = {
+      symbol: symbol.toUpperCase(),
+      interval: tf,
+      limit: query.limit.toString(),
+    };
+
+    if (query.endTime) {
+      params.endTime = query.endTime.toString();
+    }
+
+    return this.http
+      .get<BaseResponse<any[][]>>(
+        `${ENV.BACKEND_URL}/api/v1/market-data/klines/futures`,
+        {
+          params,
+          ...skipSpinnerOptions(),
+        },
+      )
+      .pipe(
+        map((res: any) => res.result || res),
+        map((data) => {
+          return data.map((kline: any) => ({
+            time: Math.floor(kline[0] / 1000), // convert ms to s for lightweight-charts
+            open: TradingFormatter.formatPrice(kline[1], formatOptions),
+            high: TradingFormatter.formatPrice(kline[2], formatOptions),
+            low: TradingFormatter.formatPrice(kline[3], formatOptions),
+            close: TradingFormatter.formatPrice(kline[4], formatOptions),
+            volume: TradingFormatter.formatPrice(kline[5], formatOptions),
+            normalizedToken: `${symbol.toLowerCase()}@kline_${tf}`,
+          }));
+        }),
+      );
+  }
+
   getMe(): Observable<boolean> {
     if (!this.storage.token.get()) {
       this.isAuthenticated.set(false);
@@ -202,9 +260,9 @@ export class BackendApiService implements OnInit, OnDestroy {
       .pipe(map((res) => res.result));
   }
 
-  getSettings(): Observable<any> {
+  getSettings(): Observable<UserSettingsResDto> {
     return this.http
-      .get<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/settings`, {
+      .get<BaseResponse<UserSettingsResDto>>(`${ENV.BACKEND_URL}/api/v1/settings`, {
         ...this.useAuth(),
         ...skipSpinnerOptions(),
       })
@@ -273,12 +331,7 @@ export class BackendApiService implements OnInit, OnDestroy {
       .pipe(map((res) => res.result.listenKey));
   }
 
-  getFuturesAccountInfo(): Observable<{
-    ok: boolean;
-    futureBalance: number;
-    unrealizedPnl: number;
-    realizedPnlToday: number;
-  }> {
+  getFuturesAccountInfo(): Observable<AccountInfoResponse> {
     return this.http
       .get<
         BaseResponse<any>

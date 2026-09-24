@@ -22,14 +22,13 @@ import { SecretKeyService } from '../../core/services/secret-key.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ThemeService, THEME } from '../../core/services/theme.service';
 import { LanguageService } from '../../core/services/language.service';
-import {
-  TimeframeService,
-  Timeframe,
-} from '../../core/services/timeframe.service';
+import { TimeframeService } from '../../core/services/timeframe.service';
 import { FormsModule } from '@angular/forms';
 import { LayoutService } from '../../core/services/layout.service';
-
+import { AccountService } from '../../core/services/account.service';
+import { TIME_FRAME } from '@trading-stack/shared-dto';
 import { UserDataWsService } from '../../core/services/api/user-data-ws.service';
+
 @Component({
   selector: 'app-authenticated-layout',
   standalone: true,
@@ -57,13 +56,16 @@ export class AuthenticatedLayoutComponent {
   private langService = inject(LanguageService);
   private timeframeService = inject(TimeframeService);
   public pageTitleStrategy = inject(PageTitleStrategy);
+  public accountService = inject(AccountService);
+  public authService = inject(BackendApiService);
+
+  private userDataWsService = inject(UserDataWsService);
 
   public layoutService = inject(LayoutService);
 
   masterTokenInput = '';
   isVerifyingToken = false;
-
-  userDataWs = inject(UserDataWsService);
+  isHeaderVisible = signal<boolean>(true);
 
   menuItems = [
     { path: APP_PATHS.DASHBOARD, label: 'MENU.DASHBOARD', icon: 'D' },
@@ -109,7 +111,8 @@ export class AuthenticatedLayoutComponent {
     },
   }));
 
-  constructor(public authService: BackendApiService) {
+  constructor() {
+    this.userDataWsService.temp();
     effect(() => {
       console.log('pageTitle', this.pageTitleStrategy.pageTitle());
       const settings = this.settingsQuery.data();
@@ -120,7 +123,7 @@ export class AuthenticatedLayoutComponent {
           this.langService.setLanguage(settings.language, false);
         if (settings.timeFrame)
           this.timeframeService.setTimeframe(
-            settings.timeFrame as Timeframe,
+            settings.timeFrame as TIME_FRAME,
             false,
           );
       }
@@ -129,6 +132,10 @@ export class AuthenticatedLayoutComponent {
 
   toggleSidebar() {
     this.isSidebarOpen.update((v) => !v);
+  }
+
+  toggleHeader() {
+    this.isHeaderVisible.update((v) => !v);
   }
 
   handleProfileMenuAction(action: string) {

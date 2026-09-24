@@ -63,6 +63,10 @@
     "NEW_PASSWORD": "New Password",
     "NEW_PASSWORD_PLACEHOLDER": "Enter your new password",
     "CONFIRM_PASSWORD": "Confirm Password",
+    "USERNAME": "Username",
+    "EMAIL": "Email",
+    "FIRST_NAME": "First Name",
+    "LAST_NAME": "Last Name",
     "CONFIRM_PASSWORD_PLACEHOLDER": "Re-enter your new password"
   },
   "SUGGESTION": {
