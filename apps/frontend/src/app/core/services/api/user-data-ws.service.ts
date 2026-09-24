@@ -3,6 +3,8 @@ import { SecretKeyService } from '../secret-key.service';
 import { effect } from '@angular/core';
 import { BackendApiService } from './backend-api.service';
 import { AccountService } from '../account.service';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -18,8 +20,19 @@ export class UserDataWsService implements OnDestroy {
   private pingInterval: any = null;
   private positionMap = new Map<string, number>();
 
+  private accountUpdate$ = new Subject<void>();
+  private accountUpdateSub: Subscription;
+
   constructor() {
     console.log('log UserDataWsService');
+
+    // Debounce ACCOUNT_UPDATE events to avoid spamming the API on multiple fills
+    this.accountUpdateSub = this.accountUpdate$
+      .pipe(debounceTime(1000))
+      .subscribe(() => {
+        this.accountServ.fetchInfo();
+      });
+
     effect(() => {
       const token = this.secretKeyService.token;
       if (token) {
@@ -91,7 +104,7 @@ export class UserDataWsService implements OnDestroy {
     if (!data || !data.e) return;
 
     if (data.e === 'ACCOUNT_UPDATE') {
-      this.accountServ.fetchInfo();
+      this.accountUpdate$.next();
     }
 
     if (data.e === 'ORDER_TRADE_UPDATE') {
@@ -115,5 +128,9 @@ export class UserDataWsService implements OnDestroy {
 
   ngOnDestroy() {
     this.stopWatching();
+    if (this.accountUpdateSub) {
+      this.accountUpdateSub.unsubscribe();
+    }
+    this.accountUpdate$.complete();
   }
 }
