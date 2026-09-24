@@ -79,6 +79,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     // Reactive: tự động reload khi global timeframe thay đổi
     effect(() => {
+      const tf = this.timeframeService.timeframe();
       if (this.chart) {
         this.loadHistoricalData();
         this.applyBinanceFormatting();
@@ -425,6 +426,9 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private currentVolumeData: any[] = [];
 
   private async loadHistoricalData(): Promise<void> {
+    const tf = this.timeframeService.timeframe();
+    if (!this.symbol || !tf) return;
+
     // Clear existing data immediately to prevent race conditions during fetch
     this.currentData = [];
     this.currentVolumeData = [];
@@ -441,7 +445,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.symbol,
       );
       const data = await this.queryClient.query({
-        queryKey: ['klines', this.symbol, 500, 'latest'],
+        queryKey: ['klines', this.symbol, tf, 500, 'latest'],
         queryFn: () =>
           lastValueFrom(
             this.backendServ.getKlines(
@@ -487,7 +491,8 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private async loadMoreHistoricalData(): Promise<void> {
-    if (!this.symbol || this.isLoadingMore || !this.earliestTime) return;
+    const tf = this.timeframeService.timeframe();
+    if (!this.symbol || !tf || this.isLoadingMore || !this.earliestTime) return;
 
     this.isLoadingMore = true;
     const endTime = this.earliestTime * 1000 - 1;
@@ -497,7 +502,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.symbol,
       );
       const data = await this.queryClient.query({
-        queryKey: ['klines', this.symbol, 500, endTime],
+        queryKey: ['klines', this.symbol, tf, 500, endTime],
         queryFn: () =>
           lastValueFrom(
             this.backendServ.getKlines(
@@ -545,10 +550,14 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private subscribeToRealtimeData(): void {
+    const tf = this.timeframeService.timeframe();
+    if (!this.symbol || !tf) return;
+
     if (this.wsSubscription) {
       this.wsSubscription.unsubscribe();
     }
 
+    this.wsService.setTimeFrame(tf);
     this.wsSubscription = this.wsService.register(this.symbol).subscribe({
       next: (kline) => {
         if (this.isInitializing) return; // Skip realtime ticks while fetching history to prevent out-of-order data
