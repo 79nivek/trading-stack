@@ -30,6 +30,7 @@ import { ExchangeInfoService } from '../../../core/services/exchange.service';
 import { QueryClient } from '@tanstack/angular-query-experimental';
 import { calculateSMA } from '../../../core/utils/currency.util';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
+import { TimeframeService } from '../../../core/services/timeframe.service';
 
 @Component({
   selector: 'app-chart',
@@ -60,6 +61,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private themeService = inject(ThemeService);
   private chartSync = inject(ChartSyncService);
   exchangeInfoService = inject(ExchangeInfoService);
+  private timeframeService = inject(TimeframeService);
 
   private wsSubscription: Subscription | null = null;
   private syncCrosshairSub: Subscription | null = null;
@@ -78,14 +80,17 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     });
 
     // Reactive: tự động reload khi global timeframe thay đổi
-    effect(() => {
-      const tf = this.timeframeService.timeframe();
-      if (this.chart) {
-        this.loadHistoricalData();
-        this.applyBinanceFormatting();
-        this.subscribeToRealtimeData();
-      }
-    });
+    effect(
+      () => {
+        this.timeframeService.timeframe();
+        if (this.chart) {
+          this.loadHistoricalData();
+          this.applyBinanceFormatting();
+          this.subscribeToRealtimeData();
+        }
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   ngAfterViewInit(): void {
