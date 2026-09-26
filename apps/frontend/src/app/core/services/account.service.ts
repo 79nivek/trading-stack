@@ -3,7 +3,7 @@ import { BackendApiService } from './api/backend-api.service';
 import { AccountInfoResponse, Position } from '@trading-stack/shared-dto';
 import { SecretKeyService } from './secret-key.service';
 import { FuturesWebsocketService } from './api/futures-ws.service';
-import { debounceTime, interval, of, Subscription, switchMap } from 'rxjs';
+import { interval, Subscription } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AccountService implements OnDestroy {
@@ -32,35 +32,28 @@ export class AccountService implements OnDestroy {
   }
 
   fetchInfo() {
-    // debound 2s tranh call ham lien tuc
-
     this.subscriptions.unsubscribe();
     this.subscriptions = new Subscription();
 
-    of(null)
-      .pipe(
-        debounceTime(2000),
-        switchMap(() => this.backendService.getFuturesAccountInfo()),
-      )
-      .subscribe({
-        next: (account) => {
-          this.accountData.set({
-            futureBalance: account.futureBalance,
-            unrealizedPnl: account.unrealizedPnl,
-            realizedPnlToday: account.realizedPnlToday,
-            unRealizedPnls: '',
-          });
+    this.backendService.getFuturesAccountInfo().subscribe({
+      next: (account) => {
+        this.accountData.set({
+          futureBalance: account.futureBalance,
+          unrealizedPnl: account.unrealizedPnl,
+          realizedPnlToday: account.realizedPnlToday,
+          unRealizedPnls: '',
+        });
 
-          this.currentPositions = (account.positions || []).reduce(
-            (acc, position) => {
-              acc[position.symbol] = position;
-              return acc;
-            },
-            {} as Record<string, Position>,
-          );
-          this.watchUnrealizedPnl();
-        },
-      });
+        this.currentPositions = (account.positions || []).reduce(
+          (acc, position) => {
+            acc[position.symbol] = position;
+            return acc;
+          },
+          {} as Record<string, Position>,
+        );
+        this.watchUnrealizedPnl();
+      },
+    });
   }
 
   watchUnrealizedPnl() {
