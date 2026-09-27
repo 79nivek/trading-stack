@@ -46,32 +46,23 @@
     </div>
   </ng-template>
 
-  @if (suggestionsQuery.isPending()) {
-    <div class="flex justify-center items-center h-64">
-      <div
-        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
-      ></div>
-    </div>
-  }
+  <app-no-data
+    [showNoData]="
+      !suggestionsQuery.isPending() && suggestionsQuery.data()?.length === 0
+    "
+  ></app-no-data>
 
-  @if (!suggestionsQuery.isPending() && suggestionsQuery.data()?.length === 0) {
-    <div
-      class="text-center text-text-muted py-10"
-      translate="SUGGESTION.NO_DATA"
-    >
-      No suggestions available at the moment.
-    </div>
-  }
-
-  @if (!suggestionsQuery.isPending() && suggestionsQuery.data(); as suggestions) {
+  @if (
+    !suggestionsQuery.isPending() && suggestionsQuery.data();
+    as suggestions
+  ) {
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      @for (token of suggestions; track token.symbol; let i = $index) {
+      @for (token of suggestions; track token; let i = $index) {
         <app-token-card
-          [token]="token"
+          [symbol]="token.symbol"
+          [quantData]="token"
           [index]="i"
           syncGroup="suggestion"
-          [aiCheckState]="aiChecks()[token.symbol]"
-          (aiCheck)="onAiCheck($event)"
           (openPosition)="openPositionModal($event)"
         />
       }

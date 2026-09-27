@@ -1,12 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
 import { SMA, RSI } from 'technicalindicators';
 import {
-  AiCheckResponseDto,
+  LlmAnalyzeTokenResponseDto,
   Direction,
   PositionSetupDto,
 } from '@trading-stack/shared-dto';
 import { ConfigService } from '@nestjs/config';
+import { MarketDataService } from '../market-data/market-data.service';
 
 @Injectable()
 export class LlmService {
@@ -15,40 +16,33 @@ export class LlmService {
   private OLLAMA_API!: string;
   private OLLAMA_MODEL!: string; // Fits well in 16GB VRAM (8B params), fallback to 'llama3' or 'mistral' if needed.
 
-  constructor(private readonly configServ: ConfigService) {
+  constructor(private readonly configServ: ConfigService, private marketDataService: MarketDataService) {
     const OLLAMA_HOST = this.configServ.get('OLLAMA_HOST', '');
     this.OLLAMA_API = `${OLLAMA_HOST}/api/generate`;
     this.OLLAMA_MODEL = this.configServ.get('OLLAMA_MODEL', '');
   }
 
-  async llmCheck(
+  async analyze(
     symbol: string,
     timeFrame = '4h',
-  ): Promise<AiCheckResponseDto> {
+  ): Promise<LlmAnalyzeTokenResponseDto> {
     try {
       this.logger.log(`Performing LLM Check for ${symbol}`);
       this.logger.log('Fetching Binance data...');
 
       // 1. Collect Data
-      const [tickerRes, premiumRes, klinesRes] = await Promise.all([
-        axios.get(`${this.BINANCE_API}/ticker/24hr?symbol=${symbol}`, {
-          timeout: 10000,
-        }),
-        axios.get(`${this.BINANCE_API}/premiumIndex?symbol=${symbol}`, {
-          timeout: 10000,
-        }),
-        axios.get(
-          `${this.BINANCE_API}/klines?symbol=${symbol}&interval=${timeFrame}&limit=50`,
-          { timeout: 10000 },
-        ),
+      const [ticker, premium, klinesRes] = await Promise.all([
+       this.marketDataService.fetch24hTickerData(symbol),
+        this.marketDataService.fetchPremiumIndex(symbol),
+        this.marketDataService.getKlinesFutures(symbol, timeFrame, 50),
       ]);
       this.logger.log('Binance data fetched successfully.');
 
-      const ticker = tickerRes.data;
-      const premium = premiumRes.data;
-      const klines = klinesRes.data;
+      if (!ticker || !premium || !klinesRes) {
+        throw new NotFoundException('can not get necessary data, please try again');
+      }
 
-      const closes = klines.map((k: any) => parseFloat(k[4]));
+      const closes = klinesRes.map((k: any) => parseFloat(k[4]));
       const currentPrice = closes[closes.length - 1];
 
       // 2. Calculate Indicators using technicalindicators

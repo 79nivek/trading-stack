@@ -1,5 +1,5 @@
-export enum Direction { LONG = 'LONG', SHORT = 'SHORT', NEUTRAL = 'NEUTRAL' }
-export enum EntryType { MARKET = 'MARKET', LIMIT = 'LIMIT' }
+import { Direction, EntryType } from "./shared-dto";
+
 export interface TokenSuggestionDto {
   symbol: string;
   volume24h: number;
@@ -11,7 +11,7 @@ export interface TokenSuggestionDto {
   score: number;
 }
 
-export interface AiCheckResponseDto {
+export interface LlmAnalyzeTokenResponseDto {
   symbol: string;
   action: Direction;
   reasoning: string;

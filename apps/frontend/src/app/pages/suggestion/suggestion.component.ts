@@ -13,13 +13,13 @@ import { ModalService } from '../../core/services/modal.service';
 import { BaseLayoutComponent } from '../../shared/classes/base-layout';
 import {
   TokenCardComponent,
-  AiCheckState,
 } from '../../shared/components/token-card/token-card.component';
+import { NoDataComponent } from '../../shared/components/no-data/no-data.component';
 
 @Component({
   selector: 'app-suggestion-page',
   standalone: true,
-  imports: [CommonModule, TranslateDirective, TokenCardComponent],
+  imports: [CommonModule, TranslateDirective, TokenCardComponent, NoDataComponent],
   templateUrl: './suggestion.component.html',
   styleUrl: './suggestion.component.scss',
 })
@@ -84,31 +84,6 @@ export class SuggestionPageComponent extends BaseLayoutComponent {
     const value = (event.target as HTMLSelectElement).value;
     this.userLimit.set(Number(value));
     this.updateSettingsMutation.mutate(Number(value));
-  }
-
-  aiChecks = signal<Record<string, AiCheckState>>({});
-
-  async onAiCheck(symbol: string) {
-    this.aiChecks.update((state) => ({
-      ...state,
-      [symbol]: { ...state[symbol], loading: true, error: false },
-    }));
-
-    try {
-      const timeFrame = this.settingsQuery.data()?.timeFrame;
-      const data = await lastValueFrom(
-        this.backendApi.getAiCheck(symbol, timeFrame),
-      );
-      this.aiChecks.update((state) => ({
-        ...state,
-        [symbol]: { loading: false, data, error: false },
-      }));
-    } catch {
-      this.aiChecks.update((state) => ({
-        ...state,
-        [symbol]: { loading: false, error: true },
-      }));
-    }
   }
 
   openPositionModal(symbol: string) {

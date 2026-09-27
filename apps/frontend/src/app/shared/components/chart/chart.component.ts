@@ -21,6 +21,8 @@ import {
   CandlestickSeries,
   HistogramSeries,
   LineSeries,
+  IPriceLine,
+  LineStyle,
 } from 'lightweight-charts';
 import { lastValueFrom, Subscription } from 'rxjs';
 import { FuturesWebsocketService } from '../../../core/services/api/futures-ws.service';
@@ -31,6 +33,13 @@ import { QueryClient } from '@tanstack/angular-query-experimental';
 import { calculateSMA } from '../../../core/utils/currency.util';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import { TimeframeService } from '../../../core/services/timeframe.service';
+
+export type LineCheckPoint = {
+  color: string;
+  title: string;
+  value: string;
+  lineStyle: LineStyle;
+};
 
 @Component({
   selector: 'app-chart',
@@ -43,6 +52,8 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() symbol = '';
   /** syncGroup để đồng bộ zoom/crosshair giữa các chart cùng nhóm. */
   @Input() syncGroup = '';
+
+  @Input() lines: LineCheckPoint[] = [];
 
   @ViewChild('chartContainer') chartContainer!: ElementRef;
 
@@ -66,6 +77,36 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private wsSubscription: Subscription | null = null;
   private syncCrosshairSub: Subscription | null = null;
   private syncZoomSub: Subscription | null = null;
+
+  private priceLines: IPriceLine[] = [];
+
+  private renderPriceLines(): void {
+    if (!this.candlestickSeries) return;
+
+    // Clear existing price lines
+    this.priceLines.forEach((line) => {
+      this.candlestickSeries!.removePriceLine(line);
+    });
+    this.priceLines = [];
+
+    // Draw new price lines
+    if (this.lines && this.lines.length > 0) {
+      this.lines.forEach((config) => {
+        const price = parseFloat(config.value);
+        if (!isNaN(price)) {
+          const line = this.candlestickSeries!.createPriceLine({
+            price: price,
+            color: config.color,
+            lineWidth: 1,
+            lineStyle: config.lineStyle, // Cast to any to avoid importing LineStyle enum
+            axisLabelVisible: true,
+            title: config.title,
+          });
+          this.priceLines.push(line);
+        }
+      });
+    }
+  }
 
   /** Unique ID để phân biệt source khi broadcast sync events. */
   private readonly instanceId = `chart-${Math.random().toString(36).slice(2)}`;
@@ -107,6 +148,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     const symbolChanged = changes['symbol'] && !changes['symbol'].firstChange;
     const syncGroupChanged =
       changes['syncGroup'] && !changes['syncGroup'].firstChange;
+    const linesChanged = changes['lines'];
 
     if (symbolChanged) {
       if (this.chart) {
@@ -118,6 +160,10 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     if (syncGroupChanged) {
       this.subscribeSyncEvents();
+    }
+
+    if (linesChanged && this.chart) {
+      this.renderPriceLines();
     }
   }
 
@@ -367,6 +413,9 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     // Đăng ký sync events sau khi chart đã khởi tạo xong
     this.subscribeSyncEvents();
+
+    // Render price lines if provided
+    this.renderPriceLines();
   }
 
   private applyTheme(theme: THEME): void {

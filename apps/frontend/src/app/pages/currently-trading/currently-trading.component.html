@@ -1,4 +1,48 @@
-<h1 class="page-title">{{ 'MENU.CURRENTLY_TRADING' | translate }}</h1>
-    <div class="page-card">
-      <p class="text-text/60">Currently trading list...</p>
+<div class="followed-container w-full mx-auto">
+  <!-- ===== Header section (injected into layout header) ===== -->
+  <ng-template #HeaderSection>
+    <div class="flex items-center gap-3">
+      <!-- <button
+        (click)="onRefreshData()"
+        [disabled]="followedDataQuery.isFetching()"
+        class="flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-md hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          [class.animate-spin]="followedDataQuery.isFetching()"
+        >
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+          <path d="M21 3v5h-5"></path>
+        </svg>
+        <span translate="SUGGESTION.REFRESH">Refresh</span>
+      </button> -->
     </div>
+  </ng-template>
+
+  <!-- ===== Empty state ===== -->
+  <app-no-data [showNoData]="accountServ.currentPositions().size === 0" />
+  <!-- ===== Cards grid with drag-and-drop ===== -->
+  @if (accountServ.currentPositions().size > 0) {
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      @for (
+        position of accountServ.currentPositions().values();
+        track position.symbol
+      ) {
+        <app-token-card
+          [symbol]="position.symbol"
+          syncGroup="current-trading"
+          [showRemoveButton]="true"
+          (remove)="onCancelPosition(position.symbol)"
+        />
+      }
+    </div>
+  }
+</div>

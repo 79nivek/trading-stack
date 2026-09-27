@@ -26,6 +26,7 @@ import {
   KlineData,
   AccountInfoResponse,
   UserSettingsResDto,
+  LlmAnalyzeTokenResponseDto,
 } from '@trading-stack/shared-dto';
 import { TradingFormatter } from '../../../shared/classes/trading-formater';
 import { TimeframeService } from '../timeframe.service';
@@ -262,10 +263,13 @@ export class BackendApiService implements OnInit, OnDestroy {
 
   getSettings(): Observable<UserSettingsResDto> {
     return this.http
-      .get<BaseResponse<UserSettingsResDto>>(`${ENV.BACKEND_URL}/api/v1/settings`, {
-        ...this.useAuth(),
-        ...skipSpinnerOptions(),
-      })
+      .get<BaseResponse<UserSettingsResDto>>(
+        `${ENV.BACKEND_URL}/api/v1/settings`,
+        {
+          ...this.useAuth(),
+          ...skipSpinnerOptions(),
+        },
+      )
       .pipe(map((res) => res.result));
   }
 
@@ -311,7 +315,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<TokenSuggestionDto[]>
-      >(`${ENV.BACKEND_URL}/api/v1/suggestions/futures?limit=${limit}`, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/suggestions/futures?limit=${limit}`, { ...this.useAuth() })
       .pipe(map((res) => res.result));
   }
 
@@ -366,6 +370,24 @@ export class BackendApiService implements OnInit, OnDestroy {
       .post<
         BaseResponse<any>
       >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/place-position`, setup, { ...this.useAuth(true) })
+      .pipe(map((res) => res.result));
+  }
+
+  // ============ analyze ===============
+
+  quantAnalyzeToken(symbol: string): Observable<TokenSuggestionDto> {
+    return this.http
+      .get<
+        BaseResponse<TokenSuggestionDto>
+      >(`${ENV.BACKEND_URL}/api/v1/analyze/quantitative/${symbol}`, { ...this.useAuth(), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
+  }
+
+  llmAnalyzeToken(symbol: string): Observable<LlmAnalyzeTokenResponseDto> {
+    return this.http
+      .get<
+        BaseResponse<LlmAnalyzeTokenResponseDto>
+      >(`${ENV.BACKEND_URL}/api/v1/analyze/llm/${symbol}`, { ...this.useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 

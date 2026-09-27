@@ -1,6 +1,6 @@
 import { effect, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import { BackendApiService } from './api/backend-api.service';
-import { AccountInfoResponse, Position } from '@trading-stack/shared-dto';
+import { Position } from '@trading-stack/shared-dto';
 import { SecretKeyService } from './secret-key.service';
 import { FuturesWebsocketService } from './api/futures-ws.service';
 import { interval, Subscription } from 'rxjs';
@@ -13,14 +13,13 @@ export class AccountService implements OnDestroy {
 
   private subscriptions = new Subscription();
 
-  public accountData = signal<
-    | (Omit<AccountInfoResponse, 'positions'> & {
-        unRealizedPnls: string;
-      })
-    | null
-  >(null);
+  public futureBalance = signal(0);
 
-  private currentPositions: Record<string, Position> = {};
+  public realizedPnlToday = signal(0);
+
+  public unrealizedPnl = signal<number>(0);
+
+  public currentPositions = signal(new Map<string, Position>());
 
   constructor() {
     effect(() => {
@@ -37,20 +36,17 @@ export class AccountService implements OnDestroy {
 
     this.backendService.getFuturesAccountInfo().subscribe({
       next: (account) => {
-        this.accountData.set({
-          futureBalance: account.futureBalance,
-          unrealizedPnl: account.unrealizedPnl,
-          realizedPnlToday: account.realizedPnlToday,
-          unRealizedPnls: '',
-        });
+        this.futureBalance.set(account.futureBalance);
+        this.realizedPnlToday.set(account.realizedPnlToday);
+        this.unrealizedPnl.set(account.unrealizedPnl);
 
-        this.currentPositions = (account.positions || []).reduce(
-          (acc, position) => {
-            acc[position.symbol] = position;
+        this.currentPositions.set(
+          account.positions.reduce((acc, position) => {
+            acc.set(position.symbol, position);
             return acc;
-          },
-          {} as Record<string, Position>,
+          }, new Map<string, Position>()),
         );
+
         this.watchUnrealizedPnl();
       },
     });
@@ -60,11 +56,12 @@ export class AccountService implements OnDestroy {
     this.subscriptions.unsubscribe();
     this.subscriptions = new Subscription();
 
-    if (Object.keys(this.currentPositions).length === 0) return;
+    if (this.currentPositions().size === 0) {
+      this.unrealizedPnl.set(0);
+      return;
+    }
 
-    const pnlMap: Record<string, number> = {};
-
-    Object.values(this.currentPositions).forEach((position) => {
+    this.currentPositions().forEach((position) => {
       const amt = parseFloat(position.positionAmt || '0');
       if (amt === 0) return; // Skip closed positions
 
@@ -76,7 +73,14 @@ export class AccountService implements OnDestroy {
           if (entry > 0) {
             const displayPnl = amt * (currentPrice - entry);
             const key = position.symbol;
-            pnlMap[key] = displayPnl;
+
+            this.currentPositions.update((currentMap) => {
+              currentMap.set(key, {
+                ...position,
+                unRealizedProfit: displayPnl.toString(),
+              });
+              return currentMap;
+            });
           }
         },
       });
@@ -86,17 +90,11 @@ export class AccountService implements OnDestroy {
     this.subscriptions.add(
       interval(1000).subscribe(() => {
         let totalUnrealized = 0;
-        Object.values(pnlMap).forEach((val: any) => {
-          totalUnrealized += val;
+        this.currentPositions().forEach((position) => {
+          totalUnrealized += parseFloat(position.unRealizedProfit || '0');
         });
 
-        this.accountData.update((data) => {
-          if (!data) return null;
-          return {
-            ...data,
-            unrealizedPnl: totalUnrealized,
-          };
-        });
+        this.unrealizedPnl.set(totalUnrealized);
       }),
     );
   }

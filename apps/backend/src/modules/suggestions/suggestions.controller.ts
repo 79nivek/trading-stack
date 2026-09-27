@@ -10,7 +10,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { SuggestionsService } from './suggestions.service';
-import { LlmService } from './llm.service';
+import { LlmService } from '../llm/llm.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { BinanceCredentialsService } from '../binance-credentials/binance-credentials.service';
 import {
@@ -34,17 +34,6 @@ export class SuggestionsController {
   @Get('futures')
   async getFuturesSuggestions(@Query('limit') limit: number | string = 10) {
     return this.suggestionsService.getFuturesSuggestions(Number(limit));
-  }
-
-  @Get('ai-check')
-  async aiCheck(
-    @Query('symbol') symbol: string,
-    @Query('timeFrame') timeFrame: string,
-  ) {
-    if (!symbol) {
-      throw new Error('Symbol is required');
-    }
-    return this.llmService.llmCheck(symbol, timeFrame);
   }
 
   @Post('position')

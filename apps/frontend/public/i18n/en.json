@@ -15,6 +15,7 @@
     "CANCEL": "Cancel",
     "SUBMIT": "Submit",
     "LOADING": "Loading ...",
+    "NO_DATA": "No data available",
     "AUTO_COMPLETE_PLACEHOLDER": "Search ..."
   },
   "AUTH": {

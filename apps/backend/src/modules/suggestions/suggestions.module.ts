@@ -4,16 +4,13 @@ import { BinanceCredentialsModule } from '../binance-credentials/binance-credent
 import { Module } from '@nestjs/common';
 import { SuggestionsController } from './suggestions.controller';
 import { SuggestionsService } from './suggestions.service';
-import { LlmService } from './llm.service';
 import { MicrostructureExitService } from './position.service';
+import { AnalyzeModule } from '../analyze/analyze.module';
+import { LlmModule } from '../llm/llm.module';
 
 @Module({
-  imports: [
-    BinanceCredentialsModule,
-    AuthModule,
-    UsersModule
-  ],
+  imports: [BinanceCredentialsModule, AuthModule, UsersModule, AnalyzeModule, LlmModule],
   controllers: [SuggestionsController],
-  providers: [SuggestionsService, LlmService, MicrostructureExitService],
+  providers: [SuggestionsService, MicrostructureExitService],
 })
 export class SuggestionsModule {}

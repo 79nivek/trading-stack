@@ -35,32 +35,11 @@
   </ng-template>
 
   <!-- ===== Empty state ===== -->
-  @if (
-    !followedQuery.isPending() && (followedQuery.data()?.length ?? 0) === 0
-  ) {
-    <div class="empty-state">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="48"
-        height="48"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="text-text-muted mx-auto mb-4"
-      >
-        <path d="M12 20h9"></path>
-        <path
-          d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"
-        ></path>
-      </svg>
-      <p class="text-text-muted" translate="FOLLOWED.NO_DATA">
-        No followed symbols yet. Use the search above to add one.
-      </p>
-    </div>
-  }
+  <app-no-data
+    [showNoData]="
+      !followedQuery.isPending() && (followedQuery.data()?.length ?? 0) === 0
+    "
+  />
 
   <!-- ===== Cards grid with drag-and-drop ===== -->
   @if (orderedEntries().length > 0) {
@@ -77,12 +56,10 @@
           (dragend)="onDragEnd($event)"
         >
           <app-token-card
-            [token]="entry.token"
+            [symbol]="entry.token.symbol"
             syncGroup="followed"
             [showRemoveButton]="true"
             [draggable]="true"
-            [aiCheckState]="aiChecks()[entry.token.symbol]"
-            (aiCheck)="onAiCheck($event)"
             (openPosition)="openPositionModal($event)"
             (remove)="onRemove(entry.followedId)"
             (dragHover)="onDragHover($event, i)"

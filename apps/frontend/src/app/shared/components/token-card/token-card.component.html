@@ -38,41 +38,41 @@
       @if (index !== undefined) {
         <span class="rank-badge">#{{ index + 1 }}</span>
       }
-      <h2 class="token-symbol">{{ token.symbol }}</h2>
+      <h2 class="token-symbol">{{ symbol }}</h2>
       <span
         class="price-change-badge"
         [ngClass]="
-          token.priceChangePercent >= 0
+          (quantInfo()?.priceChangePercent || 0) >= 0
             ? 'bg-success/10 text-success'
             : 'bg-danger/10 text-danger'
         "
       >
-        {{ token.priceChangePercent >= 0 ? '+' : ''
-        }}{{ token.priceChangePercent }}%
+        {{ (quantInfo()?.priceChangePercent || 0) >= 0 ? '+' : ''
+        }}{{ quantInfo()?.priceChangePercent }}%
+      </span>
+      <span
+        class="price-change-badge"
+        [ngClass]="
+          +(position()?.unRealizedProfit || '0') >= 0
+            ? 'bg-success/10 text-success'
+            : 'bg-danger/10 text-danger'
+        "
+      >
+        {{ +(position()?.unRealizedProfit || '0') >= 0 ? '+' : ''
+        }}{{ position()?.unRealizedProfit | number: '1.2-2' }}$
       </span>
     </div>
 
     <!-- Right: action badge + buttons + collapse icon -->
     <div class="flex items-center gap-2">
-      <span
-        class="action-badge"
-        [ngClass]="{
-          'bg-success/10 text-success': token.action === 'LONG',
-          'bg-danger/10 text-danger': token.action === 'SHORT',
-          'bg-black/10 text-text dark:bg-white/10': token.action === 'NEUTRAL',
-        }"
-      >
-        {{ token.action }}
-      </span>
-
       <!-- AI Check Button -->
       <button
         (click)="onAiCheck($event)"
-        [disabled]="aiCheckState?.loading"
+        [disabled]="!!llmAnalyzeTokenMutation.isPending()"
         class="header-btn header-btn--primary"
         [attr.title]="'FOLLOWED.AI_CHECK' | translate"
       >
-        @if (aiCheckState?.loading) {
+        @if (!!llmAnalyzeTokenMutation.isPending()) {
           <svg
             class="animate-spin h-3 w-3"
             xmlns="http://www.w3.org/2000/svg"
@@ -162,7 +162,7 @@
               >24h Vol (USDT)</span
             >
             <span class="stat-value">{{
-              token.volume24h | number: '1.0-0'
+              quantInfo()?.volume24h | number: '1.0-0'
             }}</span>
           </div>
           <div class="stat-item">
@@ -170,22 +170,44 @@
               >Funding Rate</span
             >
             <span class="stat-value"
-              >{{ token.fundingRate * 100 | number: '1.4-4' }}%</span
+              >{{
+                (quantInfo()?.fundingRate || 0) * 100 | number: '1.4-4'
+              }}%</span
             >
           </div>
           <div class="stat-item">
             <span class="stat-label" translate="SUGGESTION.TRADE_COUNT"
               >Trade Count</span
             >
-            <span class="stat-value">{{ token.tradeCount | number }}</span>
+            <span class="stat-value">{{
+              quantInfo()?.tradeCount | number
+            }}</span>
           </div>
           <div class="stat-item">
             <span class="stat-label" translate="SUGGESTION.SCORE"
               >Quant Score</span
             >
             <span class="stat-value text-primary">{{
-              token.score | number: '1.0-0'
+              quantInfo()?.score | number: '1.0-0'
             }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label" translate="SUGGESTION.ACTION_SUGGESTION"
+              >Action</span
+            >
+            <div>
+              <span
+                class="action-badge"
+                [ngClass]="{
+                  'bg-success/10 text-success': quantInfo()?.action === 'LONG',
+                  'bg-danger/10 text-danger': quantInfo()?.action === 'SHORT',
+                  'bg-black/10 text-text dark:bg-white/10':
+                    quantInfo()?.action === 'NEUTRAL',
+                }"
+              >
+                {{ quantInfo()?.action }}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -197,12 +219,17 @@
           >
             Analysis
           </div>
-          <p class="text-sm text-text-muted italic">"{{ token.reason }}"</p>
+          <p class="text-sm text-text-muted italic">
+            "{{ quantInfo()?.reason }}"
+          </p>
         </div>
 
         <!-- AI Check Result Section -->
-        <div class="ai-check-box" [class.hidden]="!aiCheckState?.data">
-          @if (aiCheckState?.data; as aiResult) {
+        <div
+          class="ai-check-box"
+          [class.hidden]="!llmAnalyzeTokenMutation.data()"
+        >
+          @if (llmAnalyzeTokenMutation.data(); as aiResult) {
             <div class="text-sm">
               <div class="flex items-center gap-2 mb-2">
                 <span class="text-text-muted">AI Suggestion:</span>
@@ -220,7 +247,7 @@
               <p class="text-text-muted italic">"{{ aiResult.reasoning }}"</p>
             </div>
           }
-          @if (aiCheckState?.error) {
+          @if (llmAnalyzeTokenMutation.isError()) {
             <div class="text-sm text-danger">
               Failed to get AI suggestion. Please try again.
             </div>
@@ -231,7 +258,11 @@
 
     <!-- Chart (always visible) -->
     <div class="chart-section">
-      <app-chart [symbol]="token.symbol" [syncGroup]="syncGroup"></app-chart>
+      <app-chart
+        [lines]="lineCheckpoint()"
+        [symbol]="symbol"
+        [syncGroup]="syncGroup"
+      ></app-chart>
     </div>
   </div>
 </div>

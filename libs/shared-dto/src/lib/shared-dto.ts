@@ -1,3 +1,5 @@
+import { IsString } from "class-validator";
+
 export enum TIME_FRAME {
   ONE_M = '1m',
   FIVE_M = '5m',
@@ -23,3 +25,11 @@ export const TIME_FRAMES: TIME_FRAME[] = [
   TIME_FRAME.TWENTY_FOUR_H,
   TIME_FRAME.ONE_D,
 ];
+
+export enum Direction { LONG = 'LONG', SHORT = 'SHORT', NEUTRAL = 'NEUTRAL' }
+export enum EntryType { MARKET = 'MARKET', LIMIT = 'LIMIT' }
+
+export class FindOneSymbolDto {
+  @IsString()
+  symbol!: string;
+}

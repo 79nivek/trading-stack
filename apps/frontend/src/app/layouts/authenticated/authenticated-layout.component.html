@@ -42,7 +42,7 @@
       class="p-3 border-t border-border flex flex-col gap-2 text-sm overflow-hidden whitespace-nowrap"
     >
       @if (secretKeyService.hasToken) {
-        @if (accountService.accountData(); as data) {
+        @if (accountService.futureBalance(); as futureBalance) {
           <div class="flex flex-col gap-1">
             <div
               class="flex justify-between items-center"
@@ -51,11 +51,11 @@
               @if (isSidebarOpen()) {
                 <span class="text-text-muted text-xs">Balance</span>
                 <span class="font-medium">{{
-                  data.futureBalance | number: '1.2-2'
+                  futureBalance | number: '1.2-2'
                 }}</span>
               } @else {
                 <span class="font-medium text-xs" title="Balance">{{
-                  data.futureBalance | number: '1.0-0'
+                  futureBalance | number: '1.0-0'
                 }}</span>
               }
             </div>
@@ -67,21 +67,21 @@
                 <span class="text-text-muted text-xs">Realized (Day)</span>
                 <span
                   class="font-medium"
-                  [class.text-success]="data.realizedPnlToday > 0"
-                  [class.text-danger]="data.realizedPnlToday < 0"
+                  [class.text-success]="accountService.realizedPnlToday() > 0"
+                  [class.text-danger]="accountService.realizedPnlToday() < 0"
                 >
-                  {{ data.realizedPnlToday > 0 ? '+' : ''
-                  }}{{ data.realizedPnlToday | number: '1.2-2' }}
+                  {{ accountService.realizedPnlToday() > 0 ? '+' : ''
+                  }}{{ accountService.realizedPnlToday() | number: '1.2-2' }}
                 </span>
               } @else {
                 <span
                   class="font-medium text-xs"
-                  [class.text-success]="data.realizedPnlToday > 0"
-                  [class.text-danger]="data.realizedPnlToday < 0"
+                  [class.text-success]="accountService.realizedPnlToday() > 0"
+                  [class.text-danger]="accountService.realizedPnlToday() < 0"
                   title="Realized (Day)"
                 >
-                  {{ data.realizedPnlToday > 0 ? '+' : ''
-                  }}{{ data.realizedPnlToday | number: '1.0-0' }}
+                  {{ accountService.realizedPnlToday() > 0 ? '+' : ''
+                  }}{{ accountService.realizedPnlToday() | number: '1.0-0' }}
                 </span>
               }
             </div>
@@ -93,21 +93,21 @@
                 <span class="text-text-muted text-xs">Unrealized</span>
                 <span
                   class="font-medium"
-                  [class.text-success]="data.unrealizedPnl > 0"
-                  [class.text-danger]="data.unrealizedPnl < 0"
+                  [class.text-success]="accountService.unrealizedPnl() > 0"
+                  [class.text-danger]="accountService.unrealizedPnl() < 0"
                 >
-                  {{ data.unrealizedPnl > 0 ? '+' : ''
-                  }}{{ data.unrealizedPnl | number: '1.2-2' }}
+                  {{ accountService.unrealizedPnl() > 0 ? '+' : ''
+                  }}{{ accountService.unrealizedPnl() | number: '1.2-2' }}
                 </span>
               } @else {
                 <span
                   class="font-medium text-xs"
-                  [class.text-success]="data.unrealizedPnl > 0"
-                  [class.text-danger]="data.unrealizedPnl < 0"
+                  [class.text-success]="accountService.unrealizedPnl() > 0"
+                  [class.text-danger]="accountService.unrealizedPnl() < 0"
                   title="Unrealized"
                 >
-                  {{ data.unrealizedPnl > 0 ? '+' : ''
-                  }}{{ data.unrealizedPnl | number: '1.0-0' }}
+                  {{ accountService.unrealizedPnl() > 0 ? '+' : ''
+                  }}{{ accountService.unrealizedPnl() | number: '1.0-0' }}
                 </span>
               }
             </div>

@@ -39,10 +39,6 @@
       @apply px-2 py-1 text-xs font-semibold rounded;
     }
 
-    .action-badge {
-      @apply text-sm font-bold px-3 py-1 rounded-full uppercase;
-    }
-
     .header-btn {
       @apply px-3 py-1 text-xs font-medium rounded transition-colors
              flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed;
@@ -127,6 +123,10 @@
 
     .ai-check-box {
       @apply bg-surface/50 border border-border p-4 rounded-lg;
+    }
+
+    .action-badge {
+      @apply text-sm font-bold px-3 py-1 rounded-full uppercase;
     }
   }
 }

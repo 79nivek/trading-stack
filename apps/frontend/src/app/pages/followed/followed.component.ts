@@ -16,7 +16,6 @@ import { ToastService } from '../../core/services/toast.service';
 import { BaseLayoutComponent } from '../../shared/classes/base-layout';
 import {
   TokenCardComponent,
-  AiCheckState,
 } from '../../shared/components/token-card/token-card.component';
 import { SuggestionPositionModal } from '../suggestion/suggestion-position/suggestion-position.modal';
 import {
@@ -24,6 +23,7 @@ import {
   FollowedSymbolDto,
 } from '@trading-stack/shared-dto';
 import { AutoCompleteComponent } from '../../shared/components/auto-complete/auto-complete.component';
+import { NoDataComponent } from '../../shared/components/no-data/no-data.component';
 
 /** Pairs token market data with its followed-symbol record for rendering */
 export interface FollowedTokenEntry {
@@ -41,6 +41,7 @@ export interface FollowedTokenEntry {
     TranslatePipe,
     TokenCardComponent,
     AutoCompleteComponent,
+    NoDataComponent,
   ],
   templateUrl: './followed.component.html',
   styleUrl: './followed.component.scss',
@@ -266,31 +267,6 @@ export class FollowedPageComponent
     queryFn: () => lastValueFrom(this.backendApi.getSettings()),
     staleTime: Infinity,
   }));
-
-  aiChecks = signal<Record<string, AiCheckState>>({});
-
-  async onAiCheck(symbol: string): Promise<void> {
-    this.aiChecks.update((state) => ({
-      ...state,
-      [symbol]: { ...state[symbol], loading: true, error: false },
-    }));
-
-    try {
-      const timeFrame = this.settingsQuery.data()?.timeFrame;
-      const data = await lastValueFrom(
-        this.backendApi.getAiCheck(symbol, timeFrame),
-      );
-      this.aiChecks.update((state) => ({
-        ...state,
-        [symbol]: { loading: false, data, error: false },
-      }));
-    } catch {
-      this.aiChecks.update((state) => ({
-        ...state,
-        [symbol]: { loading: false, error: true },
-      }));
-    }
-  }
 
   openPositionModal(symbol: string): void {
     this.modalService.open(SuggestionPositionModal, { symbol });
