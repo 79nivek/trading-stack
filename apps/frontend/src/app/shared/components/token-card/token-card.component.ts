@@ -72,6 +72,7 @@ export class TokenCardComponent implements OnChanges, OnInit {
   position = computed(() =>
     this.accountService.currentPositions().get(this.symbol),
   );
+  isOpeningPosition = computed(() => !!this.position());
 
   quantDataQuery = injectQuery(() => ({
     queryKey: ['analyze', this.symbol],

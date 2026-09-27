@@ -98,13 +98,23 @@
       </button>
 
       <!-- Position Button -->
-      <button
-        (click)="onOpenPosition($event)"
-        class="header-btn header-btn--outline"
-        [attr.title]="'FOLLOWED.POSITION' | translate"
-      >
-        <span translate="FOLLOWED.POSITION">Position</span>
-      </button>
+      @if (!isOpeningPosition()) {
+        <button
+          (click)="onOpenPosition($event)"
+          class="header-btn header-btn--outline"
+          [attr.title]="'FOLLOWED.POSITION' | translate"
+        >
+          <span translate="FOLLOWED.POSITION">Position</span>
+        </button>
+      } @else {
+        <button
+          (click)="onOpenPosition($event)"
+          class="header-btn header-btn--outline"
+          [attr.title]="'COMMON.CLOSE' | translate"
+        >
+          <span translate="COMMON.CLOSE">Close</span>
+        </button>
+      }
 
       <!-- Remove Button (optional) -->
       @if (showRemoveButton) {
