@@ -9,6 +9,7 @@ import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { CredentialsController } from './credentials.controller';
 import { FuturesController } from './futures.controller';
+import { MarketDataModule } from '../market-data/market-data.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { FuturesController } from './futures.controller';
     EncryptionModule,
     AuthModule,
     UsersModule,
+    MarketDataModule,
   ],
   controllers: [BinanceController, CredentialsController, FuturesController],
   providers: [BinanceService, BinanceCredentialRepository],

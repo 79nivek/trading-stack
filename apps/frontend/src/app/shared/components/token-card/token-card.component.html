@@ -274,9 +274,8 @@
         [lines]="lineCheckpoint()"
         [symbol]="symbol"
         [syncGroup]="syncGroup"
-        (priceSelect)="onPriceSelect($event)"
       >
-        <app-chart-menu />
+        <app-chart-menu [symbol]="symbol" />
       </app-chart>
     </div>
   </div>

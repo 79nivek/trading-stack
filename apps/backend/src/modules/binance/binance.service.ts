@@ -4,7 +4,15 @@ import { EncryptionService } from '../encryption/encryption.service';
 import { BinanceCredentialRepository } from './binance-credential.repository';
 import { generateBinanceSignature } from './binance-signature.util';
 import { directionToOppositeSide } from '../../utils';
-import { AccountInfoResponse, Direction, Order, Position } from '@trading-stack/shared-dto';
+import {
+  AccountInfoResponse,
+  Direction,
+  Order,
+  OrderType,
+  Position,
+} from '@trading-stack/shared-dto';
+import { MarketDataService } from '../market-data/market-data.service';
+import { TradingFormatter } from '@trading-stack/shared';
 
 export interface BinancePermissions {
   readAccount: boolean;
@@ -14,44 +22,19 @@ export interface BinancePermissions {
 
 @Injectable()
 export class BinanceService {
-  private exchangeInfoCache: any = null;
-  private exchangeInfoCacheTime = 0;
-
   constructor(
     private readonly encryptionService: EncryptionService,
     private readonly credentialRepository: BinanceCredentialRepository,
+    private readonly marketDataServ: MarketDataService,
   ) {}
 
   private async getSymbolPrecision(symbol: string) {
-    if (
-      !this.exchangeInfoCache ||
-      Date.now() - this.exchangeInfoCacheTime > 3600000
-    ) {
-      try {
-        const response = await fetch(
-          'https://fapi.binance.com/fapi/v1/exchangeInfo',
-        );
-        if (response.ok) {
-          this.exchangeInfoCache = await response.json();
-          this.exchangeInfoCacheTime = Date.now();
-        }
-      } catch (e) {
-        console.error('Failed to fetch exchange info', e);
-      }
+    const exchangeOption = await this.marketDataServ.getExchangeOption(symbol);
+    if (!exchangeOption) {
+      throw new BadRequestException(`Symbol ${symbol} not found`);
     }
 
-    if (this.exchangeInfoCache && this.exchangeInfoCache.symbols) {
-      const symInfo = this.exchangeInfoCache.symbols.find(
-        (s: any) => s.symbol === symbol,
-      );
-      if (symInfo) {
-        return {
-          quantityPrecision: symInfo.quantityPrecision ?? 3,
-          pricePrecision: symInfo.pricePrecision ?? 4,
-        };
-      }
-    }
-    return { quantityPrecision: 3, pricePrecision: 4 }; // Fallback
+    return exchangeOption; // Fallback
   }
 
   async getSecret(userId: string, masterToken: string) {
@@ -276,12 +259,17 @@ export class BinanceService {
 
       // Dynamically fetch precision for the specific symbol
       // Dynamically fetch precision for the specific symbol
-      const { quantityPrecision, pricePrecision } =
-        await this.getSymbolPrecision(setup.symbol);
+      const formatter = await this.getSymbolPrecision(setup.symbol);
 
-      const qty = parseFloat(setup.volume.toFixed(quantityPrecision));
-      const tpPrice = parseFloat(setup.takeProfitPrice.toFixed(pricePrecision));
-      const slPrice = parseFloat(setup.stopLossPrice.toFixed(pricePrecision));
+      const qty = TradingFormatter.formatQuantity(setup.volume, formatter);
+      const tpPrice = TradingFormatter.formatPrice(
+        setup.takeProfitPrice,
+        formatter,
+      );
+      const slPrice = TradingFormatter.formatPrice(
+        setup.stopLossPrice,
+        formatter,
+      );
 
       const client = new DerivativesTradingUsdsFutures({
         configurationRestAPI: {
@@ -302,16 +290,20 @@ export class BinanceService {
       );
 
       // 3. Place TP Order (using Algo endpoint as requested by Binance)
-      const tpOrder = await this.placeTP(
-        { direction: setup.direction, symbol: setup.symbol, price: tpPrice },
-        client,
-      );
+      const tpOrder = await this.placeTP({
+        direction: setup.direction,
+        symbol: setup.symbol,
+        price: tpPrice,
+        $client: client,
+      });
 
       // 4. Place SL Order
-      const slOrder = await this.placeSL(
-        { direction: setup.direction, symbol: setup.symbol, price: slPrice },
-        client,
-      );
+      const slOrder = await this.placeSL({
+        direction: setup.direction,
+        symbol: setup.symbol,
+        price: slPrice,
+        $client: client,
+      });
 
       return { success: true, mainOrder, tpOrder, slOrder };
     } catch (error: any) {
@@ -321,38 +313,105 @@ export class BinanceService {
     }
   }
 
-  async placeSL(
-    setup: { direction: Direction; symbol: string; price: number },
-    client: any,
-  ) {
-    const oppositeSide = directionToOppositeSide(setup.direction);
-    const res = await client.restAPI.newAlgoOrder({
-      symbol: setup.symbol,
-      side: oppositeSide as any,
-      type: 'STOP_MARKET' as any,
-      algoType: 'CONDITIONAL' as any,
-      triggerPrice: setup.price,
-      closePosition: 'true' as any,
-    });
+  async placeSL(setup: {
+    direction: Direction;
+    symbol: string;
+    price: number;
+    masterToken?: string;
+    userId?: string;
+    $client?: DerivativesTradingUsdsFutures;
+  }) {
+    let client!: DerivativesTradingUsdsFutures;
 
-    return res.data();
+    try {
+      if (setup.$client) {
+        client = setup.$client;
+      } else {
+        if (!setup.userId || !setup.masterToken) {
+          throw new BadRequestException('Missing parameters');
+        }
+
+        const { apiKey, secretKey } = await this.getSecret(
+          setup.userId,
+          setup.masterToken,
+        );
+
+        client = new DerivativesTradingUsdsFutures({
+          configurationRestAPI: {
+            apiKey: apiKey,
+            privateKey: secretKey,
+          },
+        });
+      }
+
+      const oppositeSide = directionToOppositeSide(setup.direction);
+
+      const options = await this.getSymbolPrecision(setup.symbol);
+      const price = TradingFormatter.formatPrice(setup.price, options);
+
+      const res = await client.restAPI.newAlgoOrder({
+        symbol: setup.symbol,
+        side: oppositeSide as any,
+        type: OrderType.STOP_MARKET as any,
+        algoType: 'CONDITIONAL' as any,
+        triggerPrice: price,
+        closePosition: 'true' as any,
+      });
+
+      return res.data() as Order;
+    } catch (error: any) {
+      throw new BadRequestException(error);
+    }
   }
 
-  async placeTP(
-    setup: { direction: Direction; symbol: string; price: number },
-    client: any,
-  ) {
-    const oppositeSide = directionToOppositeSide(setup.direction);
-    const res = await client.restAPI.newAlgoOrder({
-      symbol: setup.symbol,
-      side: oppositeSide as any,
-      type: 'TAKE_PROFIT_MARKET' as any,
-      algoType: 'CONDITIONAL' as any,
-      triggerPrice: setup.price,
-      closePosition: 'true' as any,
-    });
+  async placeTP(setup: {
+    direction: Direction;
+    symbol: string;
+    price: number;
+    masterToken?: string;
+    userId?: string;
+    $client?: DerivativesTradingUsdsFutures;
+  }) {
+    let client!: DerivativesTradingUsdsFutures;
 
-    return res.data;
+    try {
+      if (setup.$client) {
+        client = setup.$client;
+      } else {
+        if (!setup.userId || !setup.masterToken) {
+          throw new BadRequestException('Missing parameters');
+        }
+
+        const { apiKey, secretKey } = await this.getSecret(
+          setup.userId,
+          setup.masterToken,
+        );
+
+        client = new DerivativesTradingUsdsFutures({
+          configurationRestAPI: {
+            apiKey: apiKey,
+            privateKey: secretKey,
+          },
+        });
+      }
+
+      const options = await this.getSymbolPrecision(setup.symbol);
+      const price = TradingFormatter.formatPrice(setup.price, options);
+
+      const oppositeSide = directionToOppositeSide(setup.direction);
+      const res = await client.restAPI.newAlgoOrder({
+        symbol: setup.symbol,
+        side: oppositeSide as any,
+        type: 'TAKE_PROFIT_MARKET' as any,
+        algoType: 'CONDITIONAL' as any,
+        triggerPrice: price,
+        closePosition: 'true' as any,
+      });
+
+      return res.data() as Order;
+    } catch (error: any) {
+      throw new BadRequestException(error);
+    }
   }
 
   async placeMainOrder(
@@ -474,7 +533,7 @@ export class BinanceService {
       .positionInformationV3()
       .then((res) => res.data());
 
-    return posData.map((pos: any)=> new Position(pos))
+    return posData.map((pos: any) => new Position(pos));
   }
 
   async getOrders(userId: string, masterToken: string) {
@@ -487,14 +546,12 @@ export class BinanceService {
     });
 
     const [openOrders, algoOrders] = await Promise.all([
-      client.restAPI
-        .currentAllOpenOrders()
-        .then((res) => res.data()),
+      client.restAPI.currentAllOpenOrders().then((res) => res.data()),
       client.restAPI
         .currentAllAlgoOpenOrders({ algoType: 'CONDITIONAL' })
         .then((res) => res.data()),
     ]);
 
-    return [...openOrders, ...algoOrders].map((order: any)=> new Order(order))
+    return [...openOrders, ...algoOrders].map((order: any) => new Order(order));
   }
 }

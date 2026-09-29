@@ -1,6 +1,6 @@
 import { effect, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import { BackendApiService } from './api/backend-api.service';
-import { Order, Position } from '@trading-stack/shared-dto';
+import { AlgoOrder, Position } from '@trading-stack/shared-dto';
 import { SecretKeyService } from './secret-key.service';
 import { FuturesWebsocketService } from './api/futures-ws.service';
 import { interval, Subscription } from 'rxjs';
@@ -29,7 +29,7 @@ export class AccountService implements OnDestroy {
 
   public positions = signal(new Map<string, Position>());
 
-  public orders = signal(new Map<string, Order[]>());
+  public orders = signal(new Map<string, AlgoOrder[]>());
 
   constructor() {
     effect(() => {
@@ -84,7 +84,7 @@ export class AccountService implements OnDestroy {
   private _fetchOrders() {
     this.backendService.getFuturesOrders().subscribe({
       next: (orders) => {
-        const orderMap = new Map<string, Order[]>();
+        const orderMap = new Map<string, AlgoOrder[]>();
         orders.forEach((order) => {
           if (order.symbol) {
             const oldOrder = orderMap.get(order.symbol);
@@ -130,6 +130,7 @@ export class AccountService implements OnDestroy {
                 newMap.set(key, {
                   ...oldPos,
                   unRealizedProfit: displayPnl.toString(),
+                  markPrice: currentPrice.toString()
                 });
               }
               return newMap;

@@ -1,9 +1,5 @@
 @reference "../../../../styles.css";
 
-.chart-wrapper {
-  @apply relative w-full h-full overflow-hidden border-l-0 border-r-0 border-t border-border bg-surface;
-
-  .chart-container {
-    @apply relative w-full h-full;
-  }
+.menu {
+  @apply absolute top-14 left-4 z-10 bg-background dark:bg-background/60 border border-border dark:border-border p-2 rounded shadow-md text-sm flex justify-center gap-2 flex-col;
 }

@@ -10,7 +10,7 @@ import {
   Param,
 } from '@nestjs/common';
 import { BinanceService } from './binance.service';
-import { FindOneSymbolDto } from '@trading-stack/shared-dto';
+import { FindOneSymbolDto, SetOrderReq } from '@trading-stack/shared-dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { MasterToken } from '../../decorators/master-token.decorator';
 import { RequireMasterToken } from '../../decorators/require-master-token.decorator';
@@ -59,11 +59,42 @@ export class FuturesController {
   @Get('orders')
   @HttpCode(HttpStatus.OK)
   @RequireMasterToken()
-  async getOrders(
+  async getOrders(@MasterToken() masterToken: string, @GetUser() user: User) {
+    return this.binanceService.getOrders(user.id, masterToken);
+  }
+
+  @Post('orders/take-profit')
+  @HttpCode(HttpStatus.OK)
+  @RequireMasterToken()
+  async takeProfit(
     @MasterToken() masterToken: string,
     @GetUser() user: User,
+    @Body() body: SetOrderReq,
   ) {
-    return this.binanceService.getOrders(user.id, masterToken);
+    return this.binanceService.placeTP({
+      symbol: body.symbol,
+      price: Number(body.price),
+      direction: body.direction,
+      userId: user.id,
+      masterToken,
+    });
+  }
+
+  @Post('orders/stop-loss')
+  @HttpCode(HttpStatus.OK)
+  @RequireMasterToken()
+  async stopLoss(
+    @MasterToken() masterToken: string,
+    @GetUser() user: User,
+    @Body() body: SetOrderReq,
+  ) {
+    return this.binanceService.placeSL({
+      symbol: body.symbol,
+      price: Number(body.price),
+      direction: body.direction,
+      userId: user.id,
+      masterToken,
+    });
   }
 
   @Delete('positions/:symbol')

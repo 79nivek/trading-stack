@@ -16,7 +16,7 @@ export class MarketDataController {
     @Query('endTime') endTime?: number,
   ) {
     if (!symbol || !interval) return [];
-    return await this.marketDataService.getKlinesSpot(
+    return this.marketDataService.getKlinesSpot(
       symbol,
       interval,
       Number(limit),
@@ -34,11 +34,18 @@ export class MarketDataController {
     @Query('endTime') endTime?: number,
   ) {
     if (!symbol || !interval) return [];
-    return await this.marketDataService.getKlinesFutures(
+    return this.marketDataService.getKlinesFutures(
       symbol,
       interval,
       Number(limit),
       endTime ? Number(endTime) : undefined,
     );
+  }
+
+  @Get('exchangeInfo')
+  @HttpCode(HttpStatus.OK)
+  @IgnoreLog()
+  async getExchangeInfo() {
+    return this.marketDataService.getExchangeInfo();
   }
 }

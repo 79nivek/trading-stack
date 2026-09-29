@@ -18,7 +18,12 @@ import {
   TokenSuggestionDto,
   QuantAnalyzeResponseDto,
   ChartPrimaryColor,
+  OrderType,
 } from '@trading-stack/shared-dto';
+import {
+  calculatePnlAmount,
+  calculatePositionFee,
+} from '@trading-stack/shared';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import {
   injectMutation,
@@ -29,7 +34,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { LineStyle } from 'lightweight-charts';
 import { AccountService } from '../../../core/services/account.service';
 import { PopupService } from '../../../core/services/popup.service';
-import { calculatePositionFee } from '../../../core/utils/currency.util';
+
 import { ChartMenuComponent } from '../chart-menu/chart-menu.component';
 
 @Component({
@@ -78,7 +83,6 @@ export class TokenCardComponent implements OnChanges, OnInit {
 
   isCollapsed = signal<boolean>(true);
   quantInfo = signal<TokenSuggestionDto | null>(null);
-  selectedPrice = signal<number | null>(null);
 
   lineCheckpoint = computed<LineCheckPoint[]>(() => {
     const pos = this.position();
@@ -89,13 +93,13 @@ export class TokenCardComponent implements OnChanges, OnInit {
         color: ChartPrimaryColor.ENTRY,
         title: 'Entry',
         value: (pos.entryPrice || 0).toString(),
-        lineStyle: LineStyle.Dotted,
+        lineStyle: LineStyle.Solid,
       },
       {
         color: ChartPrimaryColor.LIQUIDATION,
         title: 'Liquidation',
         value: (pos.liquidationPrice || 0).toString(),
-        lineStyle: LineStyle.Dotted,
+        lineStyle: LineStyle.Solid,
       },
     ];
     const fee = calculatePositionFee(pos);
@@ -115,12 +119,56 @@ export class TokenCardComponent implements OnChanges, OnInit {
     const orders = this.accountService.orders().get(this.symbol);
     if (orders) {
       orders.forEach((order) => {
-        lines.push({
-          color: ChartPrimaryColor.TAKE_PROFIT,
-          title: 'TP',
-          value: order.price || '',
-          lineStyle: LineStyle.Solid,
-        });
+        if (!order.orderType) return;
+        const pnl = calculatePnlAmount({
+          entryPrice: pos.entryPrice,
+          positionAmt: pos.positionAmt,
+          targetPrice: order.triggerPrice,
+        }).toFixed(2);
+        if (
+          order.orderType === OrderType.TAKE_PROFIT_LIMIT ||
+          order.orderType === OrderType.TAKE_PROFIT_MARKET
+        ) {
+          lines.push({
+            color: ChartPrimaryColor.TAKE_PROFIT,
+            title: `TP ${pnl}`,
+            value: order.triggerPrice || '',
+            lineStyle: LineStyle.Solid,
+          });
+
+          return;
+        }
+
+        if (
+          order.orderType === OrderType.STOP_LIMIT ||
+          order.orderType === OrderType.STOP_MARKET
+        ) {
+          lines.push({
+            color: ChartPrimaryColor.STOP_LOSS,
+            title: `SL ${pnl}`,
+            value: order.triggerPrice || '',
+            lineStyle: LineStyle.Solid,
+          });
+
+          return;
+        }
+
+        if (order.orderType === OrderType.TRAILING_STOP_MARKET) {
+          lines.push({
+            color: ChartPrimaryColor.TRAILING_STOP_ACTIVE,
+            title: 'TSL',
+            value: order.activatePrice || '',
+            lineStyle: LineStyle.Dotted,
+          });
+          lines.push({
+            color: ChartPrimaryColor.TRAILING_STOP_PRICE,
+            title: 'TSL',
+            value: order.triggerPrice || '',
+            lineStyle: LineStyle.Dotted,
+          });
+
+          return;
+        }
       });
     }
     return lines;
@@ -134,8 +182,6 @@ export class TokenCardComponent implements OnChanges, OnInit {
       lastValueFrom(this.backendApi.quantAnalyzeToken(this.symbol)),
     enabled: !!this.symbol && !this.quantData,
   }));
-
-  // private accountService = inject(AccountService);
 
   llmAnalyzeTokenMutation = injectMutation(() => ({
     mutationFn: () =>
@@ -238,9 +284,5 @@ export class TokenCardComponent implements OnChanges, OnInit {
   onRemove(event: MouseEvent): void {
     event.stopPropagation();
     this.remove.emit();
-  }
-
-  onPriceSelect(price: number): void {
-    this.selectedPrice.set(price);
   }
 }

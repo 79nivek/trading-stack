@@ -16,7 +16,11 @@
     "SUBMIT": "Submit",
     "LOADING": "Loading ...",
     "NO_DATA": "No data available",
-    "AUTO_COMPLETE_PLACEHOLDER": "Search ..."
+    "AUTO_COMPLETE_PLACEHOLDER": "Search ...",
+    "TAKE_PROFIT": "Take Profit",
+    "STOP_LOSS": "Stop Loss",
+    "LONG": "Long",
+    "SHORT": "Short"
   },
   "AUTH": {
     "LOGIN": "Login",

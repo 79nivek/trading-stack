@@ -8,11 +8,21 @@
     "declaration": false,
     "composite": false,
     "types": [],
-    "lib": ["dom", "es2022"]
+    "lib": [
+      "dom",
+      "es2022"
+    ]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts"],
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts"
+  ],
   "references": [
+    {
+      "path": "../../libs/shared/tsconfig.lib.json"
+    },
     {
       "path": "../../libs/shared-dto/tsconfig.lib.json"
     }

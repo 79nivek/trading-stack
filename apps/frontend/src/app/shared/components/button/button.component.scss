@@ -5,7 +5,7 @@
 }
 
 .btn-sm {
-  @apply px-3 py-1.5 text-xs;
+  @apply px-2 py-1 text-xs bg-danger/10 text-danger border border-danger/20 rounded hover:bg-danger/20 transition-colors;
 }
 .btn-md {
   @apply px-4 py-2 text-sm;
@@ -15,17 +15,17 @@
 }
 
 .btn-primary {
-  @apply bg-primary text-white hover:bg-primary/90 focus:ring-primary;
+  @apply bg-primary text-white hover:bg-primary/90;
 }
 .btn-danger {
-  @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-600 border border-transparent;
+  @apply bg-red-600 text-white hover:bg-red-700 border border-transparent;
 }
 .btn-warning {
-  @apply bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-500 border border-transparent;
+  @apply bg-yellow-500 text-white hover:bg-yellow-600 border border-transparent;
 }
 .btn-success {
-  @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-600 border border-transparent;
+  @apply bg-green-600 text-white hover:bg-green-700 border border-transparent;
 }
 .btn-info {
-  @apply bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500 border border-transparent;
+  @apply bg-blue-500 text-white hover:bg-blue-600 border border-transparent;
 }

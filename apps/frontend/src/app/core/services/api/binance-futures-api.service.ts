@@ -18,13 +18,6 @@ export class BinanceFuturesApiService {
   /** Cached USDT perpetual symbol list — fetched once per service lifetime */
   private symbolList$: Observable<string[]> | null = null;
 
-  getExchangeInfo(): Observable<any> {
-    return this.http.get<any>(
-      `${this.BASE_URL}/exchangeInfo`,
-      skipSpinnerOptions(),
-    );
-  }
-
   /**
    * Returns the list of all USDT-perpetual futures symbol names from Binance.
    * The result is cached for the lifetime of the service instance.

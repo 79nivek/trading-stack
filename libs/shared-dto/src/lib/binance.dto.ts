@@ -1,4 +1,29 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Direction } from './shared-dto';
+
+export enum OrderType {
+  /**
+   * stop market order
+   */
+  STOP_MARKET = 'STOP_MARKET',
+  /**
+   * stop limit order
+   */
+  STOP_LIMIT = 'STOP',
+  /**
+   * take profit market order
+   */
+  TAKE_PROFIT_MARKET = 'TAKE_PROFIT_MARKET',
+  /**
+   * take profit limit order
+   */
+  TAKE_PROFIT_LIMIT = 'TAKE_PROFIT',
+
+  /**
+   * trailing stop market order
+   */
+  TRAILING_STOP_MARKET = 'TRAILING_STOP_MARKET',
+}
 
 export class CheckBinanceCredentialsDto {
   @IsString()
@@ -49,11 +74,13 @@ export class Position {
   }
 }
 
+// ========== Order
+
 export class AlgoOrder {
   algoId?: number | bigint;
   clientAlgoId?: string;
   algoType?: string;
-  orderType?: string;
+  orderType?: OrderType;
   symbol?: string;
   side?: string;
   positionSide?: string;
@@ -80,6 +107,9 @@ export class AlgoOrder {
   updateTime?: number | bigint;
   triggerTime?: number | bigint;
   goodTillDate?: number | bigint;
+
+  activatePrice?: string;
+
   constructor(params: any) {
     Object.assign(this, params);
   }
@@ -122,4 +152,18 @@ export class AccountInfoResponse {
   futureBalance!: number;
   unrealizedPnl!: number;
   realizedPnlToday!: number;
+}
+
+export class SetOrderReq {
+  @IsNotEmpty()
+  @IsString()
+  symbol!: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  price!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  direction!: Direction;
 }

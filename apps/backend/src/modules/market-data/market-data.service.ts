@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { SpotKlineRepository } from './repositories/spot-kline.repository';
 import { FuturesKlineRepository } from './repositories/futures-kline.repository';
 import { PremiumIndex, Ticker24h } from '@trading-stack/shared-dto';
+import { TradingFormatter } from '@trading-stack/shared';
 
 @Injectable()
 export class MarketDataService {
@@ -17,6 +18,12 @@ export class MarketDataService {
   premiumIndexCache: Map<string, PremiumIndex> = new Map();
   private premiumIndexCacheTime = 0;
 
+  exchangeInfoCache: any;
+  private exchangeInfoCacheTime = 0;
+  private readonly EXCHANGE_INFO_CACHE_TTL = 24 * 60 * 60 * 1000; // 12 hours
+
+  private binanceExchangeInfo: Map<string, TradingFormatter> = new Map();
+
   private readonly CACHE_TTL = 2 * 60 * 1000; // 2 minute in milliseconds
 
   constructor(
@@ -24,6 +31,28 @@ export class MarketDataService {
     private readonly spotKlineRepo: SpotKlineRepository,
     private readonly futuresKlineRepo: FuturesKlineRepository,
   ) {}
+
+  async getExchangeInfo() {
+    if (
+      this.exchangeInfoCache &&
+      Date.now() - this.exchangeInfoCacheTime < this.EXCHANGE_INFO_CACHE_TTL
+    ) {
+      return this.exchangeInfoCache;
+    }
+
+    const response = await fetch(`${this.BASE_FUTURES_API_URL}/exchangeInfo`);
+    if (!response.ok) {
+      throw new Error(`Binance API error: ${response.statusText}`);
+    }
+    this.exchangeInfoCache = await response.json();
+
+    this.exchangeInfoCache.symbols.forEach((s: any) => {
+      this.binanceExchangeInfo.set(s.symbol, new TradingFormatter(s));
+    });
+
+    this.exchangeInfoCacheTime = Date.now();
+    return this.exchangeInfoCache;
+  }
 
   private parseInterval(interval: string): number {
     const unit = interval.slice(-1);
@@ -274,5 +303,19 @@ export class MarketDataService {
     this.premiumIndexCacheTime = Date.now();
 
     return symbol ? premiumMap.get(symbol) : premiumMap;
+  }
+
+  async getExchangeOption(symbol: string) {
+    if (
+      this.binanceExchangeInfo.size === 0 ||
+      Date.now() - this.EXCHANGE_INFO_CACHE_TTL > this.CACHE_TTL
+    ) {
+      await this.getExchangeInfo();
+    }
+
+    if (!this.binanceExchangeInfo.has(symbol)) {
+      return;
+    }
+    return this.binanceExchangeInfo.get(symbol);
   }
 }

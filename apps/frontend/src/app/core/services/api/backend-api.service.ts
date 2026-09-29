@@ -29,8 +29,9 @@ import {
   LlmAnalyzeTokenResponseDto,
   Position,
   Order,
+  SetOrderReq,
 } from '@trading-stack/shared-dto';
-import { TradingFormatter } from '../../../shared/classes/trading-formater';
+import { TradingFormatter } from '@trading-stack/shared';
 import { TimeframeService } from '../timeframe.service';
 
 export interface UserProfile {
@@ -162,13 +163,7 @@ export class BackendApiService implements OnInit, OnDestroy {
       limit?: number;
       endTime?: number;
     },
-    formatOptions: {
-      tickSize: string | number;
-      pricePrecision: number;
-    } = {
-      tickSize: '1',
-      pricePrecision: 0,
-    },
+    options: TradingFormatter
   ): Observable<KlineData[]> {
     if (query.limit === undefined) query.limit = 500;
     const tf = this.timeframeServ.timeframe();
@@ -196,15 +191,24 @@ export class BackendApiService implements OnInit, OnDestroy {
         map((data) => {
           return data.map((kline: any) => ({
             time: Math.floor(kline[0] / 1000), // convert ms to s for lightweight-charts
-            open: TradingFormatter.formatPrice(kline[1], formatOptions),
-            high: TradingFormatter.formatPrice(kline[2], formatOptions),
-            low: TradingFormatter.formatPrice(kline[3], formatOptions),
-            close: TradingFormatter.formatPrice(kline[4], formatOptions),
-            volume: TradingFormatter.formatPrice(kline[5], formatOptions),
+            open: TradingFormatter.formatPrice(kline[1], options),
+            high: TradingFormatter.formatPrice(kline[2], options),
+            low: TradingFormatter.formatPrice(kline[3], options),
+            close: TradingFormatter.formatPrice(kline[4], options),
+            volume: TradingFormatter.formatPrice(kline[5], options),
             normalizedToken: `${symbol.toLowerCase()}@kline_${tf}`,
           }));
         }),
       );
+  }
+
+  getExchangeInfo(): Observable<any> {
+    return this.http
+      .get<any>(
+        `${ENV.BACKEND_URL}/api/v1/market-data/exchangeInfo`,
+        skipSpinnerOptions(),
+      )
+      .pipe(map((res) => res.result));
   }
 
   getMe(): Observable<boolean> {
@@ -379,7 +383,23 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/place-position`, setup, { ...this.useAuth(true) })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions`, setup, { ...this.useAuth(true) })
+      .pipe(map((res) => res.result));
+  }
+
+  setOrderTakeProfit(params: SetOrderReq) {
+    return this.http
+      .post<
+        BaseResponse<any>
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders/take-profit`, params, { ...this.useAuth(true) })
+      .pipe(map((res) => res.result));
+  }
+
+  setOrderStopLoss(params: SetOrderReq) {
+    return this.http
+      .post<
+        BaseResponse<any>
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders/stop-loss`, params, { ...this.useAuth(true) })
       .pipe(map((res) => res.result));
   }
 

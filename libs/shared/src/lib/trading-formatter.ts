@@ -17,11 +17,11 @@ export interface SymbolExchangeInfo {
 }
 
 export class TradingFormatter {
-   tickSize: number;
-   stepSize: number;
-   pricePrecision: number;
-   qtyPrecision: number;
-   minMove: number;
+  tickSize: number;
+  stepSize: number;
+  pricePrecision: number;
+  qtyPrecision: number;
+  minMove: number;
 
   constructor(exchangeInfo: SymbolExchangeInfo) {
     this.pricePrecision = exchangeInfo.pricePrecision;
@@ -42,45 +42,33 @@ export class TradingFormatter {
     if (this.tickSize > 0) {
       this.pricePrecision = Math.max(0, -Math.floor(Math.log10(this.tickSize)));
     }
-    
+
     // Lightweight Charts requires minMove to be the exact float step size
     this.minMove = this.tickSize;
   }
 
-  static formatPrice(
-    rawPrice: number,
-    {
-      tickSize,
-      pricePrecision,
-    }: {
-      tickSize: string | number;
-      pricePrecision: string | number;
-    },
-  ): number {
-    const step = typeof tickSize === 'string' ? parseFloat(tickSize) : tickSize;
+  static formatPrice(rawPrice: number, options: TradingFormatter): number {
+    const step =
+      typeof options.tickSize === 'string'
+        ? parseFloat(options.tickSize)
+        : options.tickSize;
     const precision =
-      typeof pricePrecision === 'string'
-        ? parseInt(pricePrecision)
-        : pricePrecision;
+      typeof options.pricePrecision === 'string'
+        ? parseInt(options.pricePrecision)
+        : options.pricePrecision;
     const roundedPrice = Math.round(rawPrice / step) * step;
     return parseFloat(roundedPrice.toFixed(precision));
   }
 
-  static formatQuantity(
-    rawQty: number,
-    {
-      stepSize,
-      quantityPrecision,
-    }: {
-      stepSize: string | number;
-      quantityPrecision: string | number;
-    },
-  ): number {
-    const step = typeof stepSize === 'string' ? parseFloat(stepSize) : stepSize;
+  static formatQuantity(rawQty: number, options: TradingFormatter): number {
+    const step =
+      typeof options.stepSize === 'string'
+        ? parseFloat(options.stepSize)
+        : options.stepSize;
     const precision =
-      typeof quantityPrecision === 'string'
-        ? parseInt(quantityPrecision)
-        : quantityPrecision;
+      typeof options.qtyPrecision === 'string'
+        ? parseInt(options.qtyPrecision)
+        : options.qtyPrecision;
 
     const roundedQty = Math.floor(rawQty / step) * step;
     return parseFloat(roundedQty.toFixed(precision));

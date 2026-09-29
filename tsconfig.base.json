@@ -19,7 +19,8 @@
     "experimentalDecorators": true,
     "customConditions": ["@trading-stack/source"],
     "paths": {
-      "@trading-stack/shared-dto": ["./libs/shared-dto/src/index.ts"]
+      "@trading-stack/shared-dto": ["./libs/shared-dto/src/index.ts"],
+      "@trading-stack/shared": ["./libs/shared/src/index.ts"]
     }
   }
 }

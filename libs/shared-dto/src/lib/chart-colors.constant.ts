@@ -2,7 +2,8 @@ export enum ChartPrimaryColor {
   ENTRY = '#EAB308', // Amber 500
   TAKE_PROFIT = '#22C55E', // Green 500
   STOP_LOSS = '#EF4444', // Red 500
-  TRAILING_STOP = '#F97316', // Orange 500
+  TRAILING_STOP_ACTIVE = '#F97316', // Orange 500
+  TRAILING_STOP_PRICE = '#6366F1', // Indigo 500
   LIQUIDATION = '#991B1B', // Red 800 (Distinct from Stop Loss)
   PENDING_LONG = '#06B6D4', // Cyan 500
   PENDING_SHORT = '#D946EF', // Fuchsia 500

@@ -1,14 +1,11 @@
+import { BackendApiService } from './api/backend-api.service';
 import { inject, Injectable } from '@angular/core';
-import { BinanceFuturesApiService } from './api/binance-futures-api.service';
-import {
-  SymbolExchangeInfo,
-  TradingFormatter,
-} from '../../shared/classes/trading-formater';
+import { SymbolExchangeInfo, TradingFormatter } from '@trading-stack/shared';
 
 @Injectable({ providedIn: 'root' })
 export class ExchangeInfoService {
   private binanceExchangeInfo: Map<string, TradingFormatter> = new Map();
-  private binanceApi = inject(BinanceFuturesApiService);
+  private backendApiService = inject(BackendApiService);
 
   private _exchangeResolveWatchers: {
     symbol: string;
@@ -21,7 +18,7 @@ export class ExchangeInfoService {
   }[] = [];
 
   constructor() {
-    this.binanceApi.getExchangeInfo().subscribe({
+    this.backendApiService.getExchangeInfo().subscribe({
       next: ({ symbols }: { symbols: SymbolExchangeInfo[] }) => {
         symbols.forEach((symbol) => {
           this.binanceExchangeInfo.set(

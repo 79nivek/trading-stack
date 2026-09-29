@@ -2,7 +2,8 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "paths": {
-      "@trading-stack/shared-dto": ["./libs/shared-dto/src/index.ts"]
+      "@trading-stack/shared-dto": ["./libs/shared-dto/src/index.ts"],
+      "@trading-stack/shared": ["./libs/shared/src/index.ts"]
     }
   },
   "compileOnSave": false,
@@ -16,6 +17,9 @@
     },
     {
       "path": "./libs/shared-dto"
+    },
+    {
+      "path": "./libs/shared"
     }
   ]
 }

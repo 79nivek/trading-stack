@@ -15,7 +15,11 @@
     "CANCEL": "Hủy",
     "SUBMIT": "Gửi",
     "LOADING": "Dang Tải ...",
-    "AUTO_COMPLETE_PLACEHOLDER": "Tìm ..."
+    "AUTO_COMPLETE_PLACEHOLDER": "Tìm ...",
+    "TAKE_PROFIT": "Chốt lời",
+    "STOP_LOSS": "Cắt lỗ",
+    "LONG": "Mua",
+    "SHORT": "Bán"
   },
   "AUTH": {
     "LOGIN": "Đăng nhập",

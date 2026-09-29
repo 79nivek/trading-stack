@@ -1,9 +1,9 @@
+import { Position } from '@trading-stack/shared-dto';
 /**
  * Utility functions for formatting prices according to Binance Exchange logic.
  * Reference: https://binance-docs.github.io/apidocs/futures/en/#filters (PRICE_FILTER)
  */
 
-import { Position } from "@trading-stack/shared-dto";
 
 /**
  * Calculates the decimal precision based on the Binance tickSize.
@@ -62,7 +62,6 @@ export function calculateSMA(
   return smaData;
 }
 
-
 export function calculatePositionFee(position: Position): number {
   const entryPrice = parseFloat(position.entryPrice || '0');
   const positionAmt = parseFloat(position.positionAmt || '0');
@@ -70,3 +69,17 @@ export function calculatePositionFee(position: Position): number {
   return entryPrice * positionAmt * takerPercent * 2;
 }
 
+export function calculatePnlAmount(params: {
+  entryPrice?: string;
+  positionAmt?: string;
+  targetPrice?: string;
+}) {
+  if (!params.entryPrice || !params.positionAmt || !params.targetPrice)
+    return NaN;
+  const entryPrice = parseFloat(params.entryPrice);
+  const positionAmt = parseFloat(params.positionAmt);
+  const targetPrice = parseFloat(params.targetPrice);
+  const pnl = (targetPrice - entryPrice) * positionAmt;
+
+  return pnl;
+}

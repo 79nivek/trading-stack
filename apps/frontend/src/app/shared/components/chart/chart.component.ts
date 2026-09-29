@@ -11,8 +11,6 @@ import {
   inject,
   signal,
   effect,
-  Output,
-  EventEmitter,
   ContentChild,
 } from '@angular/core';
 
@@ -33,7 +31,7 @@ import { THEME, ThemeService } from '../../../core/services/theme.service';
 import { ChartSyncService } from '../../../core/services/chart-sync.service';
 import { ExchangeInfoService } from '../../../core/services/exchange.service';
 import { QueryClient } from '@tanstack/angular-query-experimental';
-import { calculateSMA } from '../../../core/utils/currency.util';
+import { calculateSMA } from '@trading-stack/shared';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import { TimeframeService } from '../../../core/services/timeframe.service';
 import { ChartMenuComponent } from '../chart-menu/chart-menu.component';
@@ -58,8 +56,6 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() syncGroup = '';
 
   @Input() lines: LineCheckPoint[] = [];
-
-  @Output() priceSelect = new EventEmitter<number>();
 
   @ViewChild('chartContainer') chartContainer!: ElementRef;
 
@@ -188,7 +184,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     const y = clientY - rect.top;
     const price = this.candlestickSeries.coordinateToPrice(y as any);
     if (price !== null) {
-      this.priceSelect.emit(price);
+      this.menuRef.setPoint(price);
     }
   }
 
@@ -555,10 +551,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
               {
                 limit: 500,
               },
-              {
-                pricePrecision: exchangeInfo.pricePrecision,
-                tickSize: exchangeInfo.tickSize,
-              },
+              exchangeInfo,
             ),
           ),
         staleTime: 1000 * 60 * 5,
@@ -613,10 +606,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
                 limit: 500,
                 endTime,
               },
-              {
-                pricePrecision: exchangeInfo.pricePrecision,
-                tickSize: exchangeInfo.tickSize,
-              },
+              exchangeInfo,
             ),
           ),
         staleTime: Infinity,
