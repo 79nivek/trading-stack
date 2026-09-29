@@ -4,11 +4,7 @@ import { EncryptionService } from '../encryption/encryption.service';
 import { BinanceCredentialRepository } from './binance-credential.repository';
 import { generateBinanceSignature } from './binance-signature.util';
 import { directionToOppositeSide } from '../../utils';
-import {
-  AccountInfoResponse,
-  Direction,
-  Position,
-} from '@trading-stack/shared-dto';
+import { AccountInfoResponse, Direction, Order, Position } from '@trading-stack/shared-dto';
 
 export interface BinancePermissions {
   readAccount: boolean;
@@ -17,9 +13,14 @@ export interface BinancePermissions {
 }
 
 @Injectable()
-export class BinanceCredentialsService {
+export class BinanceService {
   private exchangeInfoCache: any = null;
   private exchangeInfoCacheTime = 0;
+
+  constructor(
+    private readonly encryptionService: EncryptionService,
+    private readonly credentialRepository: BinanceCredentialRepository,
+  ) {}
 
   private async getSymbolPrecision(symbol: string) {
     if (
@@ -53,12 +54,7 @@ export class BinanceCredentialsService {
     return { quantityPrecision: 3, pricePrecision: 4 }; // Fallback
   }
 
-  constructor(
-    private readonly encryptionService: EncryptionService,
-    private readonly credentialRepository: BinanceCredentialRepository,
-  ) {}
-
-  private async getSecret(userId: string, masterToken: string) {
+  async getSecret(userId: string, masterToken: string) {
     const credential = await this.credentialRepository.findByUserId(userId);
     if (!credential) {
       throw new BadRequestException(
@@ -226,10 +222,9 @@ export class BinanceCredentialsService {
         },
       });
 
-      const [accountData, positionsData] = await Promise.all([
-        client.restAPI.accountInformationV3().then((res) => res.data()),
-        client.restAPI.positionInformationV3().then((res) => res.data()),
-      ]);
+      const accountData = await client.restAPI
+        .accountInformationV3()
+        .then((res) => res.data());
 
       const futureBalance = parseFloat(accountData.totalWalletBalance || '0');
       const unrealizedPnl = parseFloat(
@@ -264,38 +259,10 @@ export class BinanceCredentialsService {
         futureBalance,
         unrealizedPnl,
         realizedPnlToday,
-        positions: positionsData as Position[],
       };
     } catch (error) {
       console.error('Error in getFuturesAccountInfo:', error);
       throw new BadRequestException('Failed to get futures account info');
-    }
-  }
-
-  async getFuturesBalance(
-    userId: string,
-    masterToken: string,
-  ): Promise<number> {
-    try {
-      const { apiKey, secretKey } = await this.getSecret(userId, masterToken);
-
-      const client = new DerivativesTradingUsdsFutures({
-        configurationRestAPI: {
-          apiKey: apiKey,
-          privateKey: secretKey,
-        },
-      });
-
-      const data = await client.restAPI.accountInformationV3().then((res) => {
-        return res.data();
-      });
-
-      return data.availableBalance ? parseFloat(data.availableBalance) : 0;
-    } catch (error) {
-      console.error('Error in getFuturesBalance:', error);
-      throw new BadRequestException(
-        'Failed to get futures balance or invalid master token.',
-      );
     }
   }
 
@@ -408,5 +375,126 @@ export class BinanceCredentialsService {
       leverage: params.leverage,
     });
     return res.data;
+  }
+
+  async closePosition(userId: string, masterToken: string, symbol: string) {
+    try {
+      const { apiKey, secretKey } = await this.getSecret(userId, masterToken);
+
+      const client = new DerivativesTradingUsdsFutures({
+        configurationRestAPI: {
+          apiKey: apiKey,
+          privateKey: secretKey,
+        },
+      });
+
+      // Execute a MARKET order with closePosition=true for both sides to cover Hedge Mode and One-way Mode.
+      // Or we can fetch the position side first. Let's fetch position side first.
+      const posData = await client.restAPI
+        .positionInformationV2({ symbol })
+        .then((res: any) => res.data());
+
+      const openPositions = (posData as any[]).filter(
+        (p) => parseFloat(p.positionAmt) !== 0,
+      );
+
+      if (openPositions.length === 0) {
+        throw new BadRequestException('No open position for this symbol');
+      }
+
+      const results = [];
+      for (const pos of openPositions) {
+        const amt = parseFloat(pos.positionAmt);
+        const side = amt > 0 ? 'SELL' : 'BUY';
+
+        // In Hedge mode, we need to specify positionSide ('LONG' or 'SHORT').
+        // In One-way mode, positionSide is 'BOTH'.
+        const positionSide = pos.positionSide;
+
+        const orderRes = await client.restAPI.newOrder({
+          symbol: symbol,
+          side: side as any,
+          type: 'MARKET' as any,
+          quantity: Math.abs(amt),
+          positionSide: positionSide as any,
+          reduceOnly: 'true' as any,
+        });
+        results.push(orderRes.data);
+      }
+
+      return {
+        success: true,
+        message: 'Position closed successfully',
+      };
+    } catch (error: any) {
+      console.error('Error closing position:', error);
+      throw new BadRequestException(
+        error.message || 'Failed to close position',
+      );
+    }
+  }
+
+  async getFuturesBalance(
+    userId: string,
+    masterToken: string,
+  ): Promise<number> {
+    try {
+      const { apiKey, secretKey } = await this.getSecret(userId, masterToken);
+
+      const client = new DerivativesTradingUsdsFutures({
+        configurationRestAPI: {
+          apiKey: apiKey,
+          privateKey: secretKey,
+        },
+      });
+
+      const data = await client.restAPI.accountInformationV3().then((res) => {
+        return res.data();
+      });
+
+      return data.availableBalance ? parseFloat(data.availableBalance) : 0;
+    } catch (error) {
+      console.error('Error in getFuturesBalance:', error);
+      throw new BadRequestException(
+        'Failed to get futures balance or invalid master token.',
+      );
+    }
+  }
+
+  async getPositions(userId: string, masterToken: string) {
+    const { apiKey, secretKey } = await this.getSecret(userId, masterToken);
+    const client = new DerivativesTradingUsdsFutures({
+      configurationRestAPI: {
+        apiKey: apiKey,
+        privateKey: secretKey,
+      },
+    });
+
+    const posData = await client.restAPI
+      .positionInformationV3()
+      .then((res) => res.data());
+
+    return posData.map((pos: any)=> new Position(pos))
+  }
+
+  async getOrders(userId: string, masterToken: string) {
+    const { apiKey, secretKey } = await this.getSecret(userId, masterToken);
+    const client = new DerivativesTradingUsdsFutures({
+      configurationRestAPI: {
+        apiKey: apiKey,
+        privateKey: secretKey,
+      },
+    });
+
+    const [openOrders, algoOrders] = await Promise.all([
+      client.restAPI
+        .currentAllOpenOrders()
+        .then((res) => res.data()),
+      client.restAPI
+        .currentAllAlgoOpenOrders({ algoType: 'CONDITIONAL' })
+        .then((res) => res.data()),
+    ]);
+
+    return [...openOrders, ...algoOrders].map((order: any)=> new Order(order))
   }
 }

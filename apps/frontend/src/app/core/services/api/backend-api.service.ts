@@ -27,6 +27,8 @@ import {
   AccountInfoResponse,
   UserSettingsResDto,
   LlmAnalyzeTokenResponseDto,
+  Position,
+  Order,
 } from '@trading-stack/shared-dto';
 import { TradingFormatter } from '../../../shared/classes/trading-formater';
 import { TimeframeService } from '../timeframe.service';
@@ -291,7 +293,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/check`, data, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/check`, data, { ...this.useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -299,7 +301,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<{ token: string }>
-      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/save`, data, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/save`, data, { ...this.useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -307,7 +309,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/check-token`, { masterToken }, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/master-token/check`, { masterToken }, { ...this.useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -331,7 +333,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<{ listenKey: string }>
-      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/listen-key`, { ...this.useAuth(true), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/listen-key`, { ...this.useAuth(true), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result.listenKey));
   }
 
@@ -339,15 +341,23 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/futures/account-info`, { ...this.useAuth(true), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/account-info`, { ...this.useAuth(true), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
-  getBinanceFuturesBalance(): Observable<{ ok: boolean; balance: number }> {
+  getFuturesPositions(): Observable<Position[]> {
     return this.http
       .get<
-        BaseResponse<{ ok: boolean; balance: number }>
-      >(`${ENV.BACKEND_URL}/api/v1/binance-credentials/futures/balance`, { ...this.useAuth(true) })
+        BaseResponse<Position[]>
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions`, { ...this.useAuth(true), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
+  }
+
+  getFuturesOrders(): Observable<Order[]> {
+    return this.http
+      .get<
+        BaseResponse<Order[]>
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders`, { ...this.useAuth(true), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -432,6 +442,14 @@ export class BackendApiService implements OnInit, OnDestroy {
       .patch<
         BaseResponse<void>
       >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/reorder`, dto, { ...this.useAuth(), ...skipSpinnerOptions() })
+      .pipe(map((res) => res.result));
+  }
+
+  closePosition(symbol: string): Observable<any> {
+    return this.http
+      .delete<
+        BaseResponse<any>
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions/${symbol}`, { ...this.useAuth(true) })
       .pipe(map((res) => res.result));
   }
 }

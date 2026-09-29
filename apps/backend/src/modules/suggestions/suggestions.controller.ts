@@ -12,7 +12,7 @@ import {
 import { SuggestionsService } from './suggestions.service';
 import { LlmService } from '../llm/llm.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
-import { BinanceCredentialsService } from '../binance-credentials/binance-credentials.service';
+import { BinanceService } from '../binance/binance.service';
 import {
   Direction,
   EntryType,
@@ -20,6 +20,7 @@ import {
 } from '@trading-stack/shared-dto';
 import { MasterToken } from '../../decorators/master-token.decorator';
 import { RequireMasterToken } from '../../decorators/require-master-token.decorator';
+import { UserSettingsService } from '../user-settings/user-settings.service';
 
 @Controller('suggestions')
 @UseGuards(JwtAuthGuard)
@@ -27,8 +28,9 @@ export class SuggestionsController {
   constructor(
     private readonly suggestionsService: SuggestionsService,
     private readonly llmService: LlmService,
-    private readonly binanceService: BinanceCredentialsService,
+    private readonly binanceService: BinanceService,
     private readonly microstructureExitService: MicrostructureExitService,
+    private readonly userSettingService: UserSettingsService,
   ) {}
 
   @Get('futures')
@@ -74,25 +76,29 @@ export class SuggestionsController {
       }
     }
 
+    const userSetting = await this.userSettingService.getSettings(req.user.id);
+
     // Call both concurrently
     const [llmSetup, quantSetups] = await Promise.all([
-      this.llmService.llmPosition(symbol, balanceNum).catch((e) => {
-        // Fallback for LLM failure
-        return {
-          strategyName: 'LLM Error',
-          direction: Direction.NEUTRAL,
-          leverage: 0,
-          margin: 0,
-          volume: 0,
-          entryType: EntryType.MARKET,
-          entryPrice: 0,
-          takeProfitPrice: 0,
-          stopLossPrice: 0,
-          estimatedProfit: 0,
-          estimatedLoss: 0,
-          reasoning: 'Failed to generate LLM setup',
-        };
-      }),
+      this.llmService
+        .llmPosition(symbol, balanceNum, userSetting.timeFrame)
+        .catch((e) => {
+          // Fallback for LLM failure
+          return {
+            strategyName: 'LLM Error',
+            direction: Direction.NEUTRAL,
+            leverage: 0,
+            margin: 0,
+            volume: 0,
+            entryType: EntryType.MARKET,
+            entryPrice: 0,
+            takeProfitPrice: 0,
+            stopLossPrice: 0,
+            estimatedProfit: 0,
+            estimatedLoss: 0,
+            reasoning: 'Failed to generate LLM setup',
+          };
+        }),
       this.suggestionsService.quantPosition(symbol, balanceNum),
     ]);
 

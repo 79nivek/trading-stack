@@ -5,7 +5,7 @@ export * from './lib/binance-api.dto';
 export * from './lib/auth.dto';
 export * from './lib/user.dto';
 export * from './lib/futures-kline.dto';
-export * from './lib/binance-credentials.dto';
+export * from './lib/binance.dto';
 export * from './lib/settings.dto';
 export * from './lib/suggestions.dto';
 export * from './lib/followed-symbol.dto';

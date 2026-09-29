@@ -1,0 +1,9 @@
+@reference "../../../../styles.css";
+
+.chart-wrapper {
+  @apply relative w-full h-full overflow-hidden border-l-0 border-r-0 border-t border-border bg-surface;
+
+  .chart-container {
+    @apply relative w-full h-full;
+  }
+}

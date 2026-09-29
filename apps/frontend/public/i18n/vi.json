@@ -53,7 +53,8 @@
   "SETTING": {
     "PROFILE": "Hồ sơ",
     "BINANCE": "Khóa API Binance",
-    "NOTIFICATION": "Thông báo"
+    "NOTIFICATION": "Thông báo",
+    "UI_SETTINGS": "Cài đặt giao diện"
   },
   "PROFILE": {
     "CHANGE_PASSWORD": "Đổi mật khẩu",

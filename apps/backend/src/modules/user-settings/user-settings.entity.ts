@@ -34,6 +34,9 @@ export class UserSettings {
   @Column({ type: 'int', default: 10 })
   suggestionLimit!: number;
 
+  @Column({ default: 'UTC' })
+  timeZone!: string;
+
   @CreateDateColumn()
   createdAt!: Date;
 

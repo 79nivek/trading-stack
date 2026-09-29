@@ -28,11 +28,20 @@ import { lastValueFrom } from 'rxjs';
 import { ToastService } from '../../../core/services/toast.service';
 import { LineStyle } from 'lightweight-charts';
 import { AccountService } from '../../../core/services/account.service';
+import { PopupService } from '../../../core/services/popup.service';
+import { calculatePositionFee } from '../../../core/utils/currency.util';
+import { ChartMenuComponent } from '../chart-menu/chart-menu.component';
 
 @Component({
   selector: 'app-token-card',
   standalone: true,
-  imports: [CommonModule, TranslateDirective, TranslatePipe, ChartComponent],
+  imports: [
+    CommonModule,
+    TranslateDirective,
+    TranslatePipe,
+    ChartComponent,
+    ChartMenuComponent,
+  ],
   templateUrl: './token-card.component.html',
   styleUrl: './token-card.component.scss',
 })
@@ -65,13 +74,58 @@ export class TokenCardComponent implements OnChanges, OnInit {
   private backendApi = inject(BackendApiService);
   private toastService = inject(ToastService);
   private accountService = inject(AccountService);
+  private popupService = inject(PopupService);
 
   isCollapsed = signal<boolean>(true);
   quantInfo = signal<TokenSuggestionDto | null>(null);
-  lineCheckpoint = signal<LineCheckPoint[]>([]);
-  position = computed(() =>
-    this.accountService.currentPositions().get(this.symbol),
-  );
+  selectedPrice = signal<number | null>(null);
+
+  lineCheckpoint = computed<LineCheckPoint[]>(() => {
+    const pos = this.position();
+    if (!pos) return [];
+
+    const lines = [
+      {
+        color: ChartPrimaryColor.ENTRY,
+        title: 'Entry',
+        value: (pos.entryPrice || 0).toString(),
+        lineStyle: LineStyle.Dotted,
+      },
+      {
+        color: ChartPrimaryColor.LIQUIDATION,
+        title: 'Liquidation',
+        value: (pos.liquidationPrice || 0).toString(),
+        lineStyle: LineStyle.Dotted,
+      },
+    ];
+    const fee = calculatePositionFee(pos);
+    const positionAmt = parseFloat(pos.positionAmt || '0');
+    const entryPrice = parseFloat(pos.entryPrice || '0');
+
+    if (fee > 1 && positionAmt !== 0) {
+      const breakEvenPrice = entryPrice + fee / positionAmt;
+      lines.push({
+        color: ChartPrimaryColor.BREAK_EVEN,
+        title: `BE(-$${fee.toFixed(2)})`,
+        value: breakEvenPrice.toString(),
+        lineStyle: LineStyle.Dotted,
+      });
+    }
+
+    const orders = this.accountService.orders().get(this.symbol);
+    if (orders) {
+      orders.forEach((order) => {
+        lines.push({
+          color: ChartPrimaryColor.TAKE_PROFIT,
+          title: 'TP',
+          value: order.price || '',
+          lineStyle: LineStyle.Solid,
+        });
+      });
+    }
+    return lines;
+  });
+  position = computed(() => this.accountService.positions().get(this.symbol));
   isOpeningPosition = computed(() => !!this.position());
 
   quantDataQuery = injectQuery(() => ({
@@ -91,7 +145,21 @@ export class TokenCardComponent implements OnChanges, OnInit {
     },
     onError: (err: any) => {
       this.toastService.show(
-        err.error?.message || 'Invalid Master Token',
+        err.error?.message || 'Failed to analyze token',
+        'danger',
+      );
+    },
+  }));
+
+  closePositionMutation = injectMutation(() => ({
+    mutationFn: () => lastValueFrom(this.backendApi.closePosition(this.symbol)),
+    onSuccess: () => {
+      this.toastService.show('Position closed successfully!', 'success', 2000);
+      this.popupService.close();
+    },
+    onError: (err: any) => {
+      this.toastService.show(
+        err.error?.message || 'Failed to close position',
         'danger',
       );
     },
@@ -101,22 +169,6 @@ export class TokenCardComponent implements OnChanges, OnInit {
     effect(() => {
       if (this.quantDataQuery.data()) {
         this.quantInfo.set(this.quantDataQuery.data() as TokenSuggestionDto);
-      }
-      if (this.position()?.entryPrice) {
-        this.lineCheckpoint.set([
-          {
-            color: ChartPrimaryColor.ENTRY,
-            title: 'Entry',
-            value: (this.position()?.entryPrice || 0).toString(),
-            lineStyle: LineStyle.Dotted,
-          },
-          {
-            color: ChartPrimaryColor.LIQUIDATION,
-            title: 'Liquidation',
-            value: (this.position()?.liquidationPrice || 0).toString(),
-            lineStyle: LineStyle.Dotted,
-          },
-        ]);
       }
     });
   }
@@ -151,8 +203,44 @@ export class TokenCardComponent implements OnChanges, OnInit {
     this.openPosition.emit(this.symbol);
   }
 
+  onCancel(event: MouseEvent): void {
+    event.stopPropagation();
+
+    const pos = this.position();
+    if (!pos) return;
+
+    // Calculate approximate PNL or fetch it if needed, wait, position object from accountService already has unrealizedProfit
+    const pnl = pos.unRealizedProfit
+      ? parseFloat(pos.unRealizedProfit).toFixed(2)
+      : '0.00';
+    const side = parseFloat(pos.positionAmt) > 0 ? 'LONG' : 'SHORT';
+
+    this.popupService.open({
+      title: 'Close Position',
+      message: `Are you sure you want to close the ${side} position for ${this.symbol}?\nEstimated PnL: $${pnl}`,
+      buttons: [
+        {
+          text: 'Cancel',
+          type: 'info',
+          action: () => this.popupService.close(),
+        },
+        {
+          text: 'Confirm',
+          type: 'danger',
+          action: () => {
+            this.closePositionMutation.mutate();
+          },
+        },
+      ],
+    });
+  }
+
   onRemove(event: MouseEvent): void {
     event.stopPropagation();
     this.remove.emit();
+  }
+
+  onPriceSelect(price: number): void {
+    this.selectedPrice.set(price);
   }
 }

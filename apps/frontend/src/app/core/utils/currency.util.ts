@@ -3,6 +3,8 @@
  * Reference: https://binance-docs.github.io/apidocs/futures/en/#filters (PRICE_FILTER)
  */
 
+import { Position } from "@trading-stack/shared-dto";
+
 /**
  * Calculates the decimal precision based on the Binance tickSize.
  * Example: '0.001' -> 3, '0.01' -> 2, '1' -> 0
@@ -59,3 +61,12 @@ export function calculateSMA(
   }
   return smaData;
 }
+
+
+export function calculatePositionFee(position: Position): number {
+  const entryPrice = parseFloat(position.entryPrice || '0');
+  const positionAmt = parseFloat(position.positionAmt || '0');
+  const takerPercent = 0.0005;
+  return entryPrice * positionAmt * takerPercent * 2;
+}
+

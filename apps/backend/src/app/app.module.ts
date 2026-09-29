@@ -6,14 +6,15 @@ import { AppService } from './app.service';
 import { CONFIGURATION } from '../configuration';
 import { AuthModule } from '../modules/auth/auth.module';
 import { UsersModule } from '../modules/users/users.module';
-import { BinanceCredentialsModule } from '../modules/binance-credentials/binance-credentials.module';
+import { BinanceModule } from '../modules/binance/binance.module';
 import { UserSettingsModule } from '../modules/user-settings/user-settings.module';
 import { SuggestionsModule } from '../modules/suggestions/suggestions.module';
 import { FollowedSymbolsModule } from '../modules/followed-symbols/followed-symbols.module';
 import { MarketDataModule } from '../modules/market-data/market-data.module';
+// import { PositionModule } from '../modules/position/position.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, RouterModule } from '@nestjs/core';
 import { LoggerInterceptor } from '../core/interceptors/logger.interceptor';
 import { TransformInterceptor } from '../core/interceptors/transform.interceptor';
 
@@ -38,13 +39,22 @@ import { TransformInterceptor } from '../core/interceptors/transform.interceptor
         synchronize: true, // auto create tables (suitable for dev/simple apps)
       }),
     }),
+
     AuthModule,
     UsersModule,
-    BinanceCredentialsModule,
+    BinanceModule,
     UserSettingsModule,
     SuggestionsModule,
     FollowedSymbolsModule,
     MarketDataModule,
+    // PositionModule,
+
+    RouterModule.register([
+      {
+        path: 'binance',
+        module: BinanceModule,
+      },
+    ]),
   ],
   controllers: [AppController],
   providers: [

@@ -1,0 +1,36 @@
+<app-modal size="M" [hideCloseButton]="false">
+  <div modal-title translate="SETTING.UI_SETTINGS">UI Settings</div>
+
+  <div modal-body>
+    <form [formGroup]="form">
+      <div class="mb-4">
+        <label
+          for="timeZoneInput"
+          class="block text-sm font-medium text-text mb-1"
+          >Time Zone</label
+        >
+        <select
+          id="timeZoneInput"
+          formControlName="timeZone"
+          class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-surface text-text"
+        >
+          @for (tz of timezones; track tz) {
+            <option [value]="tz">{{ tz }}</option>
+          }
+        </select>
+      </div>
+    </form>
+  </div>
+
+  <div modal-footer class="flex justify-end gap-3 w-full">
+    <app-button
+      btnType="primary"
+      (click)="onSave()"
+      [disabled]="saveMutation.isPending()"
+    >
+      {{
+        (saveMutation.isPending() ? 'COMMON.SAVE' : 'COMMON.SAVE') | translate
+      }}
+    </app-button>
+  </div>
+</app-modal>

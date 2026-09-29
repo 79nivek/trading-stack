@@ -16,7 +16,10 @@ export class LlmService {
   private OLLAMA_API!: string;
   private OLLAMA_MODEL!: string; // Fits well in 16GB VRAM (8B params), fallback to 'llama3' or 'mistral' if needed.
 
-  constructor(private readonly configServ: ConfigService, private marketDataService: MarketDataService) {
+  constructor(
+    private readonly configServ: ConfigService,
+    private marketDataService: MarketDataService,
+  ) {
     const OLLAMA_HOST = this.configServ.get('OLLAMA_HOST', '');
     this.OLLAMA_API = `${OLLAMA_HOST}/api/generate`;
     this.OLLAMA_MODEL = this.configServ.get('OLLAMA_MODEL', '');
@@ -32,14 +35,16 @@ export class LlmService {
 
       // 1. Collect Data
       const [ticker, premium, klinesRes] = await Promise.all([
-       this.marketDataService.fetch24hTickerData(symbol),
+        this.marketDataService.fetch24hTickerData(symbol),
         this.marketDataService.fetchPremiumIndex(symbol),
         this.marketDataService.getKlinesFutures(symbol, timeFrame, 50),
       ]);
       this.logger.log('Binance data fetched successfully.');
 
       if (!ticker || !premium || !klinesRes) {
-        throw new NotFoundException('can not get necessary data, please try again');
+        throw new NotFoundException(
+          'can not get necessary data, please try again',
+        );
       }
 
       const closes = klinesRes.map((k: any) => parseFloat(k[4]));
@@ -114,24 +119,21 @@ export class LlmService {
   async llmPosition(
     symbol: string,
     balance: number,
+    timeFrame = '4h'
   ): Promise<PositionSetupDto> {
     try {
-      const [tickerRes, premiumRes, klinesRes] = await Promise.all([
-        axios.get(`${this.BINANCE_API}/ticker/24hr?symbol=${symbol}`, {
-          timeout: 10000,
-        }),
-        axios.get(`${this.BINANCE_API}/premiumIndex?symbol=${symbol}`, {
-          timeout: 10000,
-        }),
-        axios.get(
-          `${this.BINANCE_API}/klines?symbol=${symbol}&interval=4h&limit=50`,
-          { timeout: 10000 },
-        ),
+      const [ticker, premium, klines] = await Promise.all([
+        this.marketDataService.fetch24hTickerData(symbol),
+        this.marketDataService.fetchPremiumIndex(symbol),
+        this.marketDataService.getKlinesFutures(symbol, timeFrame, 50),
       ]);
 
-      const ticker = tickerRes.data;
-      const premium = premiumRes.data;
-      const klines = klinesRes.data;
+      if (!ticker || !premium || !klines) {
+        throw new NotFoundException(
+          'can not get necessary data, please try again',
+        );
+      }
+
 
       const closes = klines.map((k: any) => parseFloat(k[4]));
       const currentPrice = closes[closes.length - 1];

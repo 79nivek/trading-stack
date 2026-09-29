@@ -17,6 +17,10 @@ export class UpdateSettingsDto {
   @IsNumber()
   @IsIn([3, 5, 10])
   suggestionLimit?: number;
+
+  @IsOptional()
+  @IsString()
+  timeZone?: string;
 }
 
 export class UserSettingsResDto {
@@ -24,4 +28,5 @@ export class UserSettingsResDto {
   language!: string;
   timeFrame!: string;
   suggestionLimit!: number;
+  timeZone!: string;
 }

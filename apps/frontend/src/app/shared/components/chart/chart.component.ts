@@ -11,6 +11,9 @@ import {
   inject,
   signal,
   effect,
+  Output,
+  EventEmitter,
+  ContentChild,
 } from '@angular/core';
 
 import {
@@ -33,6 +36,7 @@ import { QueryClient } from '@tanstack/angular-query-experimental';
 import { calculateSMA } from '../../../core/utils/currency.util';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import { TimeframeService } from '../../../core/services/timeframe.service';
+import { ChartMenuComponent } from '../chart-menu/chart-menu.component';
 
 export type LineCheckPoint = {
   color: string;
@@ -55,7 +59,11 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   @Input() lines: LineCheckPoint[] = [];
 
+  @Output() priceSelect = new EventEmitter<number>();
+
   @ViewChild('chartContainer') chartContainer!: ElementRef;
+
+  @ContentChild(ChartMenuComponent) menuRef!: ChartMenuComponent;
 
   private chart: IChartApi | null = null;
   private candlestickSeries: ISeriesApi<'Candlestick'> | null = null;
@@ -141,6 +149,46 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.applyBinanceFormatting();
       this.subscribeToRealtimeData();
       this.subscribeSyncEvents();
+
+      this.chartContainer.nativeElement.addEventListener(
+        'contextmenu',
+        (e: MouseEvent) => {
+          e.preventDefault();
+          this.emitPriceAtPosition(e.clientY);
+        },
+      );
+
+      // Handle mobile long press
+      let touchTimer: any;
+      this.chartContainer.nativeElement.addEventListener(
+        'touchstart',
+        (e: TouchEvent) => {
+          if (e.touches.length === 1) {
+            touchTimer = setTimeout(() => {
+              const touch = e.touches[0];
+              this.emitPriceAtPosition(touch.clientY);
+            }, 500);
+          }
+        },
+        { passive: true },
+      );
+
+      this.chartContainer.nativeElement.addEventListener('touchend', () => {
+        if (touchTimer) clearTimeout(touchTimer);
+      });
+      this.chartContainer.nativeElement.addEventListener('touchmove', () => {
+        if (touchTimer) clearTimeout(touchTimer);
+      });
+    }
+  }
+
+  private emitPriceAtPosition(clientY: number) {
+    if (!this.candlestickSeries) return;
+    const rect = this.chartContainer.nativeElement.getBoundingClientRect();
+    const y = clientY - rect.top;
+    const price = this.candlestickSeries.coordinateToPrice(y as any);
+    if (price !== null) {
+      this.priceSelect.emit(price);
     }
   }
 

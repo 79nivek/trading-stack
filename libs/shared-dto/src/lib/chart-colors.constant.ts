@@ -6,6 +6,7 @@ export enum ChartPrimaryColor {
   LIQUIDATION = '#991B1B', // Red 800 (Distinct from Stop Loss)
   PENDING_LONG = '#06B6D4', // Cyan 500
   PENDING_SHORT = '#D946EF', // Fuchsia 500
+  BREAK_EVEN = '#64748B', // Slate 500
 }
 
 export const CHART_MARKER_COLORS: string[] = [

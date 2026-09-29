@@ -54,7 +54,8 @@
   "SETTING": {
     "PROFILE": "Profile",
     "BINANCE": "Binance Credentials",
-    "NOTIFICATION": "Notifications"
+    "NOTIFICATION": "Notifications",
+    "UI_SETTINGS": "UI Settings"
   },
   "PROFILE": {
     "CHANGE_PASSWORD": "Change Password",

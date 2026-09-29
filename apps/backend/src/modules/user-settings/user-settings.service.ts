@@ -5,7 +5,9 @@ import { UpdateSettingsDto } from '@trading-stack/shared-dto';
 
 @Injectable()
 export class UserSettingsService {
-  constructor(private readonly userSettingsRepository: UserSettingsRepository) {}
+  constructor(
+    private readonly userSettingsRepository: UserSettingsRepository,
+  ) {}
 
   async getSettings(userId: string): Promise<UserSettings> {
     let settings = await this.userSettingsRepository.findByUserId(userId);
@@ -16,13 +18,18 @@ export class UserSettingsService {
     return settings;
   }
 
-  async updateSettings(userId: string, dto: UpdateSettingsDto): Promise<UserSettings> {
+  async updateSettings(
+    userId: string,
+    dto: UpdateSettingsDto,
+  ): Promise<UserSettings> {
     const settings = await this.getSettings(userId);
-    
+
     if (dto.theme !== undefined) settings.theme = dto.theme;
     if (dto.language !== undefined) settings.language = dto.language;
     if (dto.timeFrame !== undefined) settings.timeFrame = dto.timeFrame;
-    if (dto.suggestionLimit !== undefined) settings.suggestionLimit = dto.suggestionLimit;
+    if (dto.suggestionLimit !== undefined)
+      settings.suggestionLimit = dto.suggestionLimit;
+    if (dto.timeZone !== undefined) settings.timeZone = dto.timeZone;
 
     return this.userSettingsRepository.save(settings);
   }
