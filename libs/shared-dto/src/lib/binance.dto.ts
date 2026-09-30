@@ -148,6 +148,15 @@ export class Order {
   }
 }
 
+export class OrdersResponse {
+  orders: Order[] = [];
+  algoOrders: AlgoOrder[] = [];
+
+  constructor(params: any) {
+    Object.assign(this, params);
+  }
+}
+
 export class AccountInfoResponse {
   futureBalance!: number;
   unrealizedPnl!: number;
