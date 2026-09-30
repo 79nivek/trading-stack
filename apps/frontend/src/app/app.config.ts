@@ -1,5 +1,6 @@
+import { PageTitleStrategy } from './core/strategies/page-title.strategy';
 import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, TitleStrategy } from '@angular/router';
 import { routes } from './app.routes';
 import {
   provideHttpClient,
@@ -12,8 +13,6 @@ import { catchError } from 'rxjs/operators';
 import { spinnerInterceptor } from './core/interceptors/spinner.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 
-import { PageTitleStrategy } from './core/strategies/page-title.strategy';
-import { TitleStrategy } from '@angular/router';
 
 import {
   provideTanStackQuery,

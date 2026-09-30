@@ -1,6 +1,6 @@
 import { Injectable, signal, inject, Injector } from '@angular/core';
 
-import { BackendApiService } from './api/backend-api.service';
+import { UserSettingService } from './user-setting.service';
 import { TIME_FRAME, TIME_FRAMES } from '@trading-stack/shared-dto';
 
 @Injectable({ providedIn: 'root' })
@@ -17,8 +17,10 @@ export class TimeframeService {
     if (TIME_FRAMES.includes(tf)) {
       this.timeframe.set(tf);
       if (saveToBackend) {
-        const backendApi = this.injector.get(BackendApiService);
-        backendApi.updateSettings({ timeFrame: tf }).subscribe();
+        const userSettingService = this.injector.get(UserSettingService);
+        userSettingService
+          .updateSettings({ timeFrame: tf })
+          .catch((err) => console.error(err));
       }
     }
   }

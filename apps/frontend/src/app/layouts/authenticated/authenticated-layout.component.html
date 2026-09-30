@@ -234,13 +234,6 @@
     @if (isHeaderVisible()) {
       <header class="main-header">
         <div class="flex items-center">
-          <h1
-            class="ml-4 text-xl font-semibold dark:text-white"
-            *ngIf="pageTitleStrategy.pageTitle()"
-          >
-            {{ pageTitleStrategy.pageTitle() | translate }}
-          </h1>
-
           <ng-container
             *ngTemplateOutlet="layoutService.section$ | async"
           ></ng-container>

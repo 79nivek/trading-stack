@@ -1,10 +1,10 @@
 import { Injectable, signal, effect, inject, Injector } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { StorageService } from './storage.service';
-import { BackendApiService } from './api/backend-api.service';
+import { UserSettingService } from './user-setting.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class LanguageService {
   private translate = inject(TranslateService);
@@ -27,10 +27,12 @@ export class LanguageService {
   setLanguage(lang: string, syncWithBackend = true) {
     this.language.set(lang);
     if (syncWithBackend) {
-      const backendApi = this.injector.get(BackendApiService);
-      backendApi.updateSettings({ language: lang }).subscribe({
-        error: (err) => console.error('Failed to sync language', err)
-      });
+      const userSettingService = this.injector.get(UserSettingService);
+      userSettingService
+        .updateSettings({ language: lang })
+        .catch((err: any) => {
+          console.error('Failed to sync language', err);
+        });
     }
   }
 

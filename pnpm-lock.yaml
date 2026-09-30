@@ -294,6 +294,9 @@ importers:
 
   libs/shared-dto:
     dependencies:
+      dayjs:
+        specifier: ^1.11.23
+        version: 1.11.23
       tslib:
         specifier: ^2.3.0
         version: 2.8.1

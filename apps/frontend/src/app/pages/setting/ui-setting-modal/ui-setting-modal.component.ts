@@ -3,14 +3,13 @@ import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ModalService } from '../../../core/services/modal.service';
-import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
   injectMutation,
-  injectQuery,
+
 } from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { UserSettingService } from '../../../core/services/user-setting.service';
 
 @Component({
   selector: 'app-ui-setting-modal',
@@ -27,8 +26,9 @@ import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 export class UiSettingModalComponent {
   private fb = inject(FormBuilder);
   modalService = inject(ModalService);
-  private api = inject(BackendApiService);
   private toast = inject(ToastService);
+
+  private userSettingService = inject(UserSettingService);
 
   timezones = [
     'UTC-12',
@@ -62,17 +62,11 @@ export class UiSettingModalComponent {
     timeZone: ['UTC'],
   });
 
-  settingsQuery = injectQuery(() => ({
-    queryKey: ['settings'],
-    queryFn: () => lastValueFrom(this.api.getSettings()),
-  }));
-
   saveMutation = injectMutation(() => ({
-    mutationFn: (config: any) => lastValueFrom(this.api.updateSettings(config)),
+    mutationFn: (config: any) => this.userSettingService.updateSettings(config),
     onSuccess: () => {
       this.toast.show('UI settings saved successfully!', 'success');
       this.modalService.close();
-      // Optional: invalidate queries if needed
     },
     onError: (err: any) => {
       this.toast.show(
@@ -84,7 +78,7 @@ export class UiSettingModalComponent {
 
   constructor() {
     effect(() => {
-      const data = this.settingsQuery.data();
+      const data = this.userSettingService.settings();
       if (data && data.timeZone) {
         this.form.patchValue({ timeZone: data.timeZone });
       }

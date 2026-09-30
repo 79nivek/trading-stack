@@ -1,11 +1,10 @@
 import {
   injectMutation,
-  injectQuery,
+
 } from '@tanstack/angular-query-experimental';
 import { lastValueFrom } from 'rxjs';
 import { effect } from '@angular/core';
 import { Component, signal, inject } from '@angular/core';
-import { PageTitleStrategy } from '../../core/strategies/page-title.strategy';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
@@ -28,6 +27,7 @@ import { LayoutService } from '../../core/services/layout.service';
 import { AccountService } from '../../core/services/account.service';
 import { TIME_FRAME } from '@trading-stack/shared-dto';
 import { UserDataWsService } from '../../core/services/api/user-data-ws.service';
+import { UserSettingService } from '../../core/services/user-setting.service';
 
 @Component({
   selector: 'app-authenticated-layout',
@@ -55,7 +55,6 @@ export class AuthenticatedLayoutComponent {
   private themeService = inject(ThemeService);
   private langService = inject(LanguageService);
   private timeframeService = inject(TimeframeService);
-  public pageTitleStrategy = inject(PageTitleStrategy);
   public accountService = inject(AccountService);
   public authService = inject(BackendApiService);
 
@@ -86,10 +85,7 @@ export class AuthenticatedLayoutComponent {
     { label: 'HEADER_PROFILE.LOGOUT', action: 'logout' },
   ];
 
-  settingsQuery = injectQuery(() => ({
-    queryKey: ['settings'],
-    queryFn: () => lastValueFrom(this.authService.getSettings()),
-  }));
+
 
   verifyTokenMutation = injectMutation(() => ({
     mutationFn: (token: string) =>
@@ -111,11 +107,12 @@ export class AuthenticatedLayoutComponent {
     },
   }));
 
+  private userSettingService = inject(UserSettingService);
+
   constructor() {
     this.userDataWsService.temp();
     effect(() => {
-      console.log('pageTitle', this.pageTitleStrategy.pageTitle());
-      const settings = this.settingsQuery.data();
+      const settings = this.userSettingService.settings();
       if (settings) {
         if (settings.theme)
           this.themeService.setTheme(settings.theme as THEME, false);

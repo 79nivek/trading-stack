@@ -35,6 +35,7 @@ import { QueryClient } from '@tanstack/angular-query-experimental';
 import { calculateSMA } from '@trading-stack/shared';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import { TimeframeService } from '../../../core/services/timeframe.service';
+import { UserSettingService } from '../../../core/services/user-setting.service';
 import { ChartMenuComponent } from '../chart-menu/chart-menu.component';
 
 export type LineCheckPoint = {
@@ -78,10 +79,28 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private chartSync = inject(ChartSyncService);
   exchangeInfoService = inject(ExchangeInfoService);
   private timeframeService = inject(TimeframeService);
+  private userSettingService = inject(UserSettingService);
 
   private wsSubscription: Subscription | null = null;
   private syncCrosshairSub: Subscription | null = null;
   private syncZoomSub: Subscription | null = null;
+
+  private get timeShiftSeconds(): number {
+    const tz = this.userSettingService.settings()?.timeZone || 'UTC';
+
+    // Calculate the target offset in minutes
+    let userOffsetMins = 0;
+    if (tz !== 'UTC') {
+      const sign = tz.includes('+') ? 1 : -1;
+      const match = tz.match(/\d+/);
+      const num = match ? parseInt(match[0], 10) : 0;
+      userOffsetMins = sign * num * 60;
+    }
+
+    const result = userOffsetMins * 60;
+
+    return result;
+  }
 
   private priceLines: IPriceLine[] = [];
 
@@ -129,6 +148,8 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     effect(
       () => {
         this.timeframeService.timeframe();
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        this.userSettingService.settings()?.timeZone;
         if (this.chart) {
           this.loadHistoricalData();
           this.applyBinanceFormatting();
@@ -565,14 +586,14 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.earliestTime = data[0].time as number;
 
         this.currentData = data.map((d) => ({
-          time: d.time as Time,
+          time: ((d.time as number) + this.timeShiftSeconds) as Time,
           open: d.open,
           high: d.high,
           low: d.low,
           close: d.close,
         }));
         this.currentVolumeData = data.map((d) => ({
-          time: d.time as Time,
+          time: ((d.time as number) + this.timeShiftSeconds) as Time,
           value: d.volume,
           color: d.close >= d.open ? '#26a69a80' : '#ef535080',
         }));
@@ -620,14 +641,14 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.earliestTime = data[0].time as number;
 
         const olderCandles = data.map((d) => ({
-          time: d.time as Time,
+          time: ((d.time as number) + this.timeShiftSeconds) as Time,
           open: d.open,
           high: d.high,
           low: d.low,
           close: d.close,
         }));
         const olderVolumes = data.map((d) => ({
-          time: d.time as Time,
+          time: ((d.time as number) + this.timeShiftSeconds) as Time,
           value: d.volume,
           color: d.close >= d.open ? '#26a69a80' : '#ef535080',
         }));
@@ -658,15 +679,17 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       next: (kline) => {
         if (this.isInitializing) return; // Skip realtime ticks while fetching history to prevent out-of-order data
         if (this.candlestickSeries && this.volumeSeries) {
+          const shiftedTime = ((kline.time as number) +
+            this.timeShiftSeconds) as Time;
           const candle = {
-            time: kline.time as Time,
+            time: shiftedTime,
             open: kline.open,
             high: kline.high,
             low: kline.low,
             close: kline.close,
           };
           const volume = {
-            time: kline.time as Time,
+            time: shiftedTime,
             value: kline.volume,
             color: kline.close >= kline.open ? '#26a69a80' : '#ef535080',
           };

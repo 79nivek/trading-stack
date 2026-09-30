@@ -1,6 +1,6 @@
 import { Injectable, signal, effect, inject, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
-import { BackendApiService } from './api/backend-api.service';
+import { UserSettingService } from './user-setting.service';
 
 export enum THEME {
   // eslint-disable-next-line no-unused-vars
@@ -8,25 +8,27 @@ export enum THEME {
   // eslint-disable-next-line no-unused-vars
   DARK = 'dark',
   // eslint-disable-next-line no-unused-vars
-  AUTO = 'auto'
+  AUTO = 'auto',
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ThemeService {
   private storage = inject(StorageService);
   private injector = inject(Injector);
 
-  theme = signal<THEME>((this.storage.theme.get() as THEME) ||  THEME.AUTO);
+  theme = signal<THEME>((this.storage.theme.get() as THEME) || THEME.AUTO);
 
   constructor() {
     // Listen for OS theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (this.theme() === THEME.AUTO) {
-        this.applyTheme(THEME.AUTO);
-      }
-    });
+    window
+      .matchMedia('(prefers-color-scheme: dark)')
+      .addEventListener('change', () => {
+        if (this.theme() === THEME.AUTO) {
+          this.applyTheme(THEME.AUTO);
+        }
+      });
 
     effect(() => {
       const currentTheme = this.theme();
@@ -53,10 +55,12 @@ export class ThemeService {
   setTheme(newTheme: THEME, syncWithBackend = true) {
     this.theme.set(newTheme);
     if (syncWithBackend) {
-      const backendApi = this.injector.get(BackendApiService);
-      backendApi.updateSettings({ theme: newTheme }).subscribe({
-        error: (err) => console.error('Failed to sync theme', err)
-      });
+      const userSettingService = this.injector.get(UserSettingService);
+      userSettingService
+        .updateSettings({ theme: newTheme })
+        .catch((err: any) => {
+          console.error('Failed to sync theme', err);
+        });
     }
   }
 

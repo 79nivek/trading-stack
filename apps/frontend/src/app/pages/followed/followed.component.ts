@@ -262,11 +262,6 @@ export class FollowedPageComponent
 
   // ─── AI Check ─────────────────────────────────────────────────────────────
 
-  settingsQuery = injectQuery(() => ({
-    queryKey: ['settings'],
-    queryFn: () => lastValueFrom(this.backendApi.getSettings()),
-    staleTime: Infinity,
-  }));
 
   openPositionModal(symbol: string): void {
     this.modalService.open(SuggestionPositionModal, { symbol });
