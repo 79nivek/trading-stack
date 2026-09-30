@@ -9,6 +9,7 @@ export const APP_ROUTES = {
   SETTING_PROFILE: 'setting/profile',
   SETTING_BINANCE: 'setting/binance',
   SETTING_NOTIFICATION: 'setting/notification',
+  TOKEN_DETAIL: 'token/:symbol',
 };
 
 export const APP_PATHS = {
@@ -22,4 +23,5 @@ export const APP_PATHS = {
   SETTING_PROFILE: `/${APP_ROUTES.SETTING_PROFILE}`,
   SETTING_BINANCE: `/${APP_ROUTES.SETTING_BINANCE}`,
   SETTING_NOTIFICATION: `/${APP_ROUTES.SETTING_NOTIFICATION}`,
+  TOKEN_DETAIL: (symbol: string) => `/token/${symbol}`,
 };

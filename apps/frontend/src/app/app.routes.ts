@@ -62,6 +62,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/setting/profile/profile.component').then(m => m.ProfilePageComponent)
       },
       {
+        path: APP_ROUTES.TOKEN_DETAIL,
+        title: 'NAV.TOKEN_DETAIL',
+        loadComponent: () => import('./pages/token-detail/token-detail.component').then(m => m.TokenDetailPageComponent)
+      },
+      {
         path: '',
         redirectTo: APP_ROUTES.DASHBOARD,
         pathMatch: 'full'

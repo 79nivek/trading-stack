@@ -28,8 +28,8 @@ import {
   UserSettingsResDto,
   LlmAnalyzeTokenResponseDto,
   Position,
-  Order,
   SetOrderReq,
+  OrdersResponse,
 } from '@trading-stack/shared-dto';
 import { TradingFormatter } from '@trading-stack/shared';
 import { TimeframeService } from '../timeframe.service';
@@ -357,10 +357,10 @@ export class BackendApiService implements OnInit, OnDestroy {
       .pipe(map((res) => res.result));
   }
 
-  getFuturesOrders(): Observable<Order[]> {
+  getFuturesOrders(): Observable<OrdersResponse> {
     return this.http
       .get<
-        BaseResponse<Order[]>
+        BaseResponse<OrdersResponse>
       >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders`, { ...this.useAuth(true), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }

@@ -6,8 +6,10 @@ import { generateBinanceSignature } from './binance-signature.util';
 import { directionToOppositeSide } from '../../utils';
 import {
   AccountInfoResponse,
+  AlgoOrder,
   Direction,
   Order,
+  OrdersResponse,
   OrderType,
   Position,
   SetOrderReq,
@@ -595,13 +597,20 @@ export class BinanceService {
       },
     });
 
-    const [openOrders, algoOrders] = await Promise.all([
-      client.restAPI.currentAllOpenOrders().then((res) => res.data()),
+    const [orders, algoOrders] = await Promise.all([
+      client.restAPI
+        .currentAllOpenOrders()
+        .then((res) => res.data())
+        .then((data) => data.map((order: any) => new Order(order))),
       client.restAPI
         .currentAllAlgoOpenOrders({ algoType: 'CONDITIONAL' })
-        .then((res) => res.data()),
+        .then((res) => res.data())
+        .then((data) => data.map((order: any) => new AlgoOrder(order))),
     ]);
 
-    return [...openOrders, ...algoOrders].map((order: any) => new Order(order));
+    return new OrdersResponse({
+      orders,
+      algoOrders,
+    });
   }
 }

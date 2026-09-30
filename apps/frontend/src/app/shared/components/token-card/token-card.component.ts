@@ -20,10 +20,7 @@ import {
   ChartPrimaryColor,
   OrderType,
 } from '@trading-stack/shared-dto';
-import {
-  calculatePnlAmount,
-  calculatePositionFee,
-} from '@trading-stack/shared';
+import { calculatePnlAmount } from '@trading-stack/shared';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import {
   injectMutation,
@@ -36,6 +33,7 @@ import { AccountService } from '../../../core/services/account.service';
 import { PopupService } from '../../../core/services/popup.service';
 
 import { ChartMenuComponent } from '../chart-menu/chart-menu.component';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-token-card',
@@ -46,6 +44,7 @@ import { ChartMenuComponent } from '../chart-menu/chart-menu.component';
     TranslatePipe,
     ChartComponent,
     ChartMenuComponent,
+    RouterLink,
   ],
   templateUrl: './token-card.component.html',
   styleUrl: './token-card.component.scss',
@@ -92,7 +91,7 @@ export class TokenCardComponent implements OnChanges, OnInit {
       {
         color: ChartPrimaryColor.ENTRY,
         title: 'Entry',
-        value: (pos.entryPrice).toString(),
+        value: pos.entryPrice.toString(),
         lineStyle: LineStyle.Solid,
       },
       {
@@ -102,21 +101,31 @@ export class TokenCardComponent implements OnChanges, OnInit {
         lineStyle: LineStyle.Solid,
       },
     ];
-    const fee = calculatePositionFee(pos);
-    const positionAmt = parseFloat(pos.positionAmt || '0');
+
     const entryPrice = parseFloat(pos.entryPrice || '0');
+    let breakEvenPrice = parseFloat(pos.breakEvenPrice);
+    const fee =
+      calculatePnlAmount({
+        entryPrice: pos.entryPrice,
+        positionAmt: pos.positionAmt,
+        targetPrice: pos.breakEvenPrice,
+      }) * 2;
 
-    if (fee > 1 && positionAmt !== 0) {
-      const breakEvenPrice = entryPrice + fee / positionAmt;
-      lines.push({
-        color: ChartPrimaryColor.BREAK_EVEN,
-        title: `BE(-$${fee.toFixed(2)})`,
-        value: breakEvenPrice.toString(),
-        lineStyle: LineStyle.Dotted,
-      });
+    // if (fee > 1 && positionAmt !== 0) {
+    if (entryPrice > breakEvenPrice) {
+      breakEvenPrice = entryPrice - Math.abs(breakEvenPrice - entryPrice) * 2;
+    } else {
+      breakEvenPrice = entryPrice + Math.abs(breakEvenPrice - entryPrice) * 2;
     }
+    lines.push({
+      color: ChartPrimaryColor.BREAK_EVEN,
+      title: `BE(-$${fee.toFixed(2)})`,
+      value: breakEvenPrice.toString(),
+      lineStyle: LineStyle.Dotted,
+    });
+    // }
 
-    const orders = this.accountService.orders().get(this.symbol);
+    const orders = this.accountService.algoOrders().get(this.symbol);
     if (orders) {
       orders.forEach((order) => {
         if (!order.orderType) return;

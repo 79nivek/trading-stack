@@ -38,7 +38,7 @@
       @if (index !== undefined) {
         <span class="rank-badge">#{{ index + 1 }}</span>
       }
-      <h2 class="token-symbol">{{ symbol }}</h2>
+      <a [routerLink]="['/token', symbol]" class="token-symbol hover:underline cursor-pointer transition-colors hover:text-primary">{{ symbol }}</a>
       <span
         class="price-change-badge"
         [ngClass]="
