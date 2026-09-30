@@ -77,6 +77,7 @@ export class ChartMenuComponent {
           symbol: this.symbol,
           price: this.selectedPrice().toString(),
           direction: this.isLong() ? Direction.LONG : Direction.SHORT,
+          quantity: this.position()?.positionAmt || '0',
         }),
       ),
     onSuccess: () => {
@@ -94,6 +95,7 @@ export class ChartMenuComponent {
           symbol: this.symbol,
           price: this.selectedPrice().toString(),
           direction: this.isLong() ? Direction.LONG : Direction.SHORT,
+          quantity: this.position()?.positionAmt || '0',
         }),
       ),
     onSuccess: () => {

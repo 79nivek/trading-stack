@@ -92,7 +92,7 @@ export class TokenCardComponent implements OnChanges, OnInit {
       {
         color: ChartPrimaryColor.ENTRY,
         title: 'Entry',
-        value: (pos.entryPrice || 0).toString(),
+        value: (pos.entryPrice).toString(),
         lineStyle: LineStyle.Solid,
       },
       {

@@ -24,6 +24,7 @@ import {
   LineSeries,
   IPriceLine,
   LineStyle,
+  CrosshairMode,
 } from 'lightweight-charts';
 import { lastValueFrom, Subscription } from 'rxjs';
 import { FuturesWebsocketService } from '../../../core/services/api/futures-ws.service';
@@ -298,6 +299,9 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     const chartOptions = {
       width: this.chartContainer.nativeElement.clientWidth,
       height: 400,
+      crosshair: {
+        mode: CrosshairMode.Normal,
+      },
       layout: {
         background: { color: 'transparent' },
         textColor: isDark ? '#d1d5db' : '#374151',

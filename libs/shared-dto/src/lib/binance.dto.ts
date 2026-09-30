@@ -166,4 +166,8 @@ export class SetOrderReq {
   @IsNotEmpty()
   @IsString()
   direction!: Direction;
+
+  @IsNotEmpty()
+  @IsString()
+  quantity!: string;
 }

@@ -313,7 +313,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/master-token/check`, { masterToken }, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/master-token/check`, { masterToken }, { ...this.useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 

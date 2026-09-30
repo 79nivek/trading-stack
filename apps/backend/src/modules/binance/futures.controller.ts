@@ -73,7 +73,8 @@ export class FuturesController {
   ) {
     return this.binanceService.placeTP({
       symbol: body.symbol,
-      price: Number(body.price),
+      price: body.price,
+      quantity: body.quantity,
       direction: body.direction,
       userId: user.id,
       masterToken,
@@ -90,7 +91,8 @@ export class FuturesController {
   ) {
     return this.binanceService.placeSL({
       symbol: body.symbol,
-      price: Number(body.price),
+      price: body.price,
+      quantity: body.quantity,
       direction: body.direction,
       userId: user.id,
       masterToken,

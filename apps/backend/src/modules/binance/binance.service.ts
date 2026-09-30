@@ -10,6 +10,7 @@ import {
   Order,
   OrderType,
   Position,
+  SetOrderReq,
 } from '@trading-stack/shared-dto';
 import { MarketDataService } from '../market-data/market-data.service';
 import { TradingFormatter } from '@trading-stack/shared';
@@ -293,7 +294,8 @@ export class BinanceService {
       const tpOrder = await this.placeTP({
         direction: setup.direction,
         symbol: setup.symbol,
-        price: tpPrice,
+        price: tpPrice.toString(),
+        quantity: qty.toString(),
         $client: client,
       });
 
@@ -301,7 +303,8 @@ export class BinanceService {
       const slOrder = await this.placeSL({
         direction: setup.direction,
         symbol: setup.symbol,
-        price: slPrice,
+        price: slPrice.toString(),
+        quantity: qty.toString(),
         $client: client,
       });
 
@@ -313,14 +316,13 @@ export class BinanceService {
     }
   }
 
-  async placeSL(setup: {
-    direction: Direction;
-    symbol: string;
-    price: number;
-    masterToken?: string;
-    userId?: string;
-    $client?: DerivativesTradingUsdsFutures;
-  }) {
+  async placeSL(
+    setup: SetOrderReq & {
+      masterToken?: string;
+      userId?: string;
+      $client?: DerivativesTradingUsdsFutures;
+    },
+  ) {
     let client!: DerivativesTradingUsdsFutures;
 
     try {
@@ -346,16 +348,88 @@ export class BinanceService {
 
       const oppositeSide = directionToOppositeSide(setup.direction);
 
-      const options = await this.getSymbolPrecision(setup.symbol);
-      const price = TradingFormatter.formatPrice(setup.price, options);
+      const formatOption = await this.getSymbolPrecision(setup.symbol);
 
-      const res = await client.restAPI.newAlgoOrder({
+      const qty = TradingFormatter.formatQuantity(
+        +setup.quantity,
+        formatOption,
+      );
+      const price = TradingFormatter.formatPrice(+setup.price, formatOption);
+
+      const params = {
         symbol: setup.symbol,
         side: oppositeSide as any,
         type: OrderType.STOP_MARKET as any,
         algoType: 'CONDITIONAL' as any,
         triggerPrice: price,
-        closePosition: 'true' as any,
+        closePosition: 'false' as any,
+        quantity: Math.abs(qty),
+        // selfTradePreventionMode: 'NONE' as any,
+        timeInForce: 'GTC' as any,
+        priceProtect: 'true' as any,
+        reduceOnly: 'true' as any,
+      };
+
+      const res = await client.restAPI.newAlgoOrder(params);
+
+      return res.data() as Order;
+    } catch (error: any) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  async placeTP(
+    setup: SetOrderReq & {
+      masterToken?: string;
+      userId?: string;
+      $client?: DerivativesTradingUsdsFutures;
+    },
+  ) {
+    let client!: DerivativesTradingUsdsFutures;
+
+    try {
+      if (setup.$client) {
+        client = setup.$client;
+      } else {
+        if (!setup.userId || !setup.masterToken) {
+          throw new BadRequestException('Missing parameters');
+        }
+
+        const { apiKey, secretKey } = await this.getSecret(
+          setup.userId,
+          setup.masterToken,
+        );
+
+        client = new DerivativesTradingUsdsFutures({
+          configurationRestAPI: {
+            apiKey: apiKey,
+            privateKey: secretKey,
+          },
+        });
+      }
+
+      const oppositeSide = directionToOppositeSide(setup.direction);
+
+      const formatOption = await this.getSymbolPrecision(setup.symbol);
+
+      const qty = TradingFormatter.formatQuantity(
+        +setup.quantity,
+        formatOption,
+      );
+      const price = TradingFormatter.formatPrice(+setup.price, formatOption);
+
+      const res = await client.restAPI.newAlgoOrder({
+        symbol: setup.symbol,
+        side: oppositeSide as any,
+        type: OrderType.TAKE_PROFIT_MARKET as any,
+        algoType: 'CONDITIONAL' as any,
+        triggerPrice: price,
+        closePosition: 'false' as any,
+        quantity: Math.abs(qty),
+        // selfTradePreventionMode: 'NONE' as any,
+        timeInForce: 'GTC' as any,
+        priceProtect: 'true' as any,
+        reduceOnly: 'true' as any,
       });
 
       return res.data() as Order;
@@ -364,51 +438,27 @@ export class BinanceService {
     }
   }
 
-  async placeTP(setup: {
-    direction: Direction;
-    symbol: string;
-    price: number;
-    masterToken?: string;
-    userId?: string;
-    $client?: DerivativesTradingUsdsFutures;
-  }) {
-    let client!: DerivativesTradingUsdsFutures;
-
+  async cancelOrder(
+    orderId: string,
+    credentials: { userId: string; masterToken: string; symbol: string },
+  ) {
     try {
-      if (setup.$client) {
-        client = setup.$client;
-      } else {
-        if (!setup.userId || !setup.masterToken) {
-          throw new BadRequestException('Missing parameters');
-        }
-
-        const { apiKey, secretKey } = await this.getSecret(
-          setup.userId,
-          setup.masterToken,
-        );
-
-        client = new DerivativesTradingUsdsFutures({
-          configurationRestAPI: {
-            apiKey: apiKey,
-            privateKey: secretKey,
-          },
-        });
-      }
-
-      const options = await this.getSymbolPrecision(setup.symbol);
-      const price = TradingFormatter.formatPrice(setup.price, options);
-
-      const oppositeSide = directionToOppositeSide(setup.direction);
-      const res = await client.restAPI.newAlgoOrder({
-        symbol: setup.symbol,
-        side: oppositeSide as any,
-        type: 'TAKE_PROFIT_MARKET' as any,
-        algoType: 'CONDITIONAL' as any,
-        triggerPrice: price,
-        closePosition: 'true' as any,
+      const { apiKey, secretKey } = await this.getSecret(
+        credentials.userId,
+        credentials.masterToken,
+      );
+      const client = new DerivativesTradingUsdsFutures({
+        configurationRestAPI: {
+          apiKey: apiKey,
+          privateKey: secretKey,
+        },
       });
 
-      return res.data() as Order;
+      const res = await client.restAPI.cancelAlgoOrder({
+        algoId: +orderId,
+      });
+
+      return res.data() as any;
     } catch (error: any) {
       throw new BadRequestException(error);
     }

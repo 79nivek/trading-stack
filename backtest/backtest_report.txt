@@ -1,0 +1,360 @@
+
+--- Run 1 ---
+Config: {"rsiPeriod":14,"rsiLongThreshold":45,"rsiShortThreshold":55,"smaPeriod":50,"atrPeriod":14,"atrMultiplierSL":1.5,"atrMultiplierTP":2.5,"leverage":10,"riskPerTradePercent":0.02,"limitOffset":0.001}
+
+Daily PnL:
+[2026-01-01] Total Equity: $10100.10 | Realized Equity: $10100.10 | Floating PnL: $0.00
+   -> Trades Closed Today: 3 (Wins: 2, Losses: 1)
+   -> Win PnL: +$100.10 | Loss PnL: -$0.00 | Total Fees: $4.86
+   -> Final Daily Net PnL: $100.10
+
+[2026-01-02] Total Equity: $10227.21 | Realized Equity: $10242.97 | Floating PnL: $-15.76
+   -> Trades Closed Today: 10 (Wins: 7, Losses: 3)
+   -> Win PnL: +$143.70 | Loss PnL: -$0.00 | Total Fees: $16.24
+   -> Final Daily Net PnL: $143.69
+
+[2026-01-03] Total Equity: $10079.03 | Realized Equity: $10021.82 | Floating PnL: $57.21
+   -> Trades Closed Today: 15 (Wins: 3, Losses: 12)
+   -> Win PnL: +$28.96 | Loss PnL: -$250.12 | Total Fees: $24.11
+   -> Final Daily Net PnL: $-221.17
+
+[2026-01-04] Total Equity: $10111.00 | Realized Equity: $10130.49 | Floating PnL: $-19.49
+   -> Trades Closed Today: 12 (Wins: 6, Losses: 6)
+   -> Win PnL: +$142.81 | Loss PnL: -$34.16 | Total Fees: $18.93
+   -> Final Daily Net PnL: $108.64
+
+[2026-01-05] Total Equity: $10133.23 | Realized Equity: $10128.72 | Floating PnL: $4.50
+   -> Trades Closed Today: 5 (Wins: 2, Losses: 3)
+   -> Win PnL: +$33.77 | Loss PnL: -$35.51 | Total Fees: $8.04
+   -> Final Daily Net PnL: $-1.73
+
+[2026-01-06] Total Equity: $9868.65 | Realized Equity: $9945.00 | Floating PnL: $-76.35
+   -> Trades Closed Today: 20 (Wins: 7, Losses: 13)
+   -> Win PnL: +$120.12 | Loss PnL: -$303.89 | Total Fees: $31.15
+   -> Final Daily Net PnL: $-183.77
+
+[2026-01-07] Total Equity: $9486.55 | Realized Equity: $9486.55 | Floating PnL: $0.00
+   -> Trades Closed Today: 10 (Wins: 2, Losses: 8)
+   -> Win PnL: +$27.79 | Loss PnL: -$487.00 | Total Fees: $15.43
+   -> Final Daily Net PnL: $-459.21
+
+[2026-01-08] Total Equity: $9591.27 | Realized Equity: $9591.27 | Floating PnL: $0.00
+   -> Trades Closed Today: 7 (Wins: 5, Losses: 2)
+   -> Win PnL: +$168.02 | Loss PnL: -$63.30 | Total Fees: $10.67
+   -> Final Daily Net PnL: $104.72
+
+[2026-01-09] Total Equity: $9644.57 | Realized Equity: $9644.57 | Floating PnL: $0.00
+   -> Trades Closed Today: 8 (Wins: 2, Losses: 6)
+   -> Win PnL: +$129.24 | Loss PnL: -$75.94 | Total Fees: $12.21
+   -> Final Daily Net PnL: $53.30
+
+[2026-01-10] Total Equity: $9677.93 | Realized Equity: $9677.93 | Floating PnL: $0.00
+   -> Trades Closed Today: 9 (Wins: 5, Losses: 4)
+   -> Win PnL: +$88.78 | Loss PnL: -$55.42 | Total Fees: $13.83
+   -> Final Daily Net PnL: $33.36
+
+[2026-01-11] Total Equity: $9821.38 | Realized Equity: $9821.38 | Floating PnL: $0.00
+   -> Trades Closed Today: 13 (Wins: 8, Losses: 5)
+   -> Win PnL: +$208.79 | Loss PnL: -$65.34 | Total Fees: $20.06
+   -> Final Daily Net PnL: $143.45
+
+[2026-01-12] Total Equity: $9455.70 | Realized Equity: $9455.70 | Floating PnL: $0.00
+   -> Trades Closed Today: 19 (Wins: 4, Losses: 15)
+   -> Win PnL: +$60.90 | Loss PnL: -$426.58 | Total Fees: $28.89
+   -> Final Daily Net PnL: $-365.68
+
+[2026-01-13] Total Equity: $9573.04 | Realized Equity: $9581.17 | Floating PnL: $-8.13
+   -> Trades Closed Today: 4 (Wins: 3, Losses: 1)
+   -> Win PnL: +$126.24 | Loss PnL: -$0.00 | Total Fees: $6.10
+   -> Final Daily Net PnL: $126.24
+
+[2026-01-14] Total Equity: $9444.57 | Realized Equity: $9473.48 | Floating PnL: $-28.92
+   -> Trades Closed Today: 19 (Wins: 8, Losses: 11)
+   -> Win PnL: +$193.62 | Loss PnL: -$301.32 | Total Fees: $28.10
+   -> Final Daily Net PnL: $-107.70
+
+[2026-01-15] Total Equity: $9526.17 | Realized Equity: $9526.17 | Floating PnL: $0.00
+   -> Trades Closed Today: 17 (Wins: 11, Losses: 6)
+   -> Win PnL: +$242.88 | Loss PnL: -$190.95 | Total Fees: $25.32
+   -> Final Daily Net PnL: $51.92
+
+[2026-01-16] Total Equity: $9669.72 | Realized Equity: $9669.72 | Floating PnL: $0.00
+   -> Trades Closed Today: 12 (Wins: 8, Losses: 4)
+   -> Win PnL: +$186.28 | Loss PnL: -$42.73 | Total Fees: $18.20
+   -> Final Daily Net PnL: $143.55
+
+[2026-01-17] Total Equity: $9871.54 | Realized Equity: $9871.54 | Floating PnL: $0.00
+   -> Trades Closed Today: 25 (Wins: 13, Losses: 12)
+   -> Win PnL: +$547.78 | Loss PnL: -$345.96 | Total Fees: $37.53
+   -> Final Daily Net PnL: $201.82
+
+[2026-01-18] Total Equity: $9662.49 | Realized Equity: $9662.49 | Floating PnL: $0.00
+   -> Trades Closed Today: 12 (Wins: 6, Losses: 6)
+   -> Win PnL: +$105.54 | Loss PnL: -$314.58 | Total Fees: $18.72
+   -> Final Daily Net PnL: $-209.05
+
+[2026-01-19] Total Equity: $9654.41 | Realized Equity: $9654.41 | Floating PnL: $0.00
+   -> Trades Closed Today: 22 (Wins: 13, Losses: 9)
+   -> Win PnL: +$288.62 | Loss PnL: -$296.69 | Total Fees: $32.73
+   -> Final Daily Net PnL: $-8.08
+
+[2026-01-20] Total Equity: $9522.71 | Realized Equity: $9522.71 | Floating PnL: $0.00
+   -> Trades Closed Today: 16 (Wins: 9, Losses: 7)
+   -> Win PnL: +$163.56 | Loss PnL: -$295.27 | Total Fees: $24.33
+   -> Final Daily Net PnL: $-131.71
+
+[2026-01-21] Total Equity: $9466.92 | Realized Equity: $9453.43 | Floating PnL: $13.49
+   -> Trades Closed Today: 26 (Wins: 10, Losses: 16)
+   -> Win PnL: +$443.37 | Loss PnL: -$511.14 | Total Fees: $38.36
+   -> Final Daily Net PnL: $-67.77
+
+[2026-01-22] Total Equity: $9523.03 | Realized Equity: $9524.83 | Floating PnL: $-1.80
+   -> Trades Closed Today: 18 (Wins: 11, Losses: 7)
+   -> Win PnL: +$254.39 | Loss PnL: -$183.02 | Total Fees: $26.59
+   -> Final Daily Net PnL: $71.37
+
+[2026-01-23] Total Equity: $9472.56 | Realized Equity: $9482.84 | Floating PnL: $-10.29
+   -> Trades Closed Today: 20 (Wins: 7, Losses: 13)
+   -> Win PnL: +$249.89 | Loss PnL: -$292.60 | Total Fees: $30.09
+   -> Final Daily Net PnL: $-42.71
+
+[2026-01-24] Total Equity: $10149.39 | Realized Equity: $10149.39 | Floating PnL: $0.00
+   -> Trades Closed Today: 28 (Wins: 16, Losses: 12)
+   -> Win PnL: +$874.95 | Loss PnL: -$209.16 | Total Fees: $43.18
+   -> Final Daily Net PnL: $665.80
+
+[2026-01-25] Total Equity: $9720.93 | Realized Equity: $9725.28 | Floating PnL: $-4.35
+   -> Trades Closed Today: 20 (Wins: 9, Losses: 11)
+   -> Win PnL: +$321.59 | Loss PnL: -$744.93 | Total Fees: $31.15
+   -> Final Daily Net PnL: $-423.34
+
+[2026-01-26] Total Equity: $9645.66 | Realized Equity: $9645.66 | Floating PnL: $0.00
+   -> Trades Closed Today: 26 (Wins: 14, Losses: 12)
+   -> Win PnL: +$467.78 | Loss PnL: -$548.17 | Total Fees: $39.11
+   -> Final Daily Net PnL: $-80.40
+
+[2026-01-27] Total Equity: $9226.25 | Realized Equity: $9226.25 | Floating PnL: $0.00
+   -> Trades Closed Today: 19 (Wins: 6, Losses: 13)
+   -> Win PnL: +$158.08 | Loss PnL: -$577.49 | Total Fees: $27.79
+   -> Final Daily Net PnL: $-419.41
+
+[2026-01-28] Total Equity: $9341.84 | Realized Equity: $9316.38 | Floating PnL: $25.46
+   -> Trades Closed Today: 18 (Wins: 10, Losses: 8)
+   -> Win PnL: +$192.96 | Loss PnL: -$102.09 | Total Fees: $26.32
+   -> Final Daily Net PnL: $90.88
+
+[2026-01-29] Total Equity: $9472.60 | Realized Equity: $9432.72 | Floating PnL: $39.87
+   -> Trades Closed Today: 17 (Wins: 13, Losses: 4)
+   -> Win PnL: +$243.11 | Loss PnL: -$125.30 | Total Fees: $24.77
+   -> Final Daily Net PnL: $117.81
+
+[2026-01-30] Total Equity: $9468.49 | Realized Equity: $9468.49 | Floating PnL: $0.00
+   -> Trades Closed Today: 19 (Wins: 10, Losses: 9)
+   -> Win PnL: +$222.74 | Loss PnL: -$189.18 | Total Fees: $28.38
+   -> Final Daily Net PnL: $33.56
+
+[2026-01-31] Total Equity: $9232.25 | Realized Equity: $9279.45 | Floating PnL: $-47.20
+   -> Trades Closed Today: 10 (Wins: 6, Losses: 4)
+   -> Win PnL: +$113.04 | Loss PnL: -$298.46 | Total Fees: $14.67
+   -> Final Daily Net PnL: $-185.43
+
+[2026-02-01] Total Equity: $8981.68 | Realized Equity: $8981.68 | Floating PnL: $0.00
+   -> Trades Closed Today: 24 (Wins: 9, Losses: 15)
+   -> Win PnL: +$323.29 | Loss PnL: -$624.67 | Total Fees: $34.71
+   -> Final Daily Net PnL: $-301.38
+
+[2026-02-02] Total Equity: $8884.84 | Realized Equity: $8884.84 | Floating PnL: $0.00
+   -> Trades Closed Today: 10 (Wins: 4, Losses: 6)
+   -> Win PnL: +$59.04 | Loss PnL: -$155.88 | Total Fees: $13.99
+   -> Final Daily Net PnL: $-96.84
+
+[2026-02-03] Total Equity: $8994.20 | Realized Equity: $8994.20 | Floating PnL: $0.00
+   -> Trades Closed Today: 6 (Wins: 6, Losses: 0)
+   -> Win PnL: +$109.36 | Loss PnL: -$0.00 | Total Fees: $8.52
+   -> Final Daily Net PnL: $109.36
+
+[2026-02-04] Total Equity: $8868.09 | Realized Equity: $8868.09 | Floating PnL: $0.00
+   -> Trades Closed Today: 14 (Wins: 6, Losses: 8)
+   -> Win PnL: +$186.94 | Loss PnL: -$313.05 | Total Fees: $19.82
+   -> Final Daily Net PnL: $-126.11
+
+[2026-02-05] Total Equity: $8918.01 | Realized Equity: $8762.37 | Floating PnL: $155.64
+   -> Trades Closed Today: 6 (Wins: 1, Losses: 5)
+   -> Win PnL: +$14.53 | Loss PnL: -$119.55 | Total Fees: $8.42
+   -> Final Daily Net PnL: $-105.02
+
+[2026-02-06] Total Equity: $8969.13 | Realized Equity: $8969.13 | Floating PnL: $0.00
+   -> Trades Closed Today: 7 (Wins: 7, Losses: 0)
+   -> Win PnL: +$206.06 | Loss PnL: -$0.00 | Total Fees: $9.89
+   -> Final Daily Net PnL: $206.06
+
+[2026-02-07] Total Equity: $9173.39 | Realized Equity: $9173.39 | Floating PnL: $0.00
+   -> Trades Closed Today: 18 (Wins: 10, Losses: 8)
+   -> Win PnL: +$474.41 | Loss PnL: -$270.15 | Total Fees: $25.94
+   -> Final Daily Net PnL: $204.26
+
+[2026-02-08] Total Equity: $9151.58 | Realized Equity: $9158.76 | Floating PnL: $-7.19
+   -> Trades Closed Today: 15 (Wins: 9, Losses: 6)
+   -> Win PnL: +$277.61 | Loss PnL: -$291.50 | Total Fees: $21.47
+   -> Final Daily Net PnL: $-13.89
+
+[2026-02-09] Total Equity: $9192.19 | Realized Equity: $9135.71 | Floating PnL: $56.48
+   -> Trades Closed Today: 21 (Wins: 9, Losses: 12)
+   -> Win PnL: +$163.27 | Loss PnL: -$185.64 | Total Fees: $29.96
+   -> Final Daily Net PnL: $-22.37
+
+[2026-02-10] Total Equity: $9314.08 | Realized Equity: $9300.66 | Floating PnL: $13.42
+   -> Trades Closed Today: 9 (Wins: 6, Losses: 3)
+   -> Win PnL: +$164.26 | Loss PnL: -$0.00 | Total Fees: $13.12
+   -> Final Daily Net PnL: $164.26
+
+[2026-02-11] Total Equity: $9243.96 | Realized Equity: $9243.96 | Floating PnL: $0.00
+   -> Trades Closed Today: 15 (Wins: 8, Losses: 7)
+   -> Win PnL: +$58.16 | Loss PnL: -$115.59 | Total Fees: $21.87
+   -> Final Daily Net PnL: $-57.42
+
+[2026-02-12] Total Equity: $9151.46 | Realized Equity: $9168.38 | Floating PnL: $-16.92
+   -> Trades Closed Today: 24 (Wins: 11, Losses: 13)
+   -> Win PnL: +$403.15 | Loss PnL: -$476.57 | Total Fees: $34.29
+   -> Final Daily Net PnL: $-73.42
+
+[2026-02-13] Total Equity: $9111.33 | Realized Equity: $9107.78 | Floating PnL: $3.55
+   -> Trades Closed Today: 19 (Wins: 9, Losses: 10)
+   -> Win PnL: +$263.22 | Loss PnL: -$325.26 | Total Fees: $27.68
+   -> Final Daily Net PnL: $-62.04
+
+[2026-02-14] Total Equity: $9062.37 | Realized Equity: $9062.37 | Floating PnL: $0.00
+   -> Trades Closed Today: 22 (Wins: 12, Losses: 10)
+   -> Win PnL: +$176.96 | Loss PnL: -$223.10 | Total Fees: $31.35
+   -> Final Daily Net PnL: $-46.14
+
+[2026-02-15] Total Equity: $9243.89 | Realized Equity: $9243.89 | Floating PnL: $0.00
+   -> Trades Closed Today: 19 (Wins: 9, Losses: 10)
+   -> Win PnL: +$241.16 | Loss PnL: -$59.64 | Total Fees: $27.29
+   -> Final Daily Net PnL: $181.52
+
+[2026-02-16] Total Equity: $9014.38 | Realized Equity: $8997.77 | Floating PnL: $16.60
+   -> Trades Closed Today: 18 (Wins: 7, Losses: 11)
+   -> Win PnL: +$156.95 | Loss PnL: -$402.36 | Total Fees: $25.79
+   -> Final Daily Net PnL: $-245.41
+
+[2026-02-17] Total Equity: $9010.98 | Realized Equity: $9010.98 | Floating PnL: $0.00
+   -> Trades Closed Today: 15 (Wins: 6, Losses: 9)
+   -> Win PnL: +$204.48 | Loss PnL: -$191.97 | Total Fees: $21.18
+   -> Final Daily Net PnL: $12.50
+
+[2026-02-18] Total Equity: $8852.22 | Realized Equity: $8852.22 | Floating PnL: $0.00
+   -> Trades Closed Today: 14 (Wins: 4, Losses: 10)
+   -> Win PnL: +$187.31 | Loss PnL: -$346.07 | Total Fees: $19.75
+   -> Final Daily Net PnL: $-158.76
+
+[2026-02-19] Total Equity: $8825.91 | Realized Equity: $8825.91 | Floating PnL: $0.00
+   -> Trades Closed Today: 20 (Wins: 12, Losses: 8)
+   -> Win PnL: +$55.75 | Loss PnL: -$82.06 | Total Fees: $27.80
+   -> Final Daily Net PnL: $-26.32
+
+[2026-02-20] Total Equity: $8772.29 | Realized Equity: $8802.15 | Floating PnL: $-29.86
+   -> Trades Closed Today: 17 (Wins: 7, Losses: 10)
+   -> Win PnL: +$100.87 | Loss PnL: -$123.92 | Total Fees: $23.49
+   -> Final Daily Net PnL: $-23.05
+
+[2026-02-21] Total Equity: $8696.65 | Realized Equity: $8696.65 | Floating PnL: $0.00
+   -> Trades Closed Today: 18 (Wins: 10, Losses: 8)
+   -> Win PnL: +$127.41 | Loss PnL: -$233.61 | Total Fees: $24.58
+   -> Final Daily Net PnL: $-106.20
+
+[2026-02-22] Total Equity: $8752.42 | Realized Equity: $8752.42 | Floating PnL: $0.00
+   -> Trades Closed Today: 9 (Wins: 8, Losses: 1)
+   -> Win PnL: +$73.99 | Loss PnL: -$18.22 | Total Fees: $12.41
+   -> Final Daily Net PnL: $55.77
+
+[2026-02-23] Total Equity: $8426.19 | Realized Equity: $8430.86 | Floating PnL: $-4.67
+   -> Trades Closed Today: 25 (Wins: 8, Losses: 17)
+   -> Win PnL: +$46.96 | Loss PnL: -$367.19 | Total Fees: $33.69
+   -> Final Daily Net PnL: $-320.23
+
+[2026-02-24] Total Equity: $8424.22 | Realized Equity: $8424.22 | Floating PnL: $0.00
+   -> Trades Closed Today: 15 (Wins: 7, Losses: 8)
+   -> Win PnL: +$51.70 | Loss PnL: -$59.68 | Total Fees: $20.09
+   -> Final Daily Net PnL: $-7.98
+
+[2026-02-25] Total Equity: $8226.28 | Realized Equity: $8223.62 | Floating PnL: $2.66
+   -> Trades Closed Today: 23 (Wins: 8, Losses: 15)
+   -> Win PnL: +$253.42 | Loss PnL: -$452.73 | Total Fees: $29.67
+   -> Final Daily Net PnL: $-199.31
+
+[2026-02-26] Total Equity: $8262.72 | Realized Equity: $8268.72 | Floating PnL: $-6.00
+   -> Trades Closed Today: 16 (Wins: 7, Losses: 9)
+   -> Win PnL: +$109.33 | Loss PnL: -$62.94 | Total Fees: $20.42
+   -> Final Daily Net PnL: $46.40
+
+[2026-02-27] Total Equity: $8098.67 | Realized Equity: $8200.40 | Floating PnL: $-101.74
+   -> Trades Closed Today: 21 (Wins: 6, Losses: 15)
+   -> Win PnL: +$160.77 | Loss PnL: -$230.37 | Total Fees: $26.63
+   -> Final Daily Net PnL: $-69.60
+
+[2026-02-28] Total Equity: $8025.02 | Realized Equity: $8100.28 | Floating PnL: $-75.26
+   -> Trades Closed Today: 23 (Wins: 14, Losses: 9)
+   -> Win PnL: +$296.34 | Loss PnL: -$397.12 | Total Fees: $29.12
+   -> Final Daily Net PnL: $-100.78
+
+[2026-03-01] Total Equity: $8127.23 | Realized Equity: $8132.61 | Floating PnL: $-5.38
+   -> Trades Closed Today: 25 (Wins: 12, Losses: 13)
+   -> Win PnL: +$266.73 | Loss PnL: -$234.40 | Total Fees: $31.67
+   -> Final Daily Net PnL: $32.33
+
+[2026-03-02] Total Equity: $8115.90 | Realized Equity: $8138.84 | Floating PnL: $-22.94
+   -> Trades Closed Today: 29 (Wins: 9, Losses: 20)
+   -> Win PnL: +$393.58 | Loss PnL: -$386.07 | Total Fees: $37.39
+   -> Final Daily Net PnL: $7.51
+
+[2026-03-03] Total Equity: $8019.04 | Realized Equity: $8019.04 | Floating PnL: $0.00
+   -> Trades Closed Today: 21 (Wins: 12, Losses: 9)
+   -> Win PnL: +$131.98 | Loss PnL: -$253.71 | Total Fees: $26.79
+   -> Final Daily Net PnL: $-121.73
+
+[2026-03-04] Total Equity: $8119.49 | Realized Equity: $8162.68 | Floating PnL: $-43.19
+   -> Trades Closed Today: 22 (Wins: 12, Losses: 10)
+   -> Win PnL: +$317.88 | Loss PnL: -$172.94 | Total Fees: $27.72
+   -> Final Daily Net PnL: $144.94
+
+[2026-03-05] Total Equity: $8159.49 | Realized Equity: $8198.83 | Floating PnL: $-39.34
+   -> Trades Closed Today: 18 (Wins: 5, Losses: 13)
+   -> Win PnL: +$132.13 | Loss PnL: -$96.63 | Total Fees: $23.03
+   -> Final Daily Net PnL: $35.49
+
+[2026-03-06] Total Equity: $8065.80 | Realized Equity: $8065.80 | Floating PnL: $0.00
+   -> Trades Closed Today: 15 (Wins: 7, Losses: 8)
+   -> Win PnL: +$58.83 | Loss PnL: -$192.51 | Total Fees: $18.96
+   -> Final Daily Net PnL: $-133.68
+
+[2026-03-07] Total Equity: $7880.18 | Realized Equity: $7870.25 | Floating PnL: $9.93
+   -> Trades Closed Today: 17 (Wins: 7, Losses: 10)
+   -> Win PnL: +$229.58 | Loss PnL: -$424.50 | Total Fees: $21.81
+   -> Final Daily Net PnL: $-194.91
+
+[2026-03-08] Total Equity: $7879.58 | Realized Equity: $7847.20 | Floating PnL: $32.38
+   -> Trades Closed Today: 20 (Wins: 13, Losses: 7)
+   -> Win PnL: +$109.43 | Loss PnL: -$132.49 | Total Fees: $24.97
+   -> Final Daily Net PnL: $-23.06
+
+[2026-03-09] Total Equity: $7935.11 | Realized Equity: $7942.29 | Floating PnL: $-7.18
+   -> Trades Closed Today: 18 (Wins: 8, Losses: 10)
+   -> Win PnL: +$228.10 | Loss PnL: -$132.39 | Total Fees: $22.57
+   -> Final Daily Net PnL: $95.71
+
+[2026-03-10] Total Equity: $7908.77 | Realized Equity: $7908.77 | Floating PnL: $0.00
+   -> Trades Closed Today: 16 (Wins: 7, Losses: 9)
+   -> Win PnL: +$151.19 | Loss PnL: -$185.96 | Total Fees: $20.04
+   -> Final Daily Net PnL: $-34.77
+
+[2026-03-11] Total Equity: $7757.29 | Realized Equity: $7757.29 | Floating PnL: $0.00
+   -> Trades Closed Today: 14 (Wins: 5, Losses: 9)
+   -> Win PnL: +$119.43 | Loss PnL: -$270.91 | Total Fees: $17.26
+   -> Final Daily Net PnL: $-151.47
+
+[2026-03-12] Total Equity: $7761.14 | Realized Equity: $7761.14 | Floating PnL: $0.00
+   -> Trades Closed Today: 25 (Wins: 12, Losses: 13)
+   -> Win PnL: +$160.47 | Loss PnL: -$156.62 | Total Fees: $30.22
+   -> Final Daily Net PnL: $3.85
+
