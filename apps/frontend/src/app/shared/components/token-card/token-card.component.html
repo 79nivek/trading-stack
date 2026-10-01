@@ -38,7 +38,11 @@
       @if (index !== undefined) {
         <span class="rank-badge">#{{ index + 1 }}</span>
       }
-      <a [routerLink]="['/token', symbol]" class="token-symbol hover:underline cursor-pointer transition-colors hover:text-primary">{{ symbol }}</a>
+      <a
+        [routerLink]="['/token', symbol]"
+        class="token-symbol hover:underline cursor-pointer transition-colors hover:text-primary"
+        >{{ symbol }}
+      </a>
       <span
         class="price-change-badge"
         [ngClass]="
@@ -51,16 +55,29 @@
         }}{{ quantInfo()?.priceChangePercent }}%
       </span>
       @if (!!isOpeningPosition()) {
+
+        |
+
         <span
           class="price-change-badge"
           [ngClass]="
-            +(position()?.unRealizedProfit || '0') >= 0
+            unRealizedProfit() >= 0
               ? 'bg-success/10 text-success'
               : 'bg-danger/10 text-danger'
           "
         >
-          {{ +(position()?.unRealizedProfit || '0') >= 0 ? '+' : ''
-          }}{{ position()?.unRealizedProfit | number: '1.2-2' }}$
+          {{ unRealizedProfit() >= 0 ? '+' : ''
+          }}{{ unRealizedProfit() | number: '1.2-2' }}$
+        </span>
+        <span
+          class="price-change-badge"
+          [ngClass]="
+            pnl() >= 0
+              ? 'bg-success/10 text-success'
+              : 'bg-danger/10 text-danger'
+          "
+        >
+          {{ pnl() >= 0 ? '+' : '' }}{{ pnl() | number: '1.2-2' }}$
         </span>
       }
     </div>
@@ -274,8 +291,13 @@
         [lines]="lineCheckpoint()"
         [symbol]="symbol"
         [syncGroup]="syncGroup"
+        (rightMouseClick)="onRightClickChart($event)"
       >
-        <app-chart-menu [symbol]="symbol" />
+        <app-chart-menu
+          #chartMenu
+          (onClose)="onChartMenuClose()"
+          [symbol]="symbol"
+        />
       </app-chart>
     </div>
   </div>

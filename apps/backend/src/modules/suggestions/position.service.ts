@@ -14,11 +14,10 @@ export interface MicrostructureMetrics {
   lastVolumeRatio: number; // Volume nến hiện tại / Volume trung bình 20 nến
   isPinbarRejection: boolean;
 }
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class MicrostructureExitService {
-  private readonly logger = new Logger(MicrostructureExitService.name);
 
   /**
    * Đánh giá vị thế đang mở có vi phạm điều kiện thoát lệnh microstructure hay không

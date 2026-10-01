@@ -1,4 +1,3 @@
-import { MicrostructureExitService } from './position.service';
 import {
   Controller,
   Get,
@@ -29,7 +28,6 @@ export class SuggestionsController {
     private readonly suggestionsService: SuggestionsService,
     private readonly llmService: LlmService,
     private readonly binanceService: BinanceService,
-    private readonly microstructureExitService: MicrostructureExitService,
     private readonly userSettingService: UserSettingsService,
   ) {}
 

@@ -10,6 +10,7 @@ import {
   OnInit,
   effect,
   computed,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateDirective, TranslatePipe } from '@ngx-translate/core';
@@ -75,6 +76,8 @@ export class TokenCardComponent implements OnChanges, OnInit {
   @Output() remove = new EventEmitter<void>();
   @Output() dragHover = new EventEmitter<boolean>();
 
+  @ViewChild('chartMenu') chartMenu!: ChartMenuComponent;
+
   private backendApi = inject(BackendApiService);
   private toastService = inject(ToastService);
   private accountService = inject(AccountService);
@@ -82,12 +85,33 @@ export class TokenCardComponent implements OnChanges, OnInit {
 
   isCollapsed = signal<boolean>(true);
   quantInfo = signal<TokenSuggestionDto | null>(null);
+  temporaryLine = signal<LineCheckPoint | null>(null);
+
+  fee = computed(() => {
+    const pos = this.position();
+
+    if (!pos) return 0;
+
+    return (
+      calculatePnlAmount({
+        entryPrice: pos.entryPrice,
+        positionAmt: pos.positionAmt,
+        targetPrice: pos.breakEvenPrice,
+      }) * 2
+    );
+  });
+
+  unRealizedProfit = computed(() => +(this.position()?.unRealizedProfit || 0));
+
+  pnl = computed(() => {
+    return +this.unRealizedProfit() - this.fee();
+  });
 
   lineCheckpoint = computed<LineCheckPoint[]>(() => {
     const pos = this.position();
     if (!pos) return [];
 
-    const lines = [
+    const lines: LineCheckPoint[] = [
       {
         color: ChartPrimaryColor.ENTRY,
         title: 'Entry',
@@ -104,12 +128,6 @@ export class TokenCardComponent implements OnChanges, OnInit {
 
     const entryPrice = parseFloat(pos.entryPrice || '0');
     let breakEvenPrice = parseFloat(pos.breakEvenPrice);
-    const fee =
-      calculatePnlAmount({
-        entryPrice: pos.entryPrice,
-        positionAmt: pos.positionAmt,
-        targetPrice: pos.breakEvenPrice,
-      }) * 2;
 
     // if (fee > 1 && positionAmt !== 0) {
     if (entryPrice > breakEvenPrice) {
@@ -119,15 +137,15 @@ export class TokenCardComponent implements OnChanges, OnInit {
     }
     lines.push({
       color: ChartPrimaryColor.BREAK_EVEN,
-      title: `BE(-$${fee.toFixed(2)})`,
+      title: `BE(-$${this.fee().toFixed(2)})`,
       value: breakEvenPrice.toString(),
       lineStyle: LineStyle.Dotted,
     });
     // }
 
-    const orders = this.accountService.algoOrders().get(this.symbol);
-    if (orders) {
-      orders.forEach((order) => {
+    const algoOrders = this.accountService.algoOrders().get(this.symbol);
+    if (algoOrders) {
+      algoOrders.forEach((order) => {
         if (!order.orderType) return;
         const pnl = calculatePnlAmount({
           entryPrice: pos.entryPrice,
@@ -179,6 +197,27 @@ export class TokenCardComponent implements OnChanges, OnInit {
           return;
         }
       });
+    }
+
+    const orders = this.accountService.orders().get(this.symbol);
+    if (orders) {
+      orders.forEach((order) => {
+        if (!order.type) return;
+
+        lines.push({
+          color: ChartPrimaryColor.TAKE_PROFIT,
+          title: `TP ${order.price || ''}`,
+          value: order.price || '',
+          lineStyle: LineStyle.Solid,
+        });
+
+        return;
+      });
+    }
+
+    const tempLine = this.temporaryLine();
+    if (tempLine) {
+      lines.push(tempLine);
     }
     return lines;
   });
@@ -293,5 +332,20 @@ export class TokenCardComponent implements OnChanges, OnInit {
   onRemove(event: MouseEvent): void {
     event.stopPropagation();
     this.remove.emit();
+  }
+
+  onRightClickChart(price: number) {
+    this.chartMenu.setPoint(price);
+
+    this.temporaryLine.set({
+      color: ChartPrimaryColor.TEMPORARY_LINE,
+      title: 'Temp',
+      value: price.toString(),
+      lineStyle: LineStyle.Dotted,
+    });
+  }
+
+  onChartMenuClose() {
+    this.temporaryLine.set(null);
   }
 }

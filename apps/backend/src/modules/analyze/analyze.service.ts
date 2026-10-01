@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { MarketDataService } from '../market-data/market-data.service';
 import {
   Direction,
@@ -11,7 +11,6 @@ import { LlmService } from '../llm/llm.service';
 
 @Injectable()
 export class AnalyzeService {
-  private readonly logger = new Logger(AnalyzeService.name);
 
   constructor(
     private marketDataService: MarketDataService,

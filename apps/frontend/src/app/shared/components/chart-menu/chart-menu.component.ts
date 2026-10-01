@@ -3,9 +3,11 @@ import {
   Component,
   computed,
   ElementRef,
+  EventEmitter,
   HostListener,
   inject,
   Input,
+  Output,
   signal,
   ViewChild,
 } from '@angular/core';
@@ -31,15 +33,17 @@ export class ChartMenuComponent {
 
   @ViewChild('pricePopup') pricePopup?: ElementRef;
 
+  @Output() onClose = new EventEmitter<void>();
+
   @HostListener('document:mousedown', ['$event'])
   @HostListener('document:touchstart', ['$event'])
   onClickOutside(event: Event) {
     if (this.showMenu()) {
-      // If the click is inside the popup itself, do nothing
       if (this.pricePopup?.nativeElement?.contains(event.target)) {
         return;
       }
       this.showMenu.set(false);
+      this.onClose.emit();
     }
   }
 

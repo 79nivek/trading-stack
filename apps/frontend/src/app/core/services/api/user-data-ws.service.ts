@@ -96,14 +96,11 @@ export class UserDataWsService implements OnDestroy {
         this.accountServ.fetchInfo();
         break;
       }
-      case 'ALGO_UPDATE': {
+      case 'ALGO_UPDATE':
+      case 'ORDER_TRADE_UPDATE':
         this.accountServ.fetchOrders();
         break;
-      }
-      case 'ORDER_TRADE_UPDATE': { // new order
-        // TODO: handle order trade update
-        break;
-      }
+
       default:
         break;
     }

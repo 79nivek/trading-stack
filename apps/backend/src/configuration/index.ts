@@ -4,7 +4,6 @@ import {
   validateSync,
   IsBoolean,
   IsOptional,
-  IsNumber,
 } from 'class-validator';
 
 class Configuration {

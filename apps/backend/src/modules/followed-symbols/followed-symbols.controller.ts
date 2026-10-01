@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { FollowedSymbolsService } from './followed-symbols.service';
-import {
+import type {
   CreateFollowedSymbolDto,
   FollowedSymbolDto,
   TokenSuggestionDto,

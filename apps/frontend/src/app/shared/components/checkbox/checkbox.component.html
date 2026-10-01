@@ -1,0 +1,18 @@
+<div class="checkbox-container">
+  <input
+    type="checkbox"
+    [id]="id"
+    [checked]="checked"
+    [disabled]="disabled"
+    (change)="toggle($event)"
+    class="checkbox-input"
+  />
+  @if (label) {
+    <label [for]="id" class="checkbox-label" [class.opacity-50]="disabled">{{
+      label
+    }}</label>
+  }
+  <div [class.opacity-50]="disabled">
+    <ng-content></ng-content>
+  </div>
+</div>

@@ -112,6 +112,9 @@ export class AlgoOrder {
 
   constructor(params: any) {
     Object.assign(this, params);
+    if (params.orderId) {
+      this.algoId = BigInt(params.algoId);
+    }
   }
 }
 
@@ -120,7 +123,7 @@ export class Order {
   clientOrderId?: string;
   cumQuote?: string;
   executedQty?: string;
-  orderId?: number | bigint;
+  orderId?: number | bigint | string;
   origQty?: string;
   origType?: string;
   price?: string;
@@ -145,6 +148,9 @@ export class Order {
 
   constructor(params: any) {
     Object.assign(this, params);
+    if (params.orderId) {
+      this.orderId = BigInt(params.orderId).toString();
+    }
   }
 }
 

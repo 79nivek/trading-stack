@@ -12,7 +12,6 @@ import { MarketDataService } from '../market-data/market-data.service';
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
-  private readonly BINANCE_API = 'https://fapi.binance.com/fapi/v1';
   private OLLAMA_API!: string;
   private OLLAMA_MODEL!: string; // Fits well in 16GB VRAM (8B params), fallback to 'llama3' or 'mistral' if needed.
 

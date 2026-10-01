@@ -11,7 +11,8 @@ import {
   inject,
   signal,
   effect,
-  ContentChild,
+  Output,
+  EventEmitter,
 } from '@angular/core';
 
 import {
@@ -36,7 +37,6 @@ import { calculateSMA } from '@trading-stack/shared';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import { TimeframeService } from '../../../core/services/timeframe.service';
 import { UserSettingService } from '../../../core/services/user-setting.service';
-import { ChartMenuComponent } from '../chart-menu/chart-menu.component';
 
 export type LineCheckPoint = {
   color: string;
@@ -59,9 +59,11 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   @Input() lines: LineCheckPoint[] = [];
 
+  @Output() rightMouseClick = new EventEmitter<number>();
+
   @ViewChild('chartContainer') chartContainer!: ElementRef;
 
-  @ContentChild(ChartMenuComponent) menuRef!: ChartMenuComponent;
+  // @ContentChild(ChartMenuComponent) menuRef!: ChartMenuComponent;
 
   private chart: IChartApi | null = null;
   private candlestickSeries: ISeriesApi<'Candlestick'> | null = null;
@@ -206,7 +208,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     const y = clientY - rect.top;
     const price = this.candlestickSeries.coordinateToPrice(y as any);
     if (price !== null) {
-      this.menuRef.setPoint(price);
+      this.rightMouseClick.emit(price);
     }
   }
 

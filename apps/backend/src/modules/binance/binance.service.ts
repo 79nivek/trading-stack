@@ -3,7 +3,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { EncryptionService } from '../encryption/encryption.service';
 import { BinanceCredentialRepository } from './binance-credential.repository';
 import { generateBinanceSignature } from './binance-signature.util';
-import { directionToOppositeSide } from '../../utils';
+import { amtToSide, directionToOppositeSide } from '@trading-stack/shared';
 import {
   AccountInfoResponse,
   AlgoOrder,
@@ -470,7 +470,7 @@ export class BinanceService {
     setup: { direction: Direction; symbol: string; quantity: number },
     client: any,
   ) {
-    const side = setup.direction === Direction.LONG ? 'BUY' : 'SELL';
+    const side = directionToOppositeSide(setup.direction);
     const mainOrderResponse = await client.restAPI.newOrder({
       symbol: setup.symbol,
       side: side as any,
@@ -516,7 +516,7 @@ export class BinanceService {
       const results = [];
       for (const pos of openPositions) {
         const amt = parseFloat(pos.positionAmt);
-        const side = amt > 0 ? 'SELL' : 'BUY';
+        const side = amtToSide(amt);
 
         // In Hedge mode, we need to specify positionSide ('LONG' or 'SHORT').
         // In One-way mode, positionSide is 'BOTH'.
@@ -607,6 +607,11 @@ export class BinanceService {
         .then((res) => res.data())
         .then((data) => data.map((order: any) => new AlgoOrder(order))),
     ]);
+
+    console.log({
+      orders,
+      algoOrders,
+    });
 
     return new OrdersResponse({
       orders,

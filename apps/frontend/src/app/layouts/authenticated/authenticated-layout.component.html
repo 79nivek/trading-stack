@@ -81,7 +81,7 @@
                   title="Realized (Day)"
                 >
                   {{ accountService.realizedPnlToday() > 0 ? '+' : ''
-                  }}{{ accountService.realizedPnlToday() | number: '1.0-0' }}
+                  }}{{ accountService.realizedPnlToday() | number: '1.2-2' }}
                 </span>
               }
             </div>
@@ -107,7 +107,7 @@
                   title="Unrealized"
                 >
                   {{ accountService.unrealizedPnl() > 0 ? '+' : ''
-                  }}{{ accountService.unrealizedPnl() | number: '1.0-0' }}
+                  }}{{ accountService.unrealizedPnl() | number: '1.2-2' }}
                 </span>
               }
             </div>

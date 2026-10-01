@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DataSource } from 'typeorm';
 import { SpotKlineRepository } from './repositories/spot-kline.repository';
 import { FuturesKlineRepository } from './repositories/futures-kline.repository';
 import { PremiumIndex, Ticker24h } from '@trading-stack/shared-dto';
@@ -27,7 +26,6 @@ export class MarketDataService {
   private readonly CACHE_TTL = 2 * 60 * 1000; // 2 minute in milliseconds
 
   constructor(
-    private readonly dataSource: DataSource,
     private readonly spotKlineRepo: SpotKlineRepository,
     private readonly futuresKlineRepo: FuturesKlineRepository,
   ) {}

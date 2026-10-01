@@ -27,6 +27,7 @@ export const TIME_FRAMES: TIME_FRAME[] = [
 ];
 
 export enum Direction { LONG = 'LONG', SHORT = 'SHORT', NEUTRAL = 'NEUTRAL' }
+export enum OppositeSide { BUY = 'BUY', SELL = 'SELL' };
 export enum EntryType { MARKET = 'MARKET', LIMIT = 'LIMIT' }
 
 export class FindOneSymbolDto {
