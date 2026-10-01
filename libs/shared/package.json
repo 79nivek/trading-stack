@@ -15,5 +15,7 @@
   "nx": {
     "name": "shared"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@trading-stack/shared-dto": "workspace:*"
+  }
 }

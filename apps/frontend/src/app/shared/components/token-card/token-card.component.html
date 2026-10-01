@@ -54,10 +54,9 @@
         {{ (quantInfo()?.priceChangePercent || 0) >= 0 ? '+' : ''
         }}{{ quantInfo()?.priceChangePercent }}%
       </span>
+
       @if (!!isOpeningPosition()) {
-
-        |
-
+        <span> | </span>
         <span
           class="price-change-badge"
           [ngClass]="
@@ -78,6 +77,19 @@
           "
         >
           {{ pnl() >= 0 ? '+' : '' }}{{ pnl() | number: '1.2-2' }}$
+        </span>
+      }
+      @if (!!isPendingOrder()) {
+        <span> | </span>
+        <span
+          class="price-change-badge"
+          [ngClass]="
+            +(position()?.initialMargin ?? 0) >= 0
+              ? 'bg-success/10 text-success'
+              : 'bg-danger/10 text-danger'
+          "
+        >
+          {{ +(position()?.initialMargin ?? 0) | number: '1.2-2' }}$
         </span>
       }
     </div>
@@ -297,6 +309,7 @@
           #chartMenu
           (onClose)="onChartMenuClose()"
           [symbol]="symbol"
+          [position]="position"
         />
       </app-chart>
     </div>

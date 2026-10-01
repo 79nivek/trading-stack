@@ -8,17 +8,17 @@ import {
   inject,
   Input,
   Output,
+  Signal,
   signal,
   ViewChild,
 } from '@angular/core';
-import { AccountService } from '../../../core/services/account.service';
 import { ButtonComponent } from '../button/button.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { injectMutation } from '@tanstack/angular-query-experimental';
 import { ToastService } from '../../../core/services/toast.service';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import { lastValueFrom } from 'rxjs';
-import { Direction } from '@trading-stack/shared-dto';
+import { Direction, Position } from '@trading-stack/shared-dto';
 import { calculatePnlAmount } from '@trading-stack/shared';
 
 @Component({
@@ -30,9 +30,9 @@ import { calculatePnlAmount } from '@trading-stack/shared';
 })
 export class ChartMenuComponent {
   @Input({ required: true }) symbol = '';
+  @Input({ required: true }) position!: Signal<Position | undefined>;
 
   @ViewChild('pricePopup') pricePopup?: ElementRef;
-
   @Output() onClose = new EventEmitter<void>();
 
   @HostListener('document:mousedown', ['$event'])
@@ -47,11 +47,8 @@ export class ChartMenuComponent {
     }
   }
 
-  private accountService = inject(AccountService);
   private backendService = inject(BackendApiService);
   private toastService = inject(ToastService);
-
-  position = computed(() => this.accountService.positions().get(this.symbol));
 
   entryPrice = computed(() => +(this.position()?.entryPrice || '0'));
   markPrice = computed(() => +(this.position()?.markPrice || '0'));

@@ -1,5 +1,5 @@
-export * from './lib/shared.js';
+export * from './lib/shared';
 
+export * from './lib/side';
 export * from './lib/currency.util';
 export * from './lib/trading-formatter';
-export * from './lib/side';

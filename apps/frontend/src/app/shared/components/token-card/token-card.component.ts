@@ -20,8 +20,13 @@ import {
   QuantAnalyzeResponseDto,
   ChartPrimaryColor,
   OrderType,
+  OppositeSide,
+  Direction,
 } from '@trading-stack/shared-dto';
-import { calculatePnlAmount } from '@trading-stack/shared';
+import {
+  calculatePnlAmount,
+  oppositeSiteToDirection,
+} from '@trading-stack/shared';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import {
   injectMutation,
@@ -71,6 +76,8 @@ export class TokenCardComponent implements OnChanges, OnInit {
    * and handling dragstart/dragend events.
    */
   @Input() draggable = false;
+
+  @Input() fullWidth = false;
 
   @Output() openPosition = new EventEmitter<string>();
   @Output() remove = new EventEmitter<void>();
@@ -200,20 +207,21 @@ export class TokenCardComponent implements OnChanges, OnInit {
     }
 
     const orders = this.accountService.orders().get(this.symbol);
-    if (orders) {
-      orders.forEach((order) => {
-        if (!order.type) return;
+    orders?.forEach((order) => {
+    if (order) {
+      const side = oppositeSiteToDirection(order.side as OppositeSide);
 
-        lines.push({
-          color: ChartPrimaryColor.TAKE_PROFIT,
-          title: `TP ${order.price || ''}`,
-          value: order.price || '',
-          lineStyle: LineStyle.Solid,
-        });
-
-        return;
+      lines.push({
+        color:
+          side === Direction.LONG
+            ? ChartPrimaryColor.ORDER_LONG_PENDING
+            : ChartPrimaryColor.ORDER_SHORT_PENDING,
+        title: side,
+        value: order.price || '',
+        lineStyle: LineStyle.Dashed,
       });
     }
+    })
 
     const tempLine = this.temporaryLine();
     if (tempLine) {
@@ -221,8 +229,17 @@ export class TokenCardComponent implements OnChanges, OnInit {
     }
     return lines;
   });
+
   position = computed(() => this.accountService.positions().get(this.symbol));
-  isOpeningPosition = computed(() => !!this.position());
+  isOpeningPosition = computed(
+    () => !!this.position() && +(this.position()?.positionAmt || 0) !== 0,
+  );
+
+  order = computed(() => this.accountService.orders().get(this.symbol)?.[0]);
+
+  isPendingOrder = computed(() => {
+    return !!this.order() && this.position();
+  });
 
   quantDataQuery = injectQuery(() => ({
     queryKey: ['analyze', this.symbol],

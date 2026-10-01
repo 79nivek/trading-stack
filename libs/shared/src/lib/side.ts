@@ -5,7 +5,7 @@ export function directionToOppositeSide(direction: Direction): OppositeSide {
 }
 
 export function oppositeSiteToDirection(site: OppositeSide): Direction {
-  return site === OppositeSide.SELL ? Direction.LONG : Direction.SHORT;
+  return site === OppositeSide.SELL ? Direction.SHORT : Direction.LONG;
 }
 
 export function amtToSide(amt: number | string): OppositeSide {

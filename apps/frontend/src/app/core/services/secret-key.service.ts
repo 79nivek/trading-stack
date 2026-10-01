@@ -13,7 +13,7 @@ export class SecretKeyService {
 
   constructor() {
     if (ENV.DEVELOPMENT) {
-      const token = sessionStorage.getItem('trading_master_token');
+      const token = localStorage.getItem('trading_master_token');
       if (token) {
         this.masterToken.set(token);
       }
@@ -22,13 +22,13 @@ export class SecretKeyService {
 
   setToken(token: string) {
     if (ENV.DEVELOPMENT) {
-      sessionStorage.setItem('trading_master_token', token);
+      localStorage.setItem('trading_master_token', token);
     }
     this.masterToken.set(token);
   }
 
   clearToken() {
-    sessionStorage.removeItem('trading_master_token');
+    localStorage.removeItem('trading_master_token');
     this.masterToken.set(null);
   }
 

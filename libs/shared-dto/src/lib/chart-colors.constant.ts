@@ -9,6 +9,8 @@ export enum ChartPrimaryColor {
   PENDING_SHORT = '#D946EF', // Fuchsia 500
   BREAK_EVEN = '#64748B', // Slate 500
   TEMPORARY_LINE = '#9CA3AF', // Gray 400
+  ORDER_LONG_PENDING = '#3B82F6', // Blue 500
+  ORDER_SHORT_PENDING = '#EC4899', // Pink 500
 }
 
 export const CHART_MARKER_COLORS: string[] = [

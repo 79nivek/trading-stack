@@ -1,39 +1,40 @@
-<div class="h-full w-full flex flex-col p-4 gap-4">
+<div class="followed-container w-full mx-auto">
+  <!-- ===== Header section (injected into layout header) ===== -->
   <ng-template #HeaderSection>
-    <div
-      class="flex items-center gap-4 bg-surface p-4 rounded-lg shadow-sm border border-border shrink-0"
-    >
-      <a
-        routerLink="/"
-        class="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer text-text-muted hover:text-text"
+    <div class="flex items-center gap-3">
+      <!-- <button
+        (click)="onRefreshData()"
+        [disabled]="followedDataQuery.isFetching()"
+        class="flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-md hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          fill="none"
+          width="16"
+          height="16"
           viewBox="0 0 24 24"
-          stroke-width="2"
+          fill="none"
           stroke="currentColor"
-          class="w-6 h-6"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          [class.animate-spin]="followedDataQuery.isFetching()"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-          />
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+          <path d="M21 3v5h-5"></path>
         </svg>
-      </a>
-      <h1 class="text-2xl font-bold text-text mb-0">{{ symbol }}</h1>
+        <span translate="SUGGESTION.REFRESH">Refresh</span>
+      </button> -->
     </div>
   </ng-template>
 
-  <div
-    class="flex-1 bg-surface rounded-lg shadow-sm border border-border relative overflow-hidden"
-  >
-    @if (symbol) {
-      <app-chart
-        [symbol]="symbol"
-        class="absolute inset-0 block w-full h-full"
-      ></app-chart>
-    }
+  <!-- ===== Empty state ===== -->
+  <!-- <app-no-data [showNoData]="accountServ.positions().size === 0" /> -->
+
+  <div>
+    <app-token-card
+      [symbol]="symbol"
+      syncGroup="current-trading"
+      [showRemoveButton]="false"
+    />
   </div>
 </div>

@@ -10,6 +10,12 @@ module.exports = {
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     }),
   },
+  resolve: {
+    alias: {
+      '@trading-stack/shared-dto': join(__dirname, '../../libs/shared-dto/src/index.ts'),
+      '@trading-stack/shared': join(__dirname, '../../libs/shared/src/index.ts')
+    }
+  },
   externals: {
     'zlib-sync': 'commonjs zlib-sync',
     bufferutil: 'commonjs bufferutil',

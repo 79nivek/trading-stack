@@ -608,11 +608,6 @@ export class BinanceService {
         .then((data) => data.map((order: any) => new AlgoOrder(order))),
     ]);
 
-    console.log({
-      orders,
-      algoOrders,
-    });
-
     return new OrdersResponse({
       orders,
       algoOrders,
