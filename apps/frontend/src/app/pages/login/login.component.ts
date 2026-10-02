@@ -1,10 +1,10 @@
-import { injectMutation } from "@tanstack/angular-query-experimental";
-import { lastValueFrom } from "rxjs";
+import { injectMutation } from '@tanstack/angular-query-experimental';
+import { lastValueFrom } from 'rxjs';
 import { Component, inject } from '@angular/core';
 
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { BackendApiService } from '../../core/services/api/backend-api.service';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { PopupService } from '../../core/services/popup.service';
@@ -18,8 +18,8 @@ import { APP_PATHS } from '../../core/constants/routes.constants';
     RouterModule,
     TranslatePipe,
     TranslateDirective,
-    ButtonComponent
-],
+    ButtonComponent,
+  ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
@@ -28,6 +28,7 @@ export class LoginPageComponent {
   private authService = inject(BackendApiService);
   private router = inject(Router);
   private popupService = inject(PopupService);
+  private route = inject(ActivatedRoute);
 
   APP_PATHS = APP_PATHS;
 
@@ -36,11 +37,16 @@ export class LoginPageComponent {
     password: ['', Validators.required],
   });
 
-
   loginMutation = injectMutation(() => ({
-    mutationFn: (credentials: any) => lastValueFrom(this.authService.login(credentials)),
+    mutationFn: (credentials: any) =>
+      lastValueFrom(this.authService.login(credentials)),
     onSuccess: () => {
-      this.router.navigate([APP_PATHS.DASHBOARD]);
+      const callback = this.route.snapshot.queryParamMap.get('callback');
+      if (callback) {
+        this.router.navigateByUrl(callback);
+      } else {
+        this.router.navigate([APP_PATHS.DASHBOARD]);
+      }
     },
     onError: (err: any) => {
       this.popupService.open({
@@ -56,7 +62,7 @@ export class LoginPageComponent {
           },
         ],
       });
-    }
+    },
   }));
 
   onSubmit() {

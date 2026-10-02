@@ -9,7 +9,7 @@ export interface BaseResponse<T> {
 }
 
 import { HttpClient } from '@angular/common/http';
-import { tap, catchError, map } from 'rxjs/operators';
+import { tap, catchError, map, retry } from 'rxjs/operators';
 import { Observable, of, interval, Subscription } from 'rxjs';
 import { StorageService } from '../storage.service';
 import { SecretKeyService } from '../secret-key.service';
@@ -112,22 +112,22 @@ export class BackendApiService implements OnInit, OnDestroy {
       );
   }
 
-  logout() {
+  logout(withCallback = false) {
     if (this.storage.token.get()) {
       this.http
         .post<
           BaseResponse<any>
         >(`${ENV.BACKEND_URL}/api/v1/auth/logout`, {}, { ...this.useAuth(), ...skipSpinnerOptions() })
         .subscribe({
-          next: () => this.clearSession(),
-          error: () => this.clearSession(),
+          next: () => this.clearSession(withCallback),
+          error: () => this.clearSession(withCallback),
         });
     } else {
-      this.clearSession();
+      this.clearSession(withCallback);
     }
   }
 
-  private clearSession() {
+  private clearSession(withCallback = false) {
     this.storage.token.clear();
     this.isAuthenticated.set(false);
     this.currentUser.set(null);
@@ -136,7 +136,18 @@ export class BackendApiService implements OnInit, OnDestroy {
       this.pollSub.unsubscribe();
       this.pollSub = undefined;
     }
-    this.router.navigate([APP_PATHS.LOGIN]);
+
+    if (
+      withCallback &&
+      this.router.url &&
+      !this.router.url.includes(APP_PATHS.LOGIN)
+    ) {
+      this.router.navigate([APP_PATHS.LOGIN], {
+        queryParams: { callback: this.router.url },
+      });
+    } else {
+      this.router.navigate([APP_PATHS.LOGIN]);
+    }
   }
 
   private startPolling() {
@@ -152,7 +163,7 @@ export class BackendApiService implements OnInit, OnDestroy {
         .subscribe({
           error: (err) => {
             if (err.status === 401) {
-              this.logout();
+              this.logout(true);
             }
           },
         });
@@ -394,7 +405,10 @@ export class BackendApiService implements OnInit, OnDestroy {
       .post<
         BaseResponse<any>
       >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders/take-profit`, params, { ...this.useAuth(true) })
-      .pipe(map((res) => res.result));
+      .pipe(
+        retry(3),
+        map((res) => res.result),
+      );
   }
 
   setOrderStopLoss(params: SetOrderReq) {
@@ -402,7 +416,10 @@ export class BackendApiService implements OnInit, OnDestroy {
       .post<
         BaseResponse<any>
       >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders/stop-loss`, params, { ...this.useAuth(true) })
-      .pipe(map((res) => res.result));
+      .pipe(
+        retry(3),
+        map((res) => res.result),
+      );
   }
 
   // ============ analyze ===============
@@ -472,7 +489,10 @@ export class BackendApiService implements OnInit, OnDestroy {
       .delete<
         BaseResponse<any>
       >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions/${symbol}`, { ...this.useAuth(true) })
-      .pipe(map((res) => res.result));
+      .pipe(
+        retry(3),
+        map((res) => res.result),
+      );
   }
 
   // ========== forecasts
@@ -485,8 +505,8 @@ export class BackendApiService implements OnInit, OnDestroy {
           ...skipSpinnerOptions(),
           params: {
             symbol: params.symbol,
-            ...params.limit ? { limit: params.limit } : {},
-            ...params.timeFrame ? { timeFrame: params.timeFrame } : {},
+            ...(params.limit ? { limit: params.limit } : {}),
+            ...(params.timeFrame ? { timeFrame: params.timeFrame } : {}),
           },
         },
       )

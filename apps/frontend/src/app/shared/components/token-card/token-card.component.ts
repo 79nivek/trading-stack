@@ -260,6 +260,7 @@ export class TokenCardComponent implements OnChanges, OnInit {
         }),
       ),
     enabled: !!this.symbol,
+    structuralSharing: false,
   }));
 
   llmAnalyzeTokenMutation = injectMutation(() => ({

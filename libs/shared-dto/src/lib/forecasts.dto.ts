@@ -19,9 +19,8 @@ export class ForecastParamsDto {
   @MaxLength(50)
   timeFrame?: string;
 
-  @IsNumber()
   @IsOptional()
-  limit?: number;
+  limit?: string | number;
 }
 
 export class ForecastDto {

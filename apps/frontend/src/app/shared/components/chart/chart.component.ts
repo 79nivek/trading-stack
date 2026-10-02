@@ -79,6 +79,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private forecastPriceSeries: ISeriesApi<'Line'> | null = null;
   private forecastMinSeries: ISeriesApi<'Line'> | null = null;
   private forecastMaxSeries: ISeriesApi<'Line'> | null = null;
+  private firstForecastTime: Time | null = null;
 
   hoveredData = signal<any>(null);
 
@@ -206,11 +207,15 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       const startPoint = { time: lastCandle.time, value: lastCandle.close };
 
       const firstPriceTime = priceData[0].time as number;
+      this.firstForecastTime = firstPriceTime as Time;
       if ((startPoint.time as number) < firstPriceTime) {
         priceData.unshift(startPoint);
         if (minData.length > 0) minData.unshift(startPoint);
         if (maxData.length > 0) maxData.unshift(startPoint);
       }
+    } else {
+      this.firstForecastTime =
+        priceData.length > 0 ? (priceData[0].time as Time) : null;
     }
 
     this.forecastPriceSeries.setData(priceData);
@@ -802,6 +807,27 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
           this.candlestickSeries.update(candle);
           this.volumeSeries.update(volume);
+
+          if (this.forecastPriceSeries && this.firstForecastTime) {
+            if ((candle.time as number) < (this.firstForecastTime as number)) {
+              this.forecastPriceSeries.update({
+                time: candle.time,
+                value: candle.close,
+              });
+              if (this.forecastMinSeries) {
+                this.forecastMinSeries.update({
+                  time: candle.time,
+                  value: candle.close,
+                });
+              }
+              if (this.forecastMaxSeries) {
+                this.forecastMaxSeries.update({
+                  time: candle.time,
+                  value: candle.close,
+                });
+              }
+            }
+          }
           if (lastCandleIndex >= 0) {
             const lastTime = this.currentData[lastCandleIndex].time as number;
             const newTime = candle.time as number;
