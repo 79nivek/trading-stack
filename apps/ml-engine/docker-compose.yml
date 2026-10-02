@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  ml-engine-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ml-engine-dev
+    command: fastapi dev src/main.py --host 0.0.0.0 --port 8000
+    platform: linux/amd64
+    volumes:
+      - .:/app
+      - ./data/models:/app/data/models
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=guYGpMSkIwMEgFi1dDoPgB2EaPc5mM
+      - POSTGRES_DB=trading-stack-dev
+      - MODELS_DIR=/app/data/models
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  ml-engine-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ml-engine-prod
+    command: fastapi run src/main.py --host 0.0.0.0 --port 8000
+    volumes:
+      - ./data/models:/app/data/models
+    ports:
+      - "8001:8000"
+    environment:
+      - POSTGRES_HOST=postgres # Update with real production db host
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=yourprodpassword
+      - POSTGRES_DB=trading-stack-prod
+      - MODELS_DIR=/app/data/models

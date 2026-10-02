@@ -17,6 +17,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR, RouterModule } from '@nestjs/core';
 import { LoggerInterceptor } from '../core/interceptors/logger.interceptor';
 import { TransformInterceptor } from '../core/interceptors/transform.interceptor';
+import { ForecastsModule } from '../modules/forecasts/forecasts.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { TransformInterceptor } from '../core/interceptors/transform.interceptor
     SuggestionsModule,
     FollowedSymbolsModule,
     MarketDataModule,
+    ForecastsModule,
     // PositionModule,
 
     RouterModule.register([

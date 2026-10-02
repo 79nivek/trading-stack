@@ -96,6 +96,30 @@
 
     <!-- Right: action badge + buttons + collapse icon -->
     <div class="flex items-center gap-2">
+      <!-- Reload Forecast Button -->
+      <button
+        (click)="onReloadForecast($event)"
+        [disabled]="!!forecastDataQuery.isFetching()"
+        class="header-btn header-btn--outline"
+        [attr.title]="'SUGGESTION.REFRESH' | translate"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          [class.animate-spin]="!!forecastDataQuery.isFetching()"
+        >
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+          <path d="M21 3v5h-5"></path>
+        </svg>
+      </button>
+
       <!-- AI Check Button -->
       <button
         (click)="onAiCheck($event)"
@@ -303,6 +327,7 @@
         [lines]="lineCheckpoint()"
         [symbol]="symbol"
         [syncGroup]="syncGroup"
+        [forecasts]="forecastDataQuery.data() || []"
         (rightMouseClick)="onRightClickChart($event)"
       >
         <app-chart-menu

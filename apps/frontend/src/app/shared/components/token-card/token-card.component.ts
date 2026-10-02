@@ -40,6 +40,7 @@ import { PopupService } from '../../../core/services/popup.service';
 
 import { ChartMenuComponent } from '../chart-menu/chart-menu.component';
 import { RouterLink } from '@angular/router';
+import { TimeframeService } from '../../../core/services/timeframe.service';
 
 @Component({
   selector: 'app-token-card',
@@ -89,6 +90,7 @@ export class TokenCardComponent implements OnChanges, OnInit {
   private toastService = inject(ToastService);
   private accountService = inject(AccountService);
   private popupService = inject(PopupService);
+  private timeFrameService = inject(TimeframeService);
 
   isCollapsed = signal<boolean>(true);
   quantInfo = signal<TokenSuggestionDto | null>(null);
@@ -208,20 +210,20 @@ export class TokenCardComponent implements OnChanges, OnInit {
 
     const orders = this.accountService.orders().get(this.symbol);
     orders?.forEach((order) => {
-    if (order) {
-      const side = oppositeSiteToDirection(order.side as OppositeSide);
+      if (order) {
+        const side = oppositeSiteToDirection(order.side as OppositeSide);
 
-      lines.push({
-        color:
-          side === Direction.LONG
-            ? ChartPrimaryColor.ORDER_LONG_PENDING
-            : ChartPrimaryColor.ORDER_SHORT_PENDING,
-        title: side,
-        value: order.price || '',
-        lineStyle: LineStyle.Dashed,
-      });
-    }
-    })
+        lines.push({
+          color:
+            side === Direction.LONG
+              ? ChartPrimaryColor.ORDER_LONG_PENDING
+              : ChartPrimaryColor.ORDER_SHORT_PENDING,
+          title: side,
+          value: order.price || '',
+          lineStyle: LineStyle.Dashed,
+        });
+      }
+    });
 
     const tempLine = this.temporaryLine();
     if (tempLine) {
@@ -246,6 +248,18 @@ export class TokenCardComponent implements OnChanges, OnInit {
     queryFn: () =>
       lastValueFrom(this.backendApi.quantAnalyzeToken(this.symbol)),
     enabled: !!this.symbol && !this.quantData,
+  }));
+
+  forecastDataQuery = injectQuery(() => ({
+    queryKey: ['forecast', this.symbol, this.timeFrameService.timeframe()],
+    queryFn: () =>
+      lastValueFrom(
+        this.backendApi.getFuturesForecasts({
+          symbol: this.symbol,
+          limit: 10,
+        }),
+      ),
+    enabled: !!this.symbol,
   }));
 
   llmAnalyzeTokenMutation = injectMutation(() => ({
@@ -307,6 +321,11 @@ export class TokenCardComponent implements OnChanges, OnInit {
   onAiCheck(event: MouseEvent): void {
     event.stopPropagation();
     this.llmAnalyzeTokenMutation.mutate();
+  }
+
+  onReloadForecast(event: MouseEvent): void {
+    event.stopPropagation();
+    this.forecastDataQuery.refetch();
   }
 
   onOpenPosition(event: MouseEvent): void {

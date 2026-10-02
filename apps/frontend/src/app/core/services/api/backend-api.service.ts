@@ -30,6 +30,8 @@ import {
   Position,
   SetOrderReq,
   OrdersResponse,
+  ForecastParamsDto,
+  ForecastDto,
 } from '@trading-stack/shared-dto';
 import { TradingFormatter } from '@trading-stack/shared';
 import { TimeframeService } from '../timeframe.service';
@@ -163,7 +165,7 @@ export class BackendApiService implements OnInit, OnDestroy {
       limit?: number;
       endTime?: number;
     },
-    options: TradingFormatter
+    options: TradingFormatter,
   ): Observable<KlineData[]> {
     if (query.limit === undefined) query.limit = 500;
     const tf = this.timeframeServ.timeframe();
@@ -470,6 +472,24 @@ export class BackendApiService implements OnInit, OnDestroy {
       .delete<
         BaseResponse<any>
       >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions/${symbol}`, { ...this.useAuth(true) })
+      .pipe(map((res) => res.result));
+  }
+
+  // ========== forecasts
+  getFuturesForecasts(params: ForecastParamsDto): Observable<ForecastDto[]> {
+    return this.http
+      .get<BaseResponse<ForecastDto[]>>(
+        `${ENV.BACKEND_URL}/api/v1/forecasts/futures`,
+        {
+          ...this.useAuth(true),
+          ...skipSpinnerOptions(),
+          params: {
+            symbol: params.symbol,
+            ...params.limit ? { limit: params.limit } : {},
+            ...params.timeFrame ? { timeFrame: params.timeFrame } : {},
+          },
+        },
+      )
       .pipe(map((res) => res.result));
   }
 }

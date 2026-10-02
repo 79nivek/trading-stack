@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { Direction } from './shared-dto';
 
 export enum OrderType {
@@ -175,7 +175,7 @@ export class SetOrderReq {
   symbol!: string;
 
   @IsNotEmpty()
-  @IsNumber()
+  @IsString()
   price!: string;
 
   @IsNotEmpty()

@@ -48,6 +48,10 @@ class Configuration {
   @IsOptional()
   OLLAMA_MODEL = process.env['OLLAMA_MODEL'] || '';
 
+  @IsString()
+  @IsOptional()
+  XGBOOST_URL = process.env['XGBOOST_URL'] || 'http://localhost:8000';
+
   validate(): void {
     const errors = validateSync(this);
     if (errors.length > 0) {

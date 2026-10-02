@@ -290,13 +290,17 @@ importers:
         specifier: ^5.0.6
         version: 5.0.6
 
-  libs/shared: {}
+  libs/shared:
+    dependencies:
+      '@trading-stack/shared-dto':
+        specifier: workspace:*
+        version: link:../shared-dto
 
   libs/shared-dto:
     dependencies:
-      dayjs:
-        specifier: ^1.11.23
-        version: 1.11.23
+      class-validator:
+        specifier: ^0.15.1
+        version: 0.15.1
       tslib:
         specifier: ^2.3.0
         version: 2.8.1

@@ -37,6 +37,7 @@ import { calculateSMA } from '@trading-stack/shared';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
 import { TimeframeService } from '../../../core/services/timeframe.service';
 import { UserSettingService } from '../../../core/services/user-setting.service';
+import { ForecastDto } from '@trading-stack/shared-dto';
 
 export type LineCheckPoint = {
   color: string;
@@ -59,6 +60,8 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   @Input() lines: LineCheckPoint[] = [];
 
+  @Input() forecasts: ForecastDto[] = [];
+
   @Output() rightMouseClick = new EventEmitter<number>();
 
   @ViewChild('chartContainer') chartContainer!: ElementRef;
@@ -72,6 +75,10 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private ma7Series: ISeriesApi<'Line'> | null = null;
   private ma25Series: ISeriesApi<'Line'> | null = null;
   private ma99Series: ISeriesApi<'Line'> | null = null;
+
+  private forecastPriceSeries: ISeriesApi<'Line'> | null = null;
+  private forecastMinSeries: ISeriesApi<'Line'> | null = null;
+  private forecastMaxSeries: ISeriesApi<'Line'> | null = null;
 
   hoveredData = signal<any>(null);
 
@@ -132,6 +139,83 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         }
       });
     }
+  }
+
+  private renderForecasts(): void {
+    if (!this.chart) return;
+
+    if (!this.forecastPriceSeries) {
+      this.forecastPriceSeries = this.chart.addSeries(LineSeries, {
+        color: '#a855f7', // Purple 500
+        lineWidth: 1,
+        lineStyle: LineStyle.Solid,
+        crosshairMarkerVisible: false,
+        lastValueVisible: false,
+        priceLineVisible: false,
+      });
+    }
+    if (!this.forecastMinSeries) {
+      this.forecastMinSeries = this.chart.addSeries(LineSeries, {
+        color: '#ef4444', // Red 500
+        lineWidth: 1,
+        lineStyle: LineStyle.Solid,
+        crosshairMarkerVisible: false,
+        lastValueVisible: false,
+        priceLineVisible: false,
+      });
+    }
+    if (!this.forecastMaxSeries) {
+      this.forecastMaxSeries = this.chart.addSeries(LineSeries, {
+        color: '#22c55e', // Green 500
+        lineWidth: 1,
+        lineStyle: LineStyle.Solid,
+        crosshairMarkerVisible: false,
+        lastValueVisible: false,
+        priceLineVisible: false,
+      });
+    }
+
+    if (!this.forecasts || this.forecasts.length === 0) {
+      this.forecastPriceSeries.setData([]);
+      this.forecastMinSeries.setData([]);
+      this.forecastMaxSeries.setData([]);
+      return;
+    }
+
+    const priceData: any[] = [];
+    const minData: any[] = [];
+    const maxData: any[] = [];
+
+    const sorted = [...this.forecasts].sort((a, b) => a.openTime - b.openTime);
+
+    for (const f of sorted) {
+      const timeInSeconds = Math.floor(f.openTime / 1000);
+      const shiftedTime = (timeInSeconds + this.timeShiftSeconds) as Time;
+
+      priceData.push({ time: shiftedTime, value: f.price });
+      if (f.min_price !== undefined) {
+        minData.push({ time: shiftedTime, value: f.min_price });
+      }
+      if (f.max_price !== undefined) {
+        maxData.push({ time: shiftedTime, value: f.max_price });
+      }
+    }
+
+    if (this.currentData.length > 0 && priceData.length > 0) {
+      const lastCandle = this.currentData[this.currentData.length - 1];
+      const startPoint = { time: lastCandle.time, value: lastCandle.close };
+
+      const firstPriceTime = priceData[0].time as number;
+      if ((startPoint.time as number) < firstPriceTime) {
+        priceData.unshift(startPoint);
+        if (minData.length > 0) minData.unshift(startPoint);
+        if (maxData.length > 0) maxData.unshift(startPoint);
+      }
+    }
+
+    this.forecastPriceSeries.setData(priceData);
+    this.forecastMinSeries.setData(minData);
+    this.forecastMaxSeries.setData(maxData);
   }
 
   /** Unique ID để phân biệt source khi broadcast sync events. */
@@ -217,6 +301,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     const syncGroupChanged =
       changes['syncGroup'] && !changes['syncGroup'].firstChange;
     const linesChanged = changes['lines'];
+    const forecastsChanged = changes['forecasts'];
 
     if (symbolChanged) {
       if (this.chart) {
@@ -232,6 +317,10 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     if (linesChanged && this.chart) {
       this.renderPriceLines();
+    }
+
+    if (forecastsChanged && this.chart) {
+      this.renderForecasts();
     }
   }
 
@@ -487,6 +576,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     // Render price lines if provided
     this.renderPriceLines();
+    this.renderForecasts();
   }
 
   private applyTheme(theme: THEME): void {
@@ -604,6 +694,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.volumeSeries.setData(this.currentVolumeData);
         this.updateMAs();
         this.updateHoveredDataWithLatest();
+        this.renderForecasts();
       }
     } catch (err) {
       console.error(`Failed to load historical data for ${this.symbol}:`, err);
