@@ -34,6 +34,11 @@
       } @else {
         <!-- action place new order -->
       }
+      <div>
+        <app-button btnType="success" size="SM" (btnClick)="addMarkedPrice()">
+          {{ 'COMMON.MARKED_PRICE' | translate }}
+        </app-button>
+      </div>
     </div>
   </div>
 }

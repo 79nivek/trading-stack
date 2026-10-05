@@ -1,43 +1,38 @@
 import { effect, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import { BackendApiService } from './api/backend-api.service';
 import { AlgoOrder, Order, Position } from '@trading-stack/shared-dto';
-import { SecretKeyService } from './secret-key.service';
-import { FuturesWebsocketService } from './api/futures-ws.service';
 import { BehaviorSubject, interval, Subscription } from 'rxjs';
 import { DebounceEvent } from '../../shared/classes/debounce-event';
 import { PageTitleStrategy } from '../strategies/page-title.strategy';
+import { masterTokenStorageInstance } from './storage.service';
+import { FuturesWebsocketService } from './api/futures-ws.service';
 
 @Injectable({ providedIn: 'root' })
 export class AccountService implements OnDestroy {
   private readonly backendService = inject(BackendApiService);
-  private readonly secretKeyService = inject(SecretKeyService);
-  private futureWs = inject(FuturesWebsocketService);
+  private readonly futureWs = inject(FuturesWebsocketService);
+  private readonly pageTitle = inject(PageTitleStrategy);
 
-  private pageTitle = inject(PageTitleStrategy);
+  private wsSubscriptions = new Subscription();
+  private pnlIntervalSub?: Subscription;
 
-  private subscriptions = new Subscription();
+  private readonly debounceInfo = new DebounceEvent(1500, () =>
+    this._fetchInfo(),
+  );
+  private readonly debounceOrder = new DebounceEvent(1500, () =>
+    this._fetchOrders(),
+  );
 
-  private debounceInfo = new DebounceEvent(1500, () => {
-    this._fetchInfo();
-  });
-  private debounceOrder = new DebounceEvent(1500, () => {
-    this._fetchOrders();
-  });
-
-  public futureBalance = signal(0);
-
-  public realizedPnlToday = signal(0);
-
-  public $unrealizedPnl = new BehaviorSubject<number>(0);
-
-  public positions = signal(new Map<string, Position>());
-
-  public orders = signal(new Map<string, Order[]>());
-  public algoOrders = signal(new Map<string, AlgoOrder[]>());
+  public readonly futureBalance = signal(0);
+  public readonly realizedPnlToday = signal(0);
+  public readonly $unrealizedPnl = new BehaviorSubject<number>(0);
+  public readonly positions = signal(new Map<string, Position>());
+  public readonly orders = signal(new Map<string, Order[]>());
+  public readonly algoOrders = signal(new Map<string, AlgoOrder[]>());
 
   constructor() {
     effect(() => {
-      const token = this.secretKeyService.token;
+      const token = masterTokenStorageInstance.get();
       if (token) {
         this.fetchInfo();
       }
@@ -49,9 +44,6 @@ export class AccountService implements OnDestroy {
   }
 
   private _fetchInfo() {
-    this.subscriptions.unsubscribe();
-    this.subscriptions = new Subscription();
-
     this.backendService.getFuturesAccountInfo().subscribe({
       next: (account) => {
         this.futureBalance.set(account.futureBalance);
@@ -67,16 +59,15 @@ export class AccountService implements OnDestroy {
   fetchPositions() {
     this.backendService.getFuturesPositions().subscribe({
       next: (positions) => {
-        this.positions.set(
-          positions.reduce((acc, position) => {
-            acc.set(position.symbol, position);
-            return acc;
-          }, new Map<string, Position>()),
-        );
+        this.positions.set(new Map(positions.map((pos) => [pos.symbol, pos])));
 
         if (positions.length > 0) {
           this._fetchOrders();
           this.watchUnrealizedPnl();
+        } else {
+          this.stopWatchingPnl();
+          this.$unrealizedPnl.next(0);
+          this.pageTitle.setTitle(0);
         }
       },
     });
@@ -90,92 +81,82 @@ export class AccountService implements OnDestroy {
     this.backendService.getFuturesOrders().subscribe({
       next: ({ orders, algoOrders }) => {
         const algoOrderMap = new Map<string, AlgoOrder[]>();
-        algoOrders.forEach((order) => {
-          if (order.symbol) {
-            const oldOrder = algoOrderMap.get(order.symbol);
-            if (oldOrder) {
-              oldOrder.push(order);
-              algoOrderMap.set(order.symbol, oldOrder);
-            } else {
-              algoOrderMap.set(order.symbol, [order]);
-            }
-          }
-        });
+        for (const order of algoOrders) {
+          if (!order.symbol) continue;
+          if (!algoOrderMap.has(order.symbol))
+            algoOrderMap.set(order.symbol, []);
+          algoOrderMap.get(order.symbol)!.push(order);
+        }
         this.algoOrders.set(algoOrderMap);
 
         const orderMap = new Map<string, Order[]>();
-        orders.forEach((order) => {
-          if (order.symbol) {
-            const oldOrder = orderMap.get(order.symbol);
-            if (oldOrder) {
-              oldOrder.push(order);
-              orderMap.set(order.symbol, oldOrder);
-            } else {
-              orderMap.set(order.symbol, [order]);
-            }
-          }
-        });
+        for (const order of orders) {
+          if (!order.symbol) continue;
+          if (!orderMap.has(order.symbol)) orderMap.set(order.symbol, []);
+          orderMap.get(order.symbol)!.push(order);
+        }
         this.orders.set(orderMap);
       },
     });
   }
 
   watchUnrealizedPnl() {
-    this.subscriptions.unsubscribe();
-    this.subscriptions = new Subscription();
+    this.stopWatchingPnl(); // Clear previous websockets and interval
 
-    if (this.positions().size === 0) {
-      this.$unrealizedPnl.next(0);
-      this.pageTitle.setTitle(0);
-      return;
-    }
+    const currentPositions = this.positions();
+    if (currentPositions.size === 0) return;
 
-    this.positions().forEach((position) => {
+    for (const [symbol, position] of currentPositions) {
       const amt = parseFloat(position.positionAmt || '0');
-      if (amt === 0) return; // Skip closed positions
+      const entry = parseFloat(position.entryPrice || '0');
 
-      const sub = this.futureWs.register(position.symbol).subscribe({
+      if (amt === 0 || entry <= 0) continue; // Skip invalid or closed positions
+
+      const sub = this.futureWs.register(symbol).subscribe({
         next: (tick) => {
-          const entry = parseFloat(position.entryPrice || '0');
           const currentPrice = tick.close;
+          const displayPnl = amt * (currentPrice - entry);
 
-          if (entry > 0) {
-            const displayPnl = amt * (currentPrice - entry);
-            const key = position.symbol;
+          this.positions.update((currentMap) => {
+            const oldPos = currentMap.get(symbol);
+            if (!oldPos) return currentMap;
 
-            this.positions.update((currentMap) => {
-              const newMap = new Map(currentMap);
-              const oldPos = newMap.get(key);
-              if (oldPos) {
-                newMap.set(key, {
-                  ...oldPos,
-                  unRealizedProfit: displayPnl.toString(),
-                  markPrice: currentPrice.toString(),
-                });
-              }
-              return newMap;
+            const newMap = new Map(currentMap);
+            newMap.set(symbol, {
+              ...oldPos,
+              unRealizedProfit: displayPnl.toString(),
+              markPrice: currentPrice.toString(),
             });
-          }
+            return newMap;
+          });
         },
       });
-      this.subscriptions.add(sub);
+      this.wsSubscriptions.add(sub);
+    }
+
+    // Interval to emit total PnL
+    this.pnlIntervalSub = interval(1000).subscribe(() => {
+      let totalUnrealized = 0;
+      for (const position of this.positions().values()) {
+        totalUnrealized += parseFloat(position.unRealizedProfit || '0');
+      }
+      this.$unrealizedPnl.next(totalUnrealized);
+      this.pageTitle.setTitle(totalUnrealized);
     });
+  }
 
-    this.subscriptions.add(
-      interval(1000).subscribe(() => {
-        let totalUnrealized = 0;
-        this.positions().forEach((position) => {
-          totalUnrealized += parseFloat(position.unRealizedProfit || '0');
-        });
+  private stopWatchingPnl() {
+    this.wsSubscriptions.unsubscribe();
+    this.wsSubscriptions = new Subscription();
 
-        this.$unrealizedPnl.next(totalUnrealized);
-        this.pageTitle.setTitle(totalUnrealized);
-      }),
-    );
+    if (this.pnlIntervalSub) {
+      this.pnlIntervalSub.unsubscribe();
+      this.pnlIntervalSub = undefined;
+    }
   }
 
   ngOnDestroy() {
-    this.subscriptions.unsubscribe();
+    this.stopWatchingPnl();
     this.debounceInfo.unsub();
     this.debounceOrder.unsub();
   }

@@ -11,6 +11,7 @@ export enum ChartPrimaryColor {
   TEMPORARY_LINE = '#9CA3AF', // Gray 400
   ORDER_LONG_PENDING = '#3B82F6', // Blue 500
   ORDER_SHORT_PENDING = '#EC4899', // Pink 500
+  MARKED_PRICE = '#A855F7', // Purple 500
 }
 
 export const CHART_MARKER_COLORS: string[] = [

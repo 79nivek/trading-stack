@@ -1,17 +1,17 @@
-import { Injectable, signal, effect, inject, Injector } from '@angular/core';
+import { Injectable, signal, effect, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { StorageService } from './storage.service';
-import { UserSettingService } from './user-setting.service';
+import { langStorageInstance } from './storage.service';
+import { injectSettingsMutation } from '../queries/user-setting.query';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LanguageService {
   private translate = inject(TranslateService);
-  private storage = inject(StorageService);
-  private injector = inject(Injector);
 
-  language = signal<string>(this.storage.lang.get() || 'en');
+  language = signal<string>(langStorageInstance.get() || 'en');
+
+  userSettingMutation = injectSettingsMutation();
 
   constructor() {
     this.translate.addLangs(['en', 'vi']);
@@ -20,19 +20,14 @@ export class LanguageService {
     effect(() => {
       const currentLang = this.language();
       this.translate.use(currentLang);
-      this.storage.lang.set(currentLang);
+      langStorageInstance.set(currentLang);
     });
   }
 
   setLanguage(lang: string, syncWithBackend = true) {
     this.language.set(lang);
     if (syncWithBackend) {
-      const userSettingService = this.injector.get(UserSettingService);
-      userSettingService
-        .updateSettings({ language: lang })
-        .catch((err: any) => {
-          console.error('Failed to sync language', err);
-        });
+      this.userSettingMutation.mutateAsync({ language: lang });
     }
   }
 

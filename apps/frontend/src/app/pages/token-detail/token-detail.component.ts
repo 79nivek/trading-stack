@@ -1,20 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { ChartComponent } from '../../shared/components/chart/chart.component';
-import { NoDataComponent } from '../../shared/components/no-data/no-data.component';
-import { TranslatePipe } from '@ngx-translate/core';
+import { ActivatedRoute } from '@angular/router';
 import { TokenCardComponent } from '../../shared/components/token-card/token-card.component';
 
 @Component({
   selector: 'app-token-detail-page',
   standalone: true,
   imports: [
-    ChartComponent,
-    RouterLink,
-    NoDataComponent,
-    TranslatePipe,
-    TokenCardComponent,
-  ],
+    TokenCardComponent
+],
   templateUrl: './token-detail.component.html',
   styleUrl: './token-detail.component.scss',
 })

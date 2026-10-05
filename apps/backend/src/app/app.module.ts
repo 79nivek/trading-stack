@@ -18,6 +18,7 @@ import { APP_INTERCEPTOR, RouterModule } from '@nestjs/core';
 import { LoggerInterceptor } from '../core/interceptors/logger.interceptor';
 import { TransformInterceptor } from '../core/interceptors/transform.interceptor';
 import { ForecastsModule } from '../modules/forecasts/forecasts.module';
+import { MarkedPricesModule } from "../modules/marked-prices/marked-prices.module";
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ForecastsModule } from '../modules/forecasts/forecasts.module';
     FollowedSymbolsModule,
     MarketDataModule,
     ForecastsModule,
+    MarkedPricesModule,
     // PositionModule,
 
     RouterModule.register([

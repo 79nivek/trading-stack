@@ -1,14 +1,13 @@
 import { Injectable, inject, OnDestroy } from '@angular/core';
-import { SecretKeyService } from '../secret-key.service';
 import { effect } from '@angular/core';
 import { BackendApiService } from './backend-api.service';
 import { AccountService } from '../account.service';
+import { masterTokenStorageInstance } from '../storage.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserDataWsService implements OnDestroy {
-  private secretKeyService = inject(SecretKeyService);
 
   private backendApi = inject(BackendApiService);
   private accountServ = inject(AccountService);
@@ -22,7 +21,7 @@ export class UserDataWsService implements OnDestroy {
     console.log('log UserDataWsService');
 
     effect(() => {
-      const token = this.secretKeyService.token;
+      const token = masterTokenStorageInstance.get();
       if (token) {
         this.startWatching();
       } else {

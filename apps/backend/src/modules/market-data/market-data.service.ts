@@ -172,7 +172,7 @@ export class MarketDataService {
       }
       const binanceData = (await response.json()) as any[][];
 
-      if (!binanceData || binanceData.length === 0) return;
+      if (!binanceData || binanceData.length === 0) return null;
 
       binanceData.length = binanceData.length - 1;
       const entities = binanceData.map((k) => ({
@@ -198,6 +198,7 @@ export class MarketDataService {
         'Error fetching from Binance, falling back to DB data if available',
         error,
       );
+      return null;
     }
   }
 

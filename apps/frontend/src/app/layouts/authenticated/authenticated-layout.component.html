@@ -38,7 +38,7 @@
     </nav>
 
     <!-- clock Account Info Section -->
-    @if (userSettingService.settings()?.showFloatingClock !== false) {
+    @if (userSettings.data()?.showFloatingClock !== false) {
       <div
         class="p-3 border-t border-border flex flex-col gap-2 text-sm overflow-hidden whitespace-nowrap"
       >
@@ -63,7 +63,7 @@
     <div
       class="p-3 border-t border-border flex flex-col gap-2 text-sm overflow-hidden whitespace-nowrap"
     >
-      @if (secretKeyService.hasToken) {
+      @if (hasMasterToken()) {
         @if (accountService.futureBalance(); as futureBalance) {
           <div class="flex flex-col gap-1">
             <div
@@ -283,7 +283,7 @@
         <div class="header-controls">
           <!-- Master Token Section -->
           <div class="flex items-center gap-2 mr-4">
-            @if (!secretKeyService.hasToken) {
+            @if (!hasMasterToken()) {
               <input
                 type="password"
                 placeholder="Master Token"
@@ -301,13 +301,13 @@
                 {{ verifyTokenMutation.isPending() ? '...' : 'Apply' }}
               </button>
             }
-            @if (secretKeyService.hasToken) {
+            @if (hasMasterToken()) {
               <span
                 class="text-xs text-success font-medium px-2 py-1 bg-success/10 rounded"
                 >Token Active</span
               >
               <button
-                (click)="secretKeyService.clearToken()"
+                (click)="onClearMasterToken()"
                 class="px-2 py-1 text-xs bg-danger/10 text-danger border border-danger/20 rounded hover:bg-danger/20 transition-colors"
               >
                 Clear

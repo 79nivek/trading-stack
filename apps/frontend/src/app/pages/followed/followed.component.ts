@@ -1,7 +1,7 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateDirective, TranslatePipe } from '@ngx-translate/core';
+import { TranslateDirective } from '@ngx-translate/core';
 import {
   injectQuery,
   injectMutation,
@@ -10,13 +10,10 @@ import {
 import { lastValueFrom } from 'rxjs';
 
 import { BackendApiService } from '../../core/services/api/backend-api.service';
-import { BinanceFuturesApiService } from '../../core/services/api/binance-futures-api.service';
 import { ModalService } from '../../core/services/modal.service';
 import { ToastService } from '../../core/services/toast.service';
 import { BaseLayoutComponent } from '../../shared/classes/base-layout';
-import {
-  TokenCardComponent,
-} from '../../shared/components/token-card/token-card.component';
+import { TokenCardComponent } from '../../shared/components/token-card/token-card.component';
 import { SuggestionPositionModal } from '../suggestion/suggestion-position/suggestion-position.modal';
 import {
   TokenSuggestionDto,
@@ -24,6 +21,7 @@ import {
 } from '@trading-stack/shared-dto';
 import { AutoCompleteComponent } from '../../shared/components/auto-complete/auto-complete.component';
 import { NoDataComponent } from '../../shared/components/no-data/no-data.component';
+import { injectExchangeInfoQuery } from '../../core/queries/exchange-info.query';
 
 /** Pairs token market data with its followed-symbol record for rendering */
 export interface FollowedTokenEntry {
@@ -38,7 +36,6 @@ export interface FollowedTokenEntry {
     CommonModule,
     FormsModule,
     TranslateDirective,
-    TranslatePipe,
     TokenCardComponent,
     AutoCompleteComponent,
     NoDataComponent,
@@ -48,17 +45,29 @@ export interface FollowedTokenEntry {
 })
 export class FollowedPageComponent
   extends BaseLayoutComponent
-  implements OnInit, OnDestroy
+  implements OnDestroy
 {
   private backendApi = inject(BackendApiService);
-  private binanceApi = inject(BinanceFuturesApiService);
   private modalService = inject(ModalService);
   private toastService = inject(ToastService);
   private queryClient = inject(QueryClient);
+  exchangeInfo = injectExchangeInfoQuery();
   // ─── Search / Autocomplete ─────────────────────────────────────────────────
 
-  allBinanceSymbols = signal<string[]>([]);
-  symbolsLoaded = signal<boolean>(false);
+  allBinanceSymbols = computed(() => {
+    if (this.exchangeInfo.isLoading()) return [];
+    const res: string[] = [];
+    this.exchangeInfo.data()?.forEach((value, key) => {
+      if (
+        key.endsWith('USDT') &&
+        value.contractType === 'PERPETUAL' &&
+        value.status === 'TRADING'
+      ) {
+        res.push(key);
+      }
+    });
+    return res;
+  });
 
   // ─── Drag-and-drop state ───────────────────────────────────────────────────
 
@@ -71,16 +80,6 @@ export class FollowedPageComponent
 
   constructor() {
     super();
-  }
-
-  ngOnInit(): void {
-    this.binanceApi.getFuturesSymbolList().subscribe({
-      next: (symbols) => {
-        this.allBinanceSymbols.set(symbols);
-        this.symbolsLoaded.set(true);
-      },
-      error: () => this.symbolsLoaded.set(true),
-    });
   }
 
   override ngOnDestroy(): void {
@@ -261,7 +260,6 @@ export class FollowedPageComponent
   }
 
   // ─── AI Check ─────────────────────────────────────────────────────────────
-
 
   openPositionModal(symbol: string): void {
     this.modalService.open(SuggestionPositionModal, { symbol });

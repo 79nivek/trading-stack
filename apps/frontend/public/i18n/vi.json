@@ -19,7 +19,8 @@
     "TAKE_PROFIT": "Chốt lời",
     "STOP_LOSS": "Cắt lỗ",
     "LONG": "Mua",
-    "SHORT": "Bán"
+    "SHORT": "Bán",
+    "MARKED_PRICE": "Đánh dấu"
   },
   "AUTH": {
     "LOGIN": "Đăng nhập",

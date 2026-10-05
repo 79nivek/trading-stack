@@ -28,12 +28,12 @@
   </ng-template>
 
   <!-- ===== Empty state ===== -->
-  <app-no-data [showNoData]="accountServ.positions().size === 0" />
+  <app-no-data [showNoData]=" positions.data()?.length === 0" />
   <!-- ===== Cards grid with drag-and-drop ===== -->
-  @if (accountServ.positions().size > 0) {
+  @if (positions.data() && (positions.data()?.length || 0) > 0) {
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
       @for (
-        position of accountServ.positions().values();
+        position of positions.data();
         track position.symbol
       ) {
         <app-token-card

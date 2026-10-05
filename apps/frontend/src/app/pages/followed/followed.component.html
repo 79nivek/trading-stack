@@ -4,7 +4,7 @@
     <div class="flex items-center gap-3">
       <app-auto-complete
         [data]="allBinanceSymbols()"
-        [isLoading]="!symbolsLoaded()"
+        [isLoading]="exchangeInfo.isLoading()"
         (itemSelected)="onSymbolSelected($event)"
         placeholderKey="FOLLOWED.SEARCH_PLACEHOLDER"
       ></app-auto-complete>

@@ -6,7 +6,7 @@ import {
   Validators,
   FormGroup,
 } from '@angular/forms';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { injectMutation } from '@tanstack/angular-query-experimental';
 import { lastValueFrom } from 'rxjs';
 
@@ -20,12 +20,7 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    TranslatePipe,
-    TranslateDirective,
-    ButtonComponent
-],
+  imports: [ReactiveFormsModule, TranslatePipe, ButtonComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })
@@ -35,9 +30,9 @@ export class ProfilePageComponent implements OnInit {
   private toast = inject(ToastService);
   private modal = inject(ModalService);
 
-
   updateProfileMutation = injectMutation(() => ({
-    mutationFn: (dto: UpdateUserDto) => lastValueFrom(this.backendApi.updateProfile(dto)),
+    mutationFn: (dto: UpdateUserDto) =>
+      lastValueFrom(this.backendApi.updateProfile(dto)),
     onSuccess: () => {
       this.toast.show('Profile updated successfully', 'success');
       this.form.markAsPristine();
@@ -46,7 +41,7 @@ export class ProfilePageComponent implements OnInit {
     },
     onError: (err: any) => {
       this.toast.show(err.error?.message || 'Update failed', 'danger');
-    }
+    },
   }));
 
   form: FormGroup = this.fb.group({

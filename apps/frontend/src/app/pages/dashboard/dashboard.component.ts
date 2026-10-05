@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
-
+import { TranslatePipe } from '@ngx-translate/core';
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [TranslatePipe, TranslateDirective],
+  imports: [TranslatePipe],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+  styleUrl: './dashboard.component.scss',
 })
 export class DashboardPageComponent {}

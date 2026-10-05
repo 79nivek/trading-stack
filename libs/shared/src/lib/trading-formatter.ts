@@ -14,6 +14,8 @@ export interface SymbolExchangeInfo {
   quantityPrecision: number;
   symbol: string;
   filters: ExchangeFilter[];
+  contractType: string;
+  status: string;
 }
 
 export class TradingFormatter {
@@ -22,10 +24,14 @@ export class TradingFormatter {
   pricePrecision: number;
   qtyPrecision: number;
   minMove: number;
+  contractType: string;
+  status: string;
 
   constructor(exchangeInfo: SymbolExchangeInfo) {
     this.pricePrecision = exchangeInfo.pricePrecision;
     this.qtyPrecision = exchangeInfo.quantityPrecision;
+    this.contractType = exchangeInfo.contractType;
+    this.status = exchangeInfo.status;
 
     const priceFilter = exchangeInfo.filters.find(
       (f) => f.filterType === 'PRICE_FILTER',

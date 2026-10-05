@@ -1,6 +1,6 @@
-import { Injectable, signal, effect, inject, Injector } from '@angular/core';
-import { StorageService } from './storage.service';
-import { UserSettingService } from './user-setting.service';
+import { Injectable, signal, effect } from '@angular/core';
+import { themeStorageInstance } from './storage.service';
+import { injectSettingsMutation } from '../queries/user-setting.query';
 
 export enum THEME {
   // eslint-disable-next-line no-unused-vars
@@ -15,10 +15,9 @@ export enum THEME {
   providedIn: 'root',
 })
 export class ThemeService {
-  private storage = inject(StorageService);
-  private injector = inject(Injector);
+  theme = signal<THEME>((themeStorageInstance.get() as THEME) || THEME.AUTO);
 
-  theme = signal<THEME>((this.storage.theme.get() as THEME) || THEME.AUTO);
+  userSettingMutation = injectSettingsMutation();
 
   constructor() {
     // Listen for OS theme changes
@@ -33,7 +32,7 @@ export class ThemeService {
     effect(() => {
       const currentTheme = this.theme();
       this.applyTheme(currentTheme);
-      this.storage.theme.set(currentTheme);
+      themeStorageInstance.set(currentTheme);
     });
   }
 
@@ -55,12 +54,7 @@ export class ThemeService {
   setTheme(newTheme: THEME, syncWithBackend = true) {
     this.theme.set(newTheme);
     if (syncWithBackend) {
-      const userSettingService = this.injector.get(UserSettingService);
-      userSettingService
-        .updateSettings({ theme: newTheme })
-        .catch((err: any) => {
-          console.error('Failed to sync theme', err);
-        });
+      this.userSettingMutation.mutateAsync({ theme: newTheme });
     }
   }
 

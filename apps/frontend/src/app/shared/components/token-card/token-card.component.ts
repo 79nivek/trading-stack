@@ -11,6 +11,7 @@ import {
   effect,
   computed,
   ViewChild,
+  input,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateDirective, TranslatePipe } from '@ngx-translate/core';
@@ -40,7 +41,8 @@ import { PopupService } from '../../../core/services/popup.service';
 
 import { ChartMenuComponent } from '../chart-menu/chart-menu.component';
 import { RouterLink } from '@angular/router';
-import { TimeframeService } from '../../../core/services/timeframe.service';
+import { injectMarkedPriceQuery } from '../../../core/queries/marked-price.query';
+import { injectForecastQuery } from '../../../core/queries/forecast.query';
 
 @Component({
   selector: 'app-token-card',
@@ -58,7 +60,7 @@ import { TimeframeService } from '../../../core/services/timeframe.service';
 })
 export class TokenCardComponent implements OnChanges, OnInit {
   /** The token data to display */
-  @Input({ required: true }) symbol!: string;
+  symbol = input.required<string>();
 
   @Input({ required: false }) quantData: QuantAnalyzeResponseDto | null = null;
 
@@ -90,7 +92,6 @@ export class TokenCardComponent implements OnChanges, OnInit {
   private toastService = inject(ToastService);
   private accountService = inject(AccountService);
   private popupService = inject(PopupService);
-  private timeFrameService = inject(TimeframeService);
 
   isCollapsed = signal<boolean>(true);
   quantInfo = signal<TokenSuggestionDto | null>(null);
@@ -119,6 +120,9 @@ export class TokenCardComponent implements OnChanges, OnInit {
   lineCheckpoint = computed<LineCheckPoint[]>(() => {
     const pos = this.position();
     const lines: LineCheckPoint[] = [];
+    const sym = this.symbol();
+
+    if (!sym) return [];
 
     if (pos) {
       lines.push(
@@ -154,7 +158,7 @@ export class TokenCardComponent implements OnChanges, OnInit {
 
       // }
 
-      const algoOrders = this.accountService.algoOrders().get(this.symbol);
+      const algoOrders = this.accountService.algoOrders().get(sym);
       if (algoOrders) {
         algoOrders.forEach((order) => {
           if (!order.orderType) return;
@@ -210,7 +214,7 @@ export class TokenCardComponent implements OnChanges, OnInit {
         });
       }
     }
-    const orders = this.accountService.orders().get(this.symbol);
+    const orders = this.accountService.orders().get(sym);
     orders?.forEach((order) => {
       if (order) {
         const side = oppositeSiteToDirection(order.side as OppositeSide);
@@ -226,6 +230,16 @@ export class TokenCardComponent implements OnChanges, OnInit {
         });
       }
     });
+    this.markedPriceQuery.data()?.forEach((marked, i) => {
+      if (marked) {
+        lines.push({
+          color: ChartPrimaryColor.MARKED_PRICE,
+          title: marked.title || 'MP - ' + (i + 1),
+          value: marked.price.toString(),
+          lineStyle: LineStyle.Dashed,
+        });
+      }
+    });
 
     const tempLine = this.temporaryLine();
     if (tempLine) {
@@ -234,12 +248,16 @@ export class TokenCardComponent implements OnChanges, OnInit {
     return lines;
   });
 
-  position = computed(() => this.accountService.positions().get(this.symbol));
+  position = computed(() =>
+    this.accountService.positions().get(this.symbol() || ''),
+  );
   isOpeningPosition = computed(
     () => !!this.position() && +(this.position()?.positionAmt || 0) !== 0,
   );
 
-  order = computed(() => this.accountService.orders().get(this.symbol)?.[0]);
+  order = computed(
+    () => this.accountService.orders().get(this.symbol() || '')?.[0],
+  );
 
   isPendingOrder = computed(() => {
     return !!this.order() && this.position();
@@ -248,26 +266,15 @@ export class TokenCardComponent implements OnChanges, OnInit {
   quantDataQuery = injectQuery(() => ({
     queryKey: ['analyze', this.symbol],
     queryFn: () =>
-      lastValueFrom(this.backendApi.quantAnalyzeToken(this.symbol)),
+      lastValueFrom(this.backendApi.quantAnalyzeToken(this.symbol() || '')),
     enabled: !!this.symbol && !this.quantData,
   }));
 
-  forecastDataQuery = injectQuery(() => ({
-    queryKey: ['forecast', this.symbol, this.timeFrameService.timeframe()],
-    queryFn: () =>
-      lastValueFrom(
-        this.backendApi.getFuturesForecasts({
-          symbol: this.symbol,
-          limit: 10,
-        }),
-      ),
-    enabled: !!this.symbol && this.showLMForecast,
-    structuralSharing: false,
-  }));
+  forecastDataQuery = injectForecastQuery(this.symbol);
 
   llmAnalyzeTokenMutation = injectMutation(() => ({
     mutationFn: () =>
-      lastValueFrom(this.backendApi.llmAnalyzeToken(this.symbol)),
+      lastValueFrom(this.backendApi.llmAnalyzeToken(this.symbol() || '')),
     onSuccess: () => {
       this.isCollapsed.set(false);
     },
@@ -280,7 +287,8 @@ export class TokenCardComponent implements OnChanges, OnInit {
   }));
 
   closePositionMutation = injectMutation(() => ({
-    mutationFn: () => lastValueFrom(this.backendApi.closePosition(this.symbol)),
+    mutationFn: () =>
+      lastValueFrom(this.backendApi.closePosition(this.symbol() || '')),
     onSuccess: () => {
       this.toastService.show('Position closed successfully!', 'success', 2000);
       this.popupService.close();
@@ -292,6 +300,8 @@ export class TokenCardComponent implements OnChanges, OnInit {
       );
     },
   }));
+
+  markedPriceQuery = injectMarkedPriceQuery(this.symbol);
 
   constructor() {
     effect(() => {
@@ -333,7 +343,7 @@ export class TokenCardComponent implements OnChanges, OnInit {
 
   onOpenPosition(event: MouseEvent): void {
     event.stopPropagation();
-    this.openPosition.emit(this.symbol);
+    this.openPosition.emit(this.symbol() || '');
   }
 
   onCancel(event: MouseEvent): void {

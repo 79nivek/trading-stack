@@ -5,7 +5,7 @@ import { Component, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { BackendApiService } from '../../core/services/api/backend-api.service';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { PopupService } from '../../core/services/popup.service';
 import { APP_PATHS } from '../../core/constants/routes.constants';
@@ -13,13 +13,7 @@ import { APP_PATHS } from '../../core/constants/routes.constants';
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    RouterModule,
-    TranslatePipe,
-    TranslateDirective,
-    ButtonComponent,
-  ],
+  imports: [ReactiveFormsModule, RouterModule, TranslatePipe, ButtonComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })

@@ -9,13 +9,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
-import { SecretKeyService } from '../../../core/services/secret-key.service';
 import {
   SuggestionPositionResponseDto,
   PositionSetupDto,
 } from '@trading-stack/shared-dto';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
-import { TranslateDirective, TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
+import { masterTokenStorageInstance } from '../../../core/services/storage.service';
 
 export type SuggestionPositionModalInput = {
   symbol: string;
@@ -24,22 +24,15 @@ export type SuggestionPositionModalInput = {
 @Component({
   selector: 'app-suggestion-position-modal',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ModalComponent,
-    TranslateDirective,
-    TranslatePipe,
-  ],
+  imports: [CommonModule, FormsModule, ModalComponent, TranslatePipe],
   templateUrl: './suggestion-position.modal.html',
   styleUrl: './suggestion-position.modal.scss',
 })
 export class SuggestionPositionModal {
-  @Input() dataInput:SuggestionPositionModalInput | null = null;
+  @Input() dataInput: SuggestionPositionModalInput | null = null;
   @Output() close = new EventEmitter<void>();
 
   private backendApi = inject(BackendApiService);
-  private secretKeyService = inject(SecretKeyService);
 
   balance = signal<number | null>(null);
 
@@ -49,11 +42,11 @@ export class SuggestionPositionModal {
   errorMsg = signal<string | null>(null);
 
   get hasMasterToken(): boolean {
-    return !!this.secretKeyService.hasToken
+    return !!masterTokenStorageInstance.get();
   }
 
   onSubmit() {
-    if(!this.dataInput?.symbol){
+    if (!this.dataInput?.symbol) {
       this.errorMsg.set('Symbol is required.');
       return;
     }
@@ -62,7 +55,7 @@ export class SuggestionPositionModal {
     this.suggestionResult.set(null);
 
     this.backendApi
-      .getSuggestionPosition(this.dataInput.symbol , this.balance())
+      .getSuggestionPosition(this.dataInput.symbol, this.balance())
       .subscribe({
         next: (res) => {
           this.suggestionResult.set(res);

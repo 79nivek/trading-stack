@@ -14,3 +14,4 @@ export * from './lib/chart-colors.constant';
 export * from './lib/forecasts.dto';
 export * from './lib/market-data.dto';
 
+export * from './lib/marked-prices.dto';

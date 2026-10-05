@@ -1,5 +1,4 @@
 import { ExchangeInfoService } from './../../../core/services/exchange.service';
-import { DecimalPipe } from '@angular/common';
 import {
   Component,
   computed,
@@ -7,9 +6,8 @@ import {
   EventEmitter,
   HostListener,
   inject,
-  Input,
+  input,
   Output,
-  Signal,
   signal,
   ViewChild,
 } from '@angular/core';
@@ -21,17 +19,21 @@ import { BackendApiService } from '../../../core/services/api/backend-api.servic
 import { lastValueFrom } from 'rxjs';
 import { Direction, Position } from '@trading-stack/shared-dto';
 import { calculatePnlAmount } from '@trading-stack/shared';
+import {
+  injectMarkedPriceQuery,
+  injectMarkedPriceMutation,
+} from '../../../core/queries/marked-price.query';
 
 @Component({
   selector: 'app-chart-menu',
   standalone: true,
-  imports: [DecimalPipe, ButtonComponent, TranslatePipe],
+  imports: [ButtonComponent, TranslatePipe],
   templateUrl: './chart-menu.component.html',
   styleUrl: './chart-menu.component.scss',
 })
 export class ChartMenuComponent {
-  @Input({ required: true }) symbol = '';
-  @Input({ required: true }) position!: Signal<Position | undefined>;
+  symbol = input<string>();
+  position = input<Position | undefined>();
 
   @ViewChild('pricePopup') pricePopup?: ElementRef;
   @Output() onClose = new EventEmitter<void>();
@@ -77,7 +79,7 @@ export class ChartMenuComponent {
     mutationFn: () =>
       lastValueFrom(
         this.backendService.setOrderTakeProfit({
-          symbol: this.symbol,
+          symbol: this.symbol() || '',
           price: this.selectedPrice().toString(),
           direction: this.isLong() ? Direction.LONG : Direction.SHORT,
           quantity: this.position()?.positionAmt || '0',
@@ -95,7 +97,7 @@ export class ChartMenuComponent {
     mutationFn: () =>
       lastValueFrom(
         this.backendService.setOrderStopLoss({
-          symbol: this.symbol,
+          symbol: this.symbol() || '',
           price: this.selectedPrice().toString(),
           direction: this.isLong() ? Direction.LONG : Direction.SHORT,
           quantity: this.position()?.positionAmt || '0',
@@ -109,15 +111,21 @@ export class ChartMenuComponent {
     },
   }));
 
+  addMarkedPriceMutation = injectMarkedPriceMutation(this.symbol);
+
+  markedPriceQuery = injectMarkedPriceQuery(this.symbol);
+
   constructor() {
     //
   }
 
   public async setPoint(value: number | string) {
-    const numValue = await this.exchangeService.formatPrice(+value, this.symbol);;
+    const numValue = await this.exchangeService.formatPrice(
+      +value,
+      this.symbol() || '',
+    );
     if (numValue && numValue === this.selectedPrice()) return;
     if (this.showMenu()) {
-
       this.selectedPrice.set(numValue);
     } else {
       this.showMenu.set(true);
@@ -151,5 +159,16 @@ export class ChartMenuComponent {
         this.takeProfitMutate.mutate();
       }
     }
+  }
+
+  addMarkedPrice() {
+    const sym = this.symbol();
+    if (!sym || !this.selectedPrice()) return;
+
+    this.addMarkedPriceMutation.mutate({
+      symbol: sym,
+      price: this.selectedPrice().toString(),
+      title: 'heloo',
+    });
   }
 }

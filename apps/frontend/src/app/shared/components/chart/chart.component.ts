@@ -2,17 +2,16 @@ import { DecimalPipe } from '@angular/common';
 import {
   Component,
   ElementRef,
-  Input,
-  OnChanges,
   OnDestroy,
   AfterViewInit,
-  SimpleChanges,
   ViewChild,
   inject,
   signal,
   effect,
+  untracked,
   Output,
   EventEmitter,
+  input,
 } from '@angular/core';
 
 import {
@@ -35,9 +34,8 @@ import { ExchangeInfoService } from '../../../core/services/exchange.service';
 import { QueryClient } from '@tanstack/angular-query-experimental';
 import { calculateSMA } from '@trading-stack/shared';
 import { BackendApiService } from '../../../core/services/api/backend-api.service';
-import { TimeframeService } from '../../../core/services/timeframe.service';
-import { UserSettingService } from '../../../core/services/user-setting.service';
 import { ForecastDto } from '@trading-stack/shared-dto';
+import { injectSettingQuery } from '../../../core/queries/user-setting.query';
 
 export type LineCheckPoint = {
   color: string;
@@ -53,14 +51,14 @@ export type LineCheckPoint = {
   templateUrl: './chart.component.html',
   styleUrl: './chart.component.scss',
 })
-export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
-  @Input() symbol = '';
+export class ChartComponent implements AfterViewInit, OnDestroy {
+  symbol = input<string>('');
   /** syncGroup để đồng bộ zoom/crosshair giữa các chart cùng nhóm. */
-  @Input() syncGroup = '';
+  syncGroup = input<string>('');
 
-  @Input() lines: LineCheckPoint[] = [];
+  lines = input<LineCheckPoint[]>([]);
 
-  @Input() forecasts: ForecastDto[] = [];
+  forecasts = input<ForecastDto[]>([]);
 
   @Output() rightMouseClick = new EventEmitter<number>();
 
@@ -88,15 +86,15 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private themeService = inject(ThemeService);
   private chartSync = inject(ChartSyncService);
   exchangeInfoService = inject(ExchangeInfoService);
-  private timeframeService = inject(TimeframeService);
-  private userSettingService = inject(UserSettingService);
+
+  private userSettings = injectSettingQuery();
 
   private wsSubscription: Subscription | null = null;
   private syncCrosshairSub: Subscription | null = null;
   private syncZoomSub: Subscription | null = null;
 
   private get timeShiftSeconds(): number {
-    const tz = this.userSettingService.settings()?.timeZone || 'UTC';
+    const tz = this.userSettings.data()?.timeZone || 'UTC';
 
     // Calculate the target offset in minutes
     let userOffsetMins = 0;
@@ -124,8 +122,8 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.priceLines = [];
 
     // Draw new price lines
-    if (this.lines && this.lines.length > 0) {
-      this.lines.forEach((config) => {
+    if (this.lines() && this.lines().length > 0) {
+      this.lines().forEach((config) => {
         const price = parseFloat(config.value);
         if (!isNaN(price)) {
           const line = this.candlestickSeries!.createPriceLine({
@@ -176,7 +174,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       });
     }
 
-    if (!this.forecasts || this.forecasts.length === 0) {
+    if (!this.forecasts() || this.forecasts().length === 0) {
       this.forecastPriceSeries.setData([]);
       this.forecastMinSeries.setData([]);
       this.forecastMaxSeries.setData([]);
@@ -187,7 +185,9 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     const minData: any[] = [];
     const maxData: any[] = [];
 
-    const sorted = [...this.forecasts].sort((a, b) => a.openTime - b.openTime);
+    const sorted = [...this.forecasts()].sort(
+      (a, b) => a.openTime - b.openTime,
+    );
 
     for (const f of sorted) {
       const timeInSeconds = Math.floor(f.openTime / 1000);
@@ -230,25 +230,66 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private isSyncingCrosshair = false;
   private isSyncingZoom = false;
 
+  private isFullyInitialized = false;
+
   constructor() {
+    // Theme effect
     effect(() => {
-      this.applyTheme(this.themeService.theme());
+      const theme = this.themeService.theme();
+      untracked(() => {
+        this.applyTheme(theme);
+      });
     });
 
-    // Reactive: tự động reload khi global timeframe thay đổi
+    // Main data effect (timeFrame, timeZone, symbol)
     effect(
       () => {
-        this.timeframeService.timeframe();
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        this.userSettingService.settings()?.timeZone;
-        if (this.chart) {
-          this.loadHistoricalData();
-          this.applyBinanceFormatting();
-          this.subscribeToRealtimeData();
-        }
+        void this.userSettings.data()?.timeFrame;
+        void this.userSettings.data()?.timeZone;
+        void this.symbol();
+
+        console.log('re call');
+
+        untracked(() => {
+          if (this.chart && this.isFullyInitialized) {
+            this.loadHistoricalData();
+            this.applyBinanceFormatting();
+            this.subscribeToRealtimeData();
+          }
+        });
       },
       { allowSignalWrites: true },
     );
+
+    // Sync group effect
+    effect(() => {
+      void this.syncGroup();
+      untracked(() => {
+        if (this.chart && this.isFullyInitialized) {
+          this.subscribeSyncEvents();
+        }
+      });
+    });
+
+    // Price lines effect
+    effect(() => {
+      void this.lines();
+      untracked(() => {
+        if (this.chart && this.isFullyInitialized) {
+          this.renderPriceLines();
+        }
+      });
+    });
+
+    // Forecasts effect
+    effect(() => {
+      void this.forecasts();
+      untracked(() => {
+        if (this.chart && this.isFullyInitialized) {
+          this.renderForecasts();
+        }
+      });
+    });
   }
 
   ngAfterViewInit(): void {
@@ -258,6 +299,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.applyBinanceFormatting();
       this.subscribeToRealtimeData();
       this.subscribeSyncEvents();
+      this.isFullyInitialized = true;
 
       this.chartContainer.nativeElement.addEventListener(
         'contextmenu',
@@ -301,42 +343,14 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     }
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    const symbolChanged = changes['symbol'] && !changes['symbol'].firstChange;
-    const syncGroupChanged =
-      changes['syncGroup'] && !changes['syncGroup'].firstChange;
-    const linesChanged = changes['lines'];
-    const forecastsChanged = changes['forecasts'];
-
-    if (symbolChanged) {
-      if (this.chart) {
-        this.loadHistoricalData();
-        this.applyBinanceFormatting();
-        this.subscribeToRealtimeData();
-      }
-    }
-
-    if (syncGroupChanged) {
-      this.subscribeSyncEvents();
-    }
-
-    if (linesChanged && this.chart) {
-      this.renderPriceLines();
-    }
-
-    if (forecastsChanged && this.chart) {
-      this.renderForecasts();
-    }
-  }
-
   ngOnDestroy(): void {
     this.syncCrosshairSub?.unsubscribe();
     this.syncZoomSub?.unsubscribe();
     if (this.wsSubscription) {
       this.wsSubscription.unsubscribe();
     }
-    if (this.symbol) {
-      this.wsService.unregister(this.symbol);
+    if (this.symbol()) {
+      this.wsService.unregister(this.symbol());
     }
     if (this.chart) {
       this.chart.remove();
@@ -354,11 +368,11 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.syncCrosshairSub = null;
     this.syncZoomSub = null;
 
-    if (!this.syncGroup || !this.chart) return;
+    if (!this.syncGroup() || !this.chart) return;
 
     // Nhận crosshair từ chart khác → apply lên chart này
     this.syncCrosshairSub = this.chartSync
-      .onCrosshair(this.syncGroup, this.instanceId)
+      .onCrosshair(this.syncGroup(), this.instanceId)
       .subscribe((event) => {
         if (!this.chart) return;
         this.isSyncingCrosshair = true;
@@ -376,7 +390,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     // Nhận zoom từ chart khác → apply lên chart này
     this.syncZoomSub = this.chartSync
-      .onZoom(this.syncGroup, this.instanceId)
+      .onZoom(this.syncGroup(), this.instanceId)
       .subscribe((event) => {
         if (!this.chart || !event.range) return;
         this.isSyncingZoom = true;
@@ -390,9 +404,12 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   // ---------------------------------------------------------------------------
 
   private async applyBinanceFormatting(): Promise<void> {
-    if (!this.symbol) return;
+    if (!this.symbol()) return;
     try {
-      const info = await this.exchangeInfoService.getExchangeInfo(this.symbol);
+      const info = await this.exchangeInfoService.getExchangeInfo(
+        this.symbol(),
+      );
+      console.log('applyBinanceFormatting info: ', info);
       if (this.candlestickSeries) {
         const precision = info?.pricePrecision ?? 2;
         const minMove = info?.minMove ?? 1;
@@ -499,9 +516,9 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         }
 
         // Broadcast clear crosshair khi ra ngoài chart
-        if (!this.isSyncingCrosshair && this.syncGroup) {
+        if (!this.isSyncingCrosshair && this.syncGroup()) {
           this.chartSync.emitCrosshair({
-            groupId: this.syncGroup,
+            groupId: this.syncGroup(),
             sourceId: this.instanceId,
             time: null,
             point: null,
@@ -525,9 +542,9 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         }
 
         // Broadcast crosshair position sang chart khác
-        if (!this.isSyncingCrosshair && this.syncGroup && param.time) {
+        if (!this.isSyncingCrosshair && this.syncGroup() && param.time) {
           this.chartSync.emitCrosshair({
-            groupId: this.syncGroup,
+            groupId: this.syncGroup(),
             sourceId: this.instanceId,
             time: param.time as number,
             point: param.point ?? null,
@@ -567,9 +584,9 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         }
 
         // Broadcast zoom sang chart khác
-        if (!this.isSyncingZoom && this.syncGroup) {
+        if (!this.isSyncingZoom && this.syncGroup()) {
           this.chartSync.emitZoom({
-            groupId: this.syncGroup,
+            groupId: this.syncGroup(),
             sourceId: this.instanceId,
             range: logicalRange,
           });
@@ -646,8 +663,8 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   private currentVolumeData: any[] = [];
 
   private async loadHistoricalData(): Promise<void> {
-    const tf = this.timeframeService.timeframe();
-    if (!this.symbol || !tf) return;
+    const tf = this.userSettings.data()?.timeFrame;
+    if (!this.symbol() || !tf) return;
 
     // Clear existing data immediately to prevent race conditions during fetch
     this.currentData = [];
@@ -662,15 +679,17 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     try {
       const exchangeInfo = await this.exchangeInfoService.getExchangeInfo(
-        this.symbol,
+        this.symbol(),
       );
+      console.log('loadHistoricalData exchangeInfo: ', exchangeInfo);
       const data = await this.queryClient.query({
-        queryKey: ['klines', this.symbol, tf, 500, 'latest'],
+        queryKey: ['klines', this.symbol(), tf, 500, 'latest'],
         queryFn: () =>
           lastValueFrom(
             this.backendServ.getKlines(
-              this.symbol,
+              this.symbol(),
               {
+                timeFrame: tf,
                 limit: 500,
               },
               exchangeInfo,
@@ -702,31 +721,38 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.renderForecasts();
       }
     } catch (err) {
-      console.error(`Failed to load historical data for ${this.symbol}:`, err);
+      console.error(
+        `Failed to load historical data for ${this.symbol()}:`,
+        err,
+      );
     } finally {
       this.isInitializing = false;
     }
   }
 
   private async loadMoreHistoricalData(): Promise<void> {
-    const tf = this.timeframeService.timeframe();
-    if (!this.symbol || !tf || this.isLoadingMore || !this.earliestTime) return;
+    const tf = this.userSettings.data()?.timeFrame;
+
+    if (!this.symbol() || !tf || this.isLoadingMore || !this.earliestTime)
+      return;
 
     this.isLoadingMore = true;
     const endTime = this.earliestTime * 1000 - 1;
 
     try {
       const exchangeInfo = await this.exchangeInfoService.getExchangeInfo(
-        this.symbol,
+        this.symbol(),
       );
+      console.log('loadMoreHistoricalData exchangeInfo: ', exchangeInfo);
       const data = await this.queryClient.query({
-        queryKey: ['klines', this.symbol, tf, 500, endTime],
+        queryKey: ['klines', this.symbol(), tf, 500, endTime],
         queryFn: () =>
           lastValueFrom(
             this.backendServ.getKlines(
-              this.symbol!,
+              this.symbol(),
               {
                 limit: 500,
+                timeFrame: tf,
                 endTime,
               },
               exchangeInfo,
@@ -758,22 +784,23 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.volumeSeries.setData(this.currentVolumeData);
       }
     } catch (err) {
-      console.error(`Failed to load more data for ${this.symbol}:`, err);
+      console.error(`Failed to load more data for ${this.symbol()}:`, err);
     } finally {
       this.isLoadingMore = false;
     }
   }
 
   private subscribeToRealtimeData(): void {
-    const tf = this.timeframeService.timeframe();
-    if (!this.symbol || !tf) return;
+    const tf = this.userSettings.data()?.timeFrame;
+
+    if (!this.symbol() || !tf) return;
 
     if (this.wsSubscription) {
       this.wsSubscription.unsubscribe();
     }
 
     this.wsService.setTimeFrame(tf);
-    this.wsSubscription = this.wsService.register(this.symbol).subscribe({
+    this.wsSubscription = this.wsService.register(this.symbol()).subscribe({
       next: (kline) => {
         if (this.isInitializing) return; // Skip realtime ticks while fetching history to prevent out-of-order data
         if (this.candlestickSeries && this.volumeSeries) {
@@ -799,7 +826,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
             const newTime = candle.time as number;
             if (newTime < lastTime) {
               console.warn(
-                `[Chart WS] Ignoring out-of-order tick for ${this.symbol}. Last: ${lastTime}, New: ${newTime}`,
+                `[Chart WS] Ignoring out-of-order tick for ${this.symbol()}. Last: ${lastTime}, New: ${newTime}`,
               );
               return;
             }
@@ -873,7 +900,7 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
         }
       },
       error: (err) => {
-        console.error(`WebSocket error for ${this.symbol}:`, err);
+        console.error(`WebSocket error for ${this.symbol()}:`, err);
       },
     });
   }

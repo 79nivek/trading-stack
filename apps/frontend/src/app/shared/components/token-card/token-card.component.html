@@ -39,9 +39,9 @@
         <span class="rank-badge">#{{ index + 1 }}</span>
       }
       <a
-        [routerLink]="['/token', symbol]"
+        [routerLink]="['/token', symbol()]"
         class="token-symbol hover:underline cursor-pointer transition-colors hover:text-primary"
-        >{{ symbol }}
+        >{{ symbol() }}
       </a>
       <span
         class="price-change-badge"
@@ -325,7 +325,7 @@
     <div class="chart-section relative">
       <app-chart
         [lines]="lineCheckpoint()"
-        [symbol]="symbol"
+        [symbol]="symbol()"
         [syncGroup]="syncGroup"
         [forecasts]="forecastDataQuery.data() || []"
         (rightMouseClick)="onRightClickChart($event)"
@@ -333,8 +333,8 @@
         <app-chart-menu
           #chartMenu
           (onClose)="onChartMenuClose()"
-          [symbol]="symbol"
-          [position]="position"
+          [symbol]="symbol()"
+          [position]="position()"
         />
       </app-chart>
     </div>

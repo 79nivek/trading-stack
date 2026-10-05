@@ -1,5 +1,5 @@
-import { injectMutation } from "@tanstack/angular-query-experimental";
-import { lastValueFrom } from "rxjs";
+import { injectMutation } from '@tanstack/angular-query-experimental';
+import { lastValueFrom } from 'rxjs';
 import { Component, inject } from '@angular/core';
 
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -9,20 +9,14 @@ import { PopupService } from '../../core/services/popup.service';
 import { BackendApiService } from '../../core/services/api/backend-api.service';
 import { REGEX } from '../../core/constants/regex.constants';
 import { ERROR_MESSAGES } from '../../core/constants/error.constants';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { SignUpDto } from '@trading-stack/shared-dto';
 import { APP_PATHS } from '../../core/constants/routes.constants';
 
 @Component({
   selector: 'app-sign-up',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    RouterModule,
-    ButtonComponent,
-    TranslatePipe,
-    TranslateDirective
-],
+  imports: [ReactiveFormsModule, RouterModule, ButtonComponent, TranslatePipe],
   templateUrl: './sign-up.component.html',
   styleUrl: './sign-up.component.scss',
 })
@@ -54,7 +48,6 @@ export class SignUpPageComponent {
     const control = this.signUpForm.get(field);
     return !!(control && control.invalid && (control.dirty || control.touched));
   }
-
 
   signUpMutation = injectMutation(() => ({
     mutationFn: (dto: SignUpDto) => lastValueFrom(this.backendApi.signUp(dto)),
@@ -88,7 +81,7 @@ export class SignUpPageComponent {
           },
         ],
       });
-    }
+    },
   }));
 
   onSubmit() {

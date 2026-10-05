@@ -11,8 +11,10 @@ export interface BaseResponse<T> {
 import { HttpClient } from '@angular/common/http';
 import { tap, catchError, map, retry } from 'rxjs/operators';
 import { Observable, of, interval, Subscription } from 'rxjs';
-import { StorageService } from '../storage.service';
-import { SecretKeyService } from '../secret-key.service';
+import {
+  masterTokenStorageInstance,
+  tokenStorageInstance,
+} from '../storage.service';
 
 import { APP_PATHS } from '../../constants/routes.constants';
 import { ENV } from '../../../environments';
@@ -25,16 +27,13 @@ import {
   ReorderFollowedSymbolsDto,
   KlineData,
   AccountInfoResponse,
-  UserSettingsResDto,
-  LlmAnalyzeTokenResponseDto,
   Position,
   SetOrderReq,
   OrdersResponse,
-  ForecastParamsDto,
-  ForecastDto,
+  LlmAnalyzeTokenResponseDto,
+  TIME_FRAME,
 } from '@trading-stack/shared-dto';
 import { TradingFormatter } from '@trading-stack/shared';
-import { TimeframeService } from '../timeframe.service';
 
 export interface UserProfile {
   id: string;
@@ -44,25 +43,41 @@ export interface UserProfile {
   email: string;
 }
 
+export function useAuth(withMasterToken = false) {
+  const token = tokenStorageInstance.get();
+  const headers: any = {};
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (withMasterToken) {
+    const masterToken = masterTokenStorageInstance.get();
+    if (masterToken) {
+      headers['x-master-token'] = masterToken;
+    }
+  }
+
+  return {
+    headers,
+  };
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class BackendApiService implements OnInit, OnDestroy {
   private http = inject(HttpClient);
-  private storage = inject(StorageService);
-  private secretKeyService = inject(SecretKeyService);
   private router = inject(Router);
 
-  private timeframeServ = inject(TimeframeService);
-
-  isAuthenticated = signal<boolean>(!!this.storage.token.get());
+  isAuthenticated = signal<boolean>(!!tokenStorageInstance.get());
   currentUser = signal<UserProfile | null>(null);
 
   private isTokenVerified = false;
   private pollSub?: Subscription;
 
   ngOnInit() {
-    if (this.storage.token.get()) {
+    if (tokenStorageInstance.get()) {
       this.startPolling();
     }
   }
@@ -74,26 +89,6 @@ export class BackendApiService implements OnInit, OnDestroy {
     }
   }
 
-  private useAuth(withMasterToken = false) {
-    const token = this.storage.token.get();
-    const headers: any = {};
-
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
-    if (withMasterToken) {
-      const masterToken = this.secretKeyService.token;
-      if (masterToken) {
-        headers['x-master-token'] = masterToken;
-      }
-    }
-
-    return {
-      headers,
-    };
-  }
-
   login(credentials: any): Observable<any> {
     return this.http
       .post<
@@ -103,7 +98,7 @@ export class BackendApiService implements OnInit, OnDestroy {
         map((res) => res.result),
         tap((response: any) => {
           if (response.access_token) {
-            this.storage.token.set(response.access_token);
+            tokenStorageInstance.set(response.access_token);
             this.isAuthenticated.set(true);
             this.isTokenVerified = true;
             this.startPolling();
@@ -113,11 +108,11 @@ export class BackendApiService implements OnInit, OnDestroy {
   }
 
   logout(withCallback = false) {
-    if (this.storage.token.get()) {
+    if (tokenStorageInstance.get()) {
       this.http
         .post<
           BaseResponse<any>
-        >(`${ENV.BACKEND_URL}/api/v1/auth/logout`, {}, { ...this.useAuth(), ...skipSpinnerOptions() })
+        >(`${ENV.BACKEND_URL}/api/v1/auth/logout`, {}, { ...useAuth(), ...skipSpinnerOptions() })
         .subscribe({
           next: () => this.clearSession(withCallback),
           error: () => this.clearSession(withCallback),
@@ -128,7 +123,7 @@ export class BackendApiService implements OnInit, OnDestroy {
   }
 
   private clearSession(withCallback = false) {
-    this.storage.token.clear();
+    tokenStorageInstance.clear();
     this.isAuthenticated.set(false);
     this.currentUser.set(null);
     this.isTokenVerified = false;
@@ -157,7 +152,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     this.pollSub = interval(60000).subscribe(() => {
       this.http
         .get<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/auth/check`, {
-          ...this.useAuth(),
+          ...useAuth(),
           ...skipSpinnerOptions(),
         })
         .subscribe({
@@ -173,17 +168,17 @@ export class BackendApiService implements OnInit, OnDestroy {
   getKlines(
     symbol: string,
     query: {
+      timeFrame: TIME_FRAME;
       limit?: number;
       endTime?: number;
     },
     options: TradingFormatter,
   ): Observable<KlineData[]> {
     if (query.limit === undefined) query.limit = 500;
-    const tf = this.timeframeServ.timeframe();
 
     const params: any = {
       symbol: symbol.toUpperCase(),
-      interval: tf,
+      interval: query.timeFrame,
       limit: query.limit.toString(),
     };
 
@@ -209,23 +204,14 @@ export class BackendApiService implements OnInit, OnDestroy {
             low: TradingFormatter.formatPrice(kline[3], options),
             close: TradingFormatter.formatPrice(kline[4], options),
             volume: TradingFormatter.formatPrice(kline[5], options),
-            normalizedToken: `${symbol.toLowerCase()}@kline_${tf}`,
+            normalizedToken: `${symbol.toLowerCase()}@kline_${query.timeFrame}`,
           }));
         }),
       );
   }
 
-  getExchangeInfo(): Observable<any> {
-    return this.http
-      .get<any>(
-        `${ENV.BACKEND_URL}/api/v1/market-data/exchangeInfo`,
-        skipSpinnerOptions(),
-      )
-      .pipe(map((res) => res.result));
-  }
-
   getMe(): Observable<boolean> {
-    if (!this.storage.token.get()) {
+    if (!tokenStorageInstance.get()) {
       this.isAuthenticated.set(false);
       return of(false);
     }
@@ -236,7 +222,7 @@ export class BackendApiService implements OnInit, OnDestroy {
 
     return this.http
       .get<BaseResponse<UserProfile>>(`${ENV.BACKEND_URL}/api/v1/users/me`, {
-        ...this.useAuth(),
+        ...useAuth(),
         ...skipSpinnerOptions(),
       })
       .pipe(
@@ -267,40 +253,14 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/auth/reset-password`, data, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/auth/reset-password`, data, { ...useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
   updateProfile(data: any): Observable<any> {
     return this.http
       .patch<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/users`, data, {
-        ...this.useAuth(),
-        ...skipSpinnerOptions(),
-      })
-      .pipe(map((res) => res.result));
-  }
-
-  getSettings(): Observable<UserSettingsResDto> {
-    return this.http
-      .get<BaseResponse<UserSettingsResDto>>(
-        `${ENV.BACKEND_URL}/api/v1/settings`,
-        {
-          ...this.useAuth(),
-          ...skipSpinnerOptions(),
-        },
-      )
-      .pipe(map((res) => res.result));
-  }
-
-  updateSettings(config: {
-    language?: string;
-    theme?: string;
-    timeFrame?: string;
-    suggestionLimit?: number;
-  }): Observable<any> {
-    return this.http
-      .patch<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/settings`, config, {
-        ...this.useAuth(),
+        ...useAuth(),
         ...skipSpinnerOptions(),
       })
       .pipe(map((res) => res.result));
@@ -310,7 +270,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/check`, data, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/check`, data, { ...useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -318,7 +278,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<{ token: string }>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/save`, data, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/save`, data, { ...useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -326,7 +286,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/master-token/check`, { masterToken }, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/master-token/check`, { masterToken }, { ...useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -334,7 +294,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<TokenSuggestionDto[]>
-      >(`${ENV.BACKEND_URL}/api/v1/suggestions/futures?limit=${limit}`, { ...this.useAuth() })
+      >(`${ENV.BACKEND_URL}/api/v1/suggestions/futures?limit=${limit}`, { ...useAuth() })
       .pipe(map((res) => res.result));
   }
 
@@ -342,7 +302,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/suggestions/ai-check?symbol=${symbol}&timeFrame=${timeFrame}`, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/suggestions/ai-check?symbol=${symbol}&timeFrame=${timeFrame}`, { ...useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -350,7 +310,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<{ listenKey: string }>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/listen-key`, { ...this.useAuth(true), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/listen-key`, { ...useAuth(true), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result.listenKey));
   }
 
@@ -358,7 +318,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/account-info`, { ...this.useAuth(true), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/account-info`, { ...useAuth(true), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -366,7 +326,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<Position[]>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions`, { ...this.useAuth(true), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions`, { ...useAuth(true), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -374,7 +334,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<OrdersResponse>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders`, { ...this.useAuth(true), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders`, { ...useAuth(true), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -388,7 +348,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<SuggestionPositionResponseDto>
-      >(`${ENV.BACKEND_URL}/api/v1/suggestions/position`, payload, { ...this.useAuth(true) })
+      >(`${ENV.BACKEND_URL}/api/v1/suggestions/position`, payload, { ...useAuth(true) })
       .pipe(map((res) => res.result));
   }
 
@@ -396,7 +356,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions`, setup, { ...this.useAuth(true) })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions`, setup, { ...useAuth(true) })
       .pipe(map((res) => res.result));
   }
 
@@ -404,7 +364,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders/take-profit`, params, { ...this.useAuth(true) })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders/take-profit`, params, { ...useAuth(true) })
       .pipe(
         retry(3),
         map((res) => res.result),
@@ -415,7 +375,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders/stop-loss`, params, { ...this.useAuth(true) })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders/stop-loss`, params, { ...useAuth(true) })
       .pipe(
         retry(3),
         map((res) => res.result),
@@ -428,7 +388,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<TokenSuggestionDto>
-      >(`${ENV.BACKEND_URL}/api/v1/analyze/quantitative/${symbol}`, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/analyze/quantitative/${symbol}`, { ...useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -436,7 +396,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<LlmAnalyzeTokenResponseDto>
-      >(`${ENV.BACKEND_URL}/api/v1/analyze/llm/${symbol}`, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/analyze/llm/${symbol}`, { ...useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -446,7 +406,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<FollowedSymbolDto[]>
-      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols`, { ...this.useAuth() })
+      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols`, { ...useAuth() })
       .pipe(map((res) => res.result));
   }
 
@@ -456,7 +416,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .post<
         BaseResponse<FollowedSymbolDto>
-      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols`, dto, { ...this.useAuth() })
+      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols`, dto, { ...useAuth() })
       .pipe(map((res) => res.result));
   }
 
@@ -464,7 +424,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .delete<
         BaseResponse<void>
-      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/${id}`, { ...this.useAuth() })
+      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/${id}`, { ...useAuth() })
       .pipe(map((res) => res.result));
   }
 
@@ -472,7 +432,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .get<
         BaseResponse<TokenSuggestionDto[]>
-      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/data`, { ...this.useAuth() })
+      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/data`, { ...useAuth() })
       .pipe(map((res) => res.result));
   }
 
@@ -480,7 +440,7 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .patch<
         BaseResponse<void>
-      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/reorder`, dto, { ...this.useAuth(), ...skipSpinnerOptions() })
+      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/reorder`, dto, { ...useAuth(), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result));
   }
 
@@ -488,28 +448,10 @@ export class BackendApiService implements OnInit, OnDestroy {
     return this.http
       .delete<
         BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions/${symbol}`, { ...this.useAuth(true) })
+      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions/${symbol}`, { ...useAuth(true) })
       .pipe(
         retry(3),
         map((res) => res.result),
       );
-  }
-
-  // ========== forecasts
-  getFuturesForecasts(params: ForecastParamsDto): Observable<ForecastDto[]> {
-    return this.http
-      .get<BaseResponse<ForecastDto[]>>(
-        `${ENV.BACKEND_URL}/api/v1/forecasts/futures`,
-        {
-          ...this.useAuth(true),
-          ...skipSpinnerOptions(),
-          params: {
-            symbol: params.symbol,
-            ...(params.limit ? { limit: params.limit } : {}),
-            ...(params.timeFrame ? { timeFrame: params.timeFrame } : {}),
-          },
-        },
-      )
-      .pipe(map((res) => res.result));
   }
 }

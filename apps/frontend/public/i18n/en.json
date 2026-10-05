@@ -20,7 +20,8 @@
     "TAKE_PROFIT": "Take Profit",
     "STOP_LOSS": "Stop Loss",
     "LONG": "Long",
-    "SHORT": "Short"
+    "SHORT": "Short",
+    "MARKED_PRICE": "Marked Price"
   },
   "AUTH": {
     "LOGIN": "Login",

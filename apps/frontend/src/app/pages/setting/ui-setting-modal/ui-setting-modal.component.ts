@@ -4,13 +4,11 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CheckboxComponent } from '../../../shared/components/checkbox/checkbox.component';
 import { ModalService } from '../../../core/services/modal.service';
-import { ToastService } from '../../../core/services/toast.service';
-import {
-  injectMutation,
-
-} from '@tanstack/angular-query-experimental';
 import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
-import { UserSettingService } from '../../../core/services/user-setting.service';
+import {
+  injectSettingQuery,
+  injectSettingsMutation,
+} from '../../../core/queries/user-setting.query';
 
 @Component({
   selector: 'app-ui-setting-modal',
@@ -28,9 +26,6 @@ import { UserSettingService } from '../../../core/services/user-setting.service'
 export class UiSettingModalComponent {
   private fb = inject(FormBuilder);
   modalService = inject(ModalService);
-  private toast = inject(ToastService);
-
-  private userSettingService = inject(UserSettingService);
 
   timezones = [
     'UTC-12',
@@ -65,25 +60,15 @@ export class UiSettingModalComponent {
     showFloatingClock: [true],
   });
 
-  saveMutation = injectMutation(() => ({
-    mutationFn: (config: any) => this.userSettingService.updateSettings(config),
-    onSuccess: () => {
-      this.toast.show('UI settings saved successfully!', 'success');
-      this.modalService.close();
-    },
-    onError: (err: any) => {
-      this.toast.show(
-        err.error?.message || 'Failed to save UI settings.',
-        'danger',
-      );
-    },
-  }));
+  saveMutation = injectSettingsMutation();
+
+  settings = injectSettingQuery();
 
   constructor() {
     effect(() => {
-      const data = this.userSettingService.settings();
+      const data = this.settings.data();
       if (data) {
-        this.form.patchValue({ 
+        this.form.patchValue({
           timeZone: data.timeZone || 'UTC',
           showFloatingClock: data.showFloatingClock !== false,
         });
@@ -92,6 +77,9 @@ export class UiSettingModalComponent {
   }
 
   onSave() {
-    this.saveMutation.mutate(this.form.value);
+    const { timeZone, showFloatingClock } = this.form.value;
+    if (!timeZone || showFloatingClock === null) return;
+
+    this.saveMutation.mutate({ timeZone, showFloatingClock });
   }
 }
