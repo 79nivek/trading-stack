@@ -7,7 +7,7 @@ import { TIME_FRAME, TIME_FRAMES } from '@trading-stack/shared-dto';
 export class TimeframeService {
   private injector = inject(Injector);
 
-  timeframe = signal<TIME_FRAME>(TIME_FRAME.ONE_H);
+  timeframe = signal<TIME_FRAME | null>(null);
 
   get availableTimeframes(): TIME_FRAME[] {
     return TIME_FRAMES;

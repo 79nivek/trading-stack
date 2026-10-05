@@ -12,3 +12,5 @@ export * from './lib/followed-symbol.dto';
 export * from './lib/analyze.dto';
 export * from './lib/chart-colors.constant';
 export * from './lib/forecasts.dto';
+export * from './lib/market-data.dto';
+

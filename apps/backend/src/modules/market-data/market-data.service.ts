@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SpotKlineRepository } from './repositories/spot-kline.repository';
 import { FuturesKlineRepository } from './repositories/futures-kline.repository';
-import { PremiumIndex, Ticker24h } from '@trading-stack/shared-dto';
+import {
+  KlinesRequestDto,
+  PremiumIndex,
+  Ticker24h,
+} from '@trading-stack/shared-dto';
 import { TradingFormatter } from '@trading-stack/shared';
 
 @Injectable()
@@ -71,18 +75,14 @@ export class MarketDataService {
     }
   }
 
-  async getKlinesFutures(
-    symbol: string,
-    interval: string,
-    limit: number,
-    endTime?: number,
-  ) {
-    const resolvedEndTime = endTime ? Number(endTime) : Date.now();
-    const intervalMs = this.parseInterval(interval);
+  async getKlinesFutures(query: KlinesRequestDto) {
+    const resolvedEndTime = query.endTime ? Number(query.endTime) : Date.now();
+    const intervalMs = this.parseInterval(query.interval);
+    const limit = Number(query.limit);
 
     const dbKlines = await this.futuresKlineRepo.findLatestKlines(
-      symbol,
-      interval,
+      query.symbol,
+      query.interval,
       resolvedEndTime,
       limit,
     );
@@ -101,10 +101,10 @@ export class MarketDataService {
 
     if (needsFetch) {
       this.logger.log(
-        `Cache miss/stale for ${symbol} ${interval} [FUTURES]. Fetching from Binance...`,
+        `Cache miss/stale for ${query.symbol} ${query.interval} [FUTURES]. Fetching from Binance...`,
       );
       try {
-        const url = `${this.BASE_FUTURES_API_URL}/klines?symbol=${symbol}&interval=${interval}&limit=${limit}${endTime ? `&endTime=${endTime}` : ''}`;
+        const url = `${this.BASE_FUTURES_API_URL}/klines?symbol=${query.symbol}&interval=${query.interval}&limit=${query.limit}${query.endTime ? `&endTime=${query.endTime}` : ''}`;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Binance API error: ${response.statusText}`);
@@ -113,9 +113,10 @@ export class MarketDataService {
 
         if (!binanceData || binanceData.length === 0) return;
 
+        binanceData.length = binanceData.length - 1;
         const entities = binanceData.map((k) => ({
-          symbol,
-          interval,
+          symbol: query.symbol,
+          interval: query.interval,
           openTime: k[0],
           open: k[1],
           high: k[2],
@@ -159,18 +160,56 @@ export class MarketDataService {
       ]);
   }
 
-  async getKlinesSpot(
-    symbol: string,
-    interval: string,
-    limit: number,
-    endTime?: number,
-  ) {
-    const resolvedEndTime = endTime ? Number(endTime) : Date.now();
-    const intervalMs = this.parseInterval(interval);
+  async refreshFuturesKlines(query: KlinesRequestDto) {
+    this.logger.log(
+      `Refreshing ${query.symbol} ${query.interval} [FUTURES]. Fetching from Binance...`,
+    );
+    try {
+      const url = `${this.BASE_FUTURES_API_URL}/klines?symbol=${query.symbol}&interval=${query.interval}&limit=${query.limit}${query.endTime ? `&endTime=${query.endTime}` : ''}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Binance API error: ${response.statusText}`);
+      }
+      const binanceData = (await response.json()) as any[][];
+
+      if (!binanceData || binanceData.length === 0) return;
+
+      binanceData.length = binanceData.length - 1;
+      const entities = binanceData.map((k) => ({
+        symbol: query.symbol,
+        interval: query.interval,
+        openTime: k[0],
+        open: k[1],
+        high: k[2],
+        low: k[3],
+        close: k[4],
+        baseVolume: k[5],
+        closeTime: k[6],
+        quoteVolume: k[7],
+      }));
+
+      this.futuresKlineRepo
+        .upsertKlines(entities)
+        .catch((err) => this.logger.error('Failed to save klines to DB', err));
+
+      return 'ok';
+    } catch (error) {
+      this.logger.error(
+        'Error fetching from Binance, falling back to DB data if available',
+        error,
+      );
+    }
+  }
+
+  async getKlinesSpot(query: KlinesRequestDto) {
+    const resolvedEndTime = query.endTime ? Number(query.endTime) : Date.now();
+    const intervalMs = this.parseInterval(query.interval);
+
+    const limit = Number(query.limit);
 
     const dbKlines = await this.spotKlineRepo.findLatestKlines(
-      symbol,
-      interval,
+      query.symbol,
+      query.interval,
       resolvedEndTime,
       limit,
     );
@@ -189,10 +228,10 @@ export class MarketDataService {
 
     if (needsFetch) {
       this.logger.log(
-        `Cache miss/stale for ${symbol} ${interval} [FUTURES]. Fetching from Binance...`,
+        `Cache miss/stale for ${query.symbol} ${query.interval} [SPOT]. Fetching from Binance...`,
       );
       try {
-        const url = `${this.BASE_SPOT_API_URL}/klines?symbol=${symbol}&interval=${interval}&limit=${limit}${endTime ? `&endTime=${endTime}` : ''}`;
+        const url = `${this.BASE_SPOT_API_URL}/klines?symbol=${query.symbol}&interval=${query.interval}&limit=${query.limit}${query.endTime ? `&endTime=${query.endTime}` : ''}`;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Binance API error: ${response.statusText}`);
@@ -201,9 +240,11 @@ export class MarketDataService {
 
         if (!binanceData || binanceData.length === 0) return;
 
+        binanceData.length = binanceData.length - 1;
+
         const entities = binanceData.map((k) => ({
-          symbol,
-          interval,
+          symbol: query.symbol,
+          interval: query.interval,
           openTime: k[0],
           open: k[1],
           high: k[2],

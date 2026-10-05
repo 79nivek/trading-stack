@@ -2,6 +2,7 @@ import { Component, inject, effect } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CheckboxComponent } from '../../../shared/components/checkbox/checkbox.component';
 import { ModalService } from '../../../core/services/modal.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
@@ -18,6 +19,7 @@ import { UserSettingService } from '../../../core/services/user-setting.service'
     ReactiveFormsModule,
     ModalComponent,
     ButtonComponent,
+    CheckboxComponent,
     TranslatePipe,
     TranslateDirective,
   ],
@@ -60,6 +62,7 @@ export class UiSettingModalComponent {
 
   form = this.fb.group({
     timeZone: ['UTC'],
+    showFloatingClock: [true],
   });
 
   saveMutation = injectMutation(() => ({
@@ -79,8 +82,11 @@ export class UiSettingModalComponent {
   constructor() {
     effect(() => {
       const data = this.userSettingService.settings();
-      if (data && data.timeZone) {
-        this.form.patchValue({ timeZone: data.timeZone });
+      if (data) {
+        this.form.patchValue({ 
+          timeZone: data.timeZone || 'UTC',
+          showFloatingClock: data.showFloatingClock !== false,
+        });
       }
     });
   }

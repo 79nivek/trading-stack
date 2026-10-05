@@ -37,6 +37,9 @@ export class UserSettings {
   @Column({ default: 'UTC' })
   timeZone!: string;
 
+  @Column({ default: true })
+  showFloatingClock!: boolean;
+
   @CreateDateColumn()
   createdAt!: Date;
 

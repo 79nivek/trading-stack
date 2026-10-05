@@ -1,16 +1,13 @@
-import {
-  injectMutation,
-
-} from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
-import { effect } from '@angular/core';
+import { injectMutation } from '@tanstack/angular-query-experimental';
+import { interval, lastValueFrom, Subscription } from 'rxjs';
+import { effect, OnDestroy, OnInit } from '@angular/core';
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { LangToggleComponent } from '../../shared/components/lang-toggle/lang-toggle.component';
 import { TimeframeSelectorComponent } from '../../shared/components/timeframe-selector/timeframe-selector.component';
-import { TranslatePipe, TranslateDirective } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import {
   DropdownComponent,
   DropdownItem,
@@ -39,14 +36,13 @@ import { UserSettingService } from '../../core/services/user-setting.service';
     LangToggleComponent,
     TimeframeSelectorComponent,
     TranslatePipe,
-    TranslateDirective,
     DropdownComponent,
     FormsModule,
   ],
   templateUrl: './authenticated-layout.component.html',
   styleUrl: './authenticated-layout.component.scss',
 })
-export class AuthenticatedLayoutComponent {
+export class AuthenticatedLayoutComponent implements OnDestroy, OnInit {
   isSidebarOpen = signal<boolean>(false);
   private router = inject(Router);
   public secretKeyService = inject(SecretKeyService);
@@ -65,6 +61,9 @@ export class AuthenticatedLayoutComponent {
   masterTokenInput = '';
   isVerifyingToken = false;
   isHeaderVisible = signal<boolean>(true);
+  currentTime = signal<string>('00:00');
+
+  private clockSubscription = new Subscription();
 
   menuItems = [
     { path: APP_PATHS.DASHBOARD, label: 'MENU.DASHBOARD', icon: 'D' },
@@ -84,8 +83,6 @@ export class AuthenticatedLayoutComponent {
     { label: '', action: 'divider', divider: true },
     { label: 'HEADER_PROFILE.LOGOUT', action: 'logout' },
   ];
-
-
 
   verifyTokenMutation = injectMutation(() => ({
     mutationFn: (token: string) =>
@@ -107,7 +104,7 @@ export class AuthenticatedLayoutComponent {
     },
   }));
 
-  private userSettingService = inject(UserSettingService);
+  userSettingService = inject(UserSettingService);
 
   constructor() {
     this.userDataWsService.temp();
@@ -125,6 +122,23 @@ export class AuthenticatedLayoutComponent {
           );
       }
     });
+  }
+
+  ngOnInit(): void {
+    this.startClock();
+  }
+
+  private startClock() {
+    this.clockSubscription.add(
+      interval(1000).subscribe({
+        next: () => {
+          const now = new Date();
+          const m = now.getMinutes().toString().padStart(2, '0');
+          const s = now.getSeconds().toString().padStart(2, '0');
+          this.currentTime.set(`${m}:${s}`);
+        },
+      }),
+    );
   }
 
   toggleSidebar() {
@@ -148,5 +162,9 @@ export class AuthenticatedLayoutComponent {
     if (token) {
       this.verifyTokenMutation.mutate(token);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.clockSubscription.unsubscribe();
   }
 }

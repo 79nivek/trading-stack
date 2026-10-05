@@ -9,6 +9,7 @@ export class PageTitleStrategy extends TitleStrategy implements OnDestroy {
   private title = inject(Title);
   private translate = inject(TranslateService);
   private langSub: Subscription | null = null;
+  private currentTranslation = '';
 
   public pageTitle = signal<string>('');
 
@@ -23,17 +24,37 @@ export class PageTitleStrategy extends TitleStrategy implements OnDestroy {
       this.pageTitle.set(titleKey);
 
       // Update document title instantly
-      const currentTranslation = this.translate.instant(titleKey);
-      this.title.setTitle(`Trading Stack - ${currentTranslation}`);
+      this.currentTranslation = this.translate.instant(titleKey);
+      this.title.setTitle(`${this.currentTranslation}`);
 
       // Update document title on language change
       this.langSub = this.translate.onLangChange.subscribe(() => {
-        const newTitle = this.translate.instant(titleKey);
-        this.title.setTitle(`Trading Stack - ${newTitle}`);
+        this.currentTranslation = this.translate.instant(titleKey);
+        this.setTitle();
       });
     } else {
-      this.title.setTitle('Trading Stack');
-      this.pageTitle.set('');
+      this.currentTranslation = 'Trading Stack';
+    }
+
+    this.setTitle();
+  }
+
+  setTitle(pnl?: number) {
+    if (pnl !== undefined && pnl !== null) {
+      this.setFavicon(pnl);
+      this.title.setTitle(`${pnl.toFixed(2)} ${this.currentTranslation}`);
+    } else {
+      this.setFavicon(undefined);
+      this.title.setTitle(`${this.currentTranslation}`);
+    }
+  }
+
+  setFavicon(pnl?: number) {
+    const favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+    if (pnl !== undefined && pnl !== null) {
+      favicon.href = pnl >= 0 ? '/public/favicon.green.ico' : '/public/favicon.red.ico';
+    } else {
+      favicon.href = '/public/favicon.ico';
     }
   }
 

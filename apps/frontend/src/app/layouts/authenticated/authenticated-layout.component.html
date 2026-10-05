@@ -37,6 +37,28 @@
       </ul>
     </nav>
 
+    <!-- clock Account Info Section -->
+    @if (userSettingService.settings()?.showFloatingClock !== false) {
+      <div
+        class="p-3 border-t border-border flex flex-col gap-2 text-sm overflow-hidden whitespace-nowrap"
+      >
+        <div class="flex flex-col gap-1">
+          <div
+            class="flex justify-between items-center"
+            [class.justify-center]="!isSidebarOpen()"
+          >
+            @if (isSidebarOpen()) {
+              <span class="text-text-muted text-xs">Time</span>
+              <span class="font-medium">{{ currentTime() }}</span>
+            } @else {
+              <span class="font-medium text-xs" title="Balance">{{
+                currentTime()
+              }}</span>
+            }
+          </div>
+        </div>
+      </div>
+    }
     <!-- Futures Account Info Section -->
     <div
       class="p-3 border-t border-border flex flex-col gap-2 text-sm overflow-hidden whitespace-nowrap"
@@ -93,21 +115,40 @@
                 <span class="text-text-muted text-xs">Unrealized</span>
                 <span
                   class="font-medium"
-                  [class.text-success]="accountService.unrealizedPnl() > 0"
-                  [class.text-danger]="accountService.unrealizedPnl() < 0"
+                  [class.text-success]="
+                    ((accountService.$unrealizedPnl | async) || 0) > 0
+                  "
+                  [class.text-danger]="
+                    ((accountService.$unrealizedPnl | async) || 0) < 0
+                  "
                 >
-                  {{ accountService.unrealizedPnl() > 0 ? '+' : ''
-                  }}{{ accountService.unrealizedPnl() | number: '1.2-2' }}
+                  {{
+                    ((accountService.$unrealizedPnl | async) || 0) > 0
+                      ? '+'
+                      : ''
+                  }}{{
+                    accountService.$unrealizedPnl | async | number: '1.2-2'
+                  }}
                 </span>
               } @else {
                 <span
                   class="font-medium text-xs"
-                  [class.text-success]="accountService.unrealizedPnl() > 0"
-                  [class.text-danger]="accountService.unrealizedPnl() < 0"
+                  [class.text-success]="
+                    ((accountService.$unrealizedPnl | async) || 0) > 0
+                  "
+                  [class.text-danger]="
+                    ((accountService.$unrealizedPnl | async) || 0) < 0
+                  "
                   title="Unrealized"
                 >
-                  {{ accountService.unrealizedPnl() > 0 ? '+' : ''
-                  }}{{ accountService.unrealizedPnl() | number: '1.2-2' }}
+                  {{
+                    ((accountService.$unrealizedPnl | async) || 0) > 0
+                      ? '+'
+                      : ''
+                  }}{{
+                    (accountService.$unrealizedPnl | async) || 0
+                      | number: '1.2-2'
+                  }}
                 </span>
               }
             </div>

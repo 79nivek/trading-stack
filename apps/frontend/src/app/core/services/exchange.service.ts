@@ -60,4 +60,14 @@ export class ExchangeInfoService {
       }
     });
   }
+
+  async formatQuantity(quantity: number, symbol: string) {
+    const exchangeInfo = await this.getExchangeInfo(symbol);
+    return TradingFormatter.formatQuantity(quantity, exchangeInfo)
+  }
+
+  async formatPrice(price: number, symbol: string) {
+    const exchangeInfo = await this.getExchangeInfo(symbol);
+    return TradingFormatter.formatPrice(price, exchangeInfo);
+  }
 }

@@ -1,0 +1,22 @@
+{
+  "symbol": "MOVRUSDT",
+  "positionSide": "BOTH",
+  "positionAmt": "120.24",
+  "entryPrice": "2.8541",
+  "breakEvenPrice": "2.85467082",
+  "markPrice": "2.86581098",
+  "unRealizedProfit": "1.40812823",
+  "liquidationPrice": "2.76731206",
+  "isolatedMargin": "18.49834203",
+  "notional": "344.58511223",
+  "marginAsset": "USDT",
+  "isolatedWallet": "17.09021380",
+  "initialMargin": "17.22925562",
+  "maintMargin": "6.89170224",
+  "positionInitialMargin": "17.22925562",
+  "openOrderInitialMargin": "0",
+  "adl": 0,
+  "bidNotional": "0",
+  "askNotional": "0",
+  "updateTime": 1790893801554
+}

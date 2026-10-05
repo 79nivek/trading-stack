@@ -30,6 +30,7 @@ export class UserSettingsService {
     if (dto.suggestionLimit !== undefined)
       settings.suggestionLimit = dto.suggestionLimit;
     if (dto.timeZone !== undefined) settings.timeZone = dto.timeZone;
+    if (dto.showFloatingClock !== undefined) settings.showFloatingClock = dto.showFloatingClock;
 
     return this.userSettingsRepository.save(settings);
   }

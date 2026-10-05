@@ -1,3 +1,4 @@
+import { ExchangeInfoService } from './../../../core/services/exchange.service';
 import { DecimalPipe } from '@angular/common';
 import {
   Component,
@@ -49,6 +50,7 @@ export class ChartMenuComponent {
 
   private backendService = inject(BackendApiService);
   private toastService = inject(ToastService);
+  private exchangeService = inject(ExchangeInfoService);
 
   entryPrice = computed(() => +(this.position()?.entryPrice || '0'));
   markPrice = computed(() => +(this.position()?.markPrice || '0'));
@@ -111,10 +113,11 @@ export class ChartMenuComponent {
     //
   }
 
-  public setPoint(value: number | string) {
-    const numValue = +value;
+  public async setPoint(value: number | string) {
+    const numValue = await this.exchangeService.formatPrice(+value, this.symbol);;
     if (numValue && numValue === this.selectedPrice()) return;
     if (this.showMenu()) {
+
       this.selectedPrice.set(numValue);
     } else {
       this.showMenu.set(true);

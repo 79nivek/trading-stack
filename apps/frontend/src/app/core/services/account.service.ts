@@ -3,14 +3,17 @@ import { BackendApiService } from './api/backend-api.service';
 import { AlgoOrder, Order, Position } from '@trading-stack/shared-dto';
 import { SecretKeyService } from './secret-key.service';
 import { FuturesWebsocketService } from './api/futures-ws.service';
-import { interval, Subscription } from 'rxjs';
+import { BehaviorSubject, interval, Subscription } from 'rxjs';
 import { DebounceEvent } from '../../shared/classes/debounce-event';
+import { PageTitleStrategy } from '../strategies/page-title.strategy';
 
 @Injectable({ providedIn: 'root' })
 export class AccountService implements OnDestroy {
   private readonly backendService = inject(BackendApiService);
   private readonly secretKeyService = inject(SecretKeyService);
   private futureWs = inject(FuturesWebsocketService);
+
+  private pageTitle = inject(PageTitleStrategy);
 
   private subscriptions = new Subscription();
 
@@ -25,7 +28,7 @@ export class AccountService implements OnDestroy {
 
   public realizedPnlToday = signal(0);
 
-  public unrealizedPnl = signal<number>(0);
+  public $unrealizedPnl = new BehaviorSubject<number>(0);
 
   public positions = signal(new Map<string, Position>());
 
@@ -53,7 +56,8 @@ export class AccountService implements OnDestroy {
       next: (account) => {
         this.futureBalance.set(account.futureBalance);
         this.realizedPnlToday.set(account.realizedPnlToday);
-        this.unrealizedPnl.set(account.unrealizedPnl);
+        this.$unrealizedPnl.next(account.unrealizedPnl);
+        this.pageTitle.setTitle(account.unrealizedPnl);
       },
     });
 
@@ -121,7 +125,8 @@ export class AccountService implements OnDestroy {
     this.subscriptions = new Subscription();
 
     if (this.positions().size === 0) {
-      this.unrealizedPnl.set(0);
+      this.$unrealizedPnl.next(0);
+      this.pageTitle.setTitle(0);
       return;
     }
 
@@ -163,7 +168,8 @@ export class AccountService implements OnDestroy {
           totalUnrealized += parseFloat(position.unRealizedProfit || '0');
         });
 
-        this.unrealizedPnl.set(totalUnrealized);
+        this.$unrealizedPnl.next(totalUnrealized);
+        this.pageTitle.setTitle(totalUnrealized);
       }),
     );
   }

@@ -70,7 +70,7 @@ export class TokenCardComponent implements OnChanges, OnInit {
 
   /** Whether to show the Remove button in the card header */
   @Input() showRemoveButton = false;
-
+  @Input() showLMForecast = false;
   /**
    * When true, a drag handle icon appears at the left of the header.
    * The parent is responsible for setting draggable="true" on the wrapper
@@ -259,7 +259,7 @@ export class TokenCardComponent implements OnChanges, OnInit {
           limit: 10,
         }),
       ),
-    enabled: !!this.symbol,
+    enabled: !!this.symbol && this.showLMForecast,
     structuralSharing: false,
   }));
 

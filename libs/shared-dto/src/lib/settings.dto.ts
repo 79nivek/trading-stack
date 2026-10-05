@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsIn, IsBoolean } from "class-validator";
 
 export class UpdateSettingsDto {
   @IsOptional()
@@ -21,6 +21,10 @@ export class UpdateSettingsDto {
   @IsOptional()
   @IsString()
   timeZone?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  showFloatingClock?: boolean;
 }
 
 export class UserSettingsResDto {
@@ -29,4 +33,5 @@ export class UserSettingsResDto {
   timeFrame!: string;
   suggestionLimit!: number;
   timeZone!: string;
+  showFloatingClock!: boolean;
 }

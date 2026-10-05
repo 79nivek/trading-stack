@@ -36,7 +36,11 @@ export class LlmService {
       const [ticker, premium, klinesRes] = await Promise.all([
         this.marketDataService.fetch24hTickerData(symbol),
         this.marketDataService.fetchPremiumIndex(symbol),
-        this.marketDataService.getKlinesFutures(symbol, timeFrame, 50),
+        this.marketDataService.getKlinesFutures({
+          symbol,
+          interval: timeFrame,
+          limit: '50',
+        }),
       ]);
       this.logger.log('Binance data fetched successfully.');
 
@@ -118,13 +122,17 @@ export class LlmService {
   async llmPosition(
     symbol: string,
     balance: number,
-    timeFrame = '4h'
+    timeFrame = '4h',
   ): Promise<PositionSetupDto> {
     try {
       const [ticker, premium, klines] = await Promise.all([
         this.marketDataService.fetch24hTickerData(symbol),
         this.marketDataService.fetchPremiumIndex(symbol),
-        this.marketDataService.getKlinesFutures(symbol, timeFrame, 50),
+        this.marketDataService.getKlinesFutures({
+          symbol,
+          interval: timeFrame,
+          limit: '50',
+        }),
       ]);
 
       if (!ticker || !premium || !klines) {
@@ -132,7 +140,6 @@ export class LlmService {
           'can not get necessary data, please try again',
         );
       }
-
 
       const closes = klines.map((k: any) => parseFloat(k[4]));
       const currentPrice = closes[closes.length - 1];
