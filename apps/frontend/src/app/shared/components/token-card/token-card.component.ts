@@ -118,96 +118,98 @@ export class TokenCardComponent implements OnChanges, OnInit {
 
   lineCheckpoint = computed<LineCheckPoint[]>(() => {
     const pos = this.position();
-    if (!pos) return [];
+    const lines: LineCheckPoint[] = [];
 
-    const lines: LineCheckPoint[] = [
-      {
-        color: ChartPrimaryColor.ENTRY,
-        title: 'Entry',
-        value: pos.entryPrice.toString(),
-        lineStyle: LineStyle.Solid,
-      },
-      {
-        color: ChartPrimaryColor.LIQUIDATION,
-        title: 'Liquidation',
-        value: (pos.liquidationPrice || 0).toString(),
-        lineStyle: LineStyle.Solid,
-      },
-    ];
+    if (pos) {
+      lines.push(
+        {
+          color: ChartPrimaryColor.ENTRY,
+          title: `Entry ${Number(pos.isolatedWallet || 0).toFixed(2)}`,
+          value: pos.entryPrice.toString(),
+          lineStyle: LineStyle.Solid,
+        },
+        {
+          color: ChartPrimaryColor.LIQUIDATION,
+          title: 'Liquidation',
+          value: (pos.liquidationPrice || 0).toString(),
+          lineStyle: LineStyle.Solid,
+        },
+      );
 
-    const entryPrice = parseFloat(pos.entryPrice || '0');
-    let breakEvenPrice = parseFloat(pos.breakEvenPrice);
+      const entryPrice = parseFloat(pos.entryPrice || '0');
+      let breakEvenPrice = parseFloat(pos.breakEvenPrice);
 
-    // if (fee > 1 && positionAmt !== 0) {
-    if (entryPrice > breakEvenPrice) {
-      breakEvenPrice = entryPrice - Math.abs(breakEvenPrice - entryPrice) * 2;
-    } else {
-      breakEvenPrice = entryPrice + Math.abs(breakEvenPrice - entryPrice) * 2;
-    }
-    lines.push({
-      color: ChartPrimaryColor.BREAK_EVEN,
-      title: `BE(-$${this.fee().toFixed(2)})`,
-      value: breakEvenPrice.toString(),
-      lineStyle: LineStyle.Dotted,
-    });
-    // }
-
-    const algoOrders = this.accountService.algoOrders().get(this.symbol);
-    if (algoOrders) {
-      algoOrders.forEach((order) => {
-        if (!order.orderType) return;
-        const pnl = calculatePnlAmount({
-          entryPrice: pos.entryPrice,
-          positionAmt: pos.positionAmt,
-          targetPrice: order.triggerPrice,
-        }).toFixed(2);
-        if (
-          order.orderType === OrderType.TAKE_PROFIT_LIMIT ||
-          order.orderType === OrderType.TAKE_PROFIT_MARKET
-        ) {
-          lines.push({
-            color: ChartPrimaryColor.TAKE_PROFIT,
-            title: `TP ${pnl}`,
-            value: order.triggerPrice || '',
-            lineStyle: LineStyle.Solid,
-          });
-
-          return;
-        }
-
-        if (
-          order.orderType === OrderType.STOP_LIMIT ||
-          order.orderType === OrderType.STOP_MARKET
-        ) {
-          lines.push({
-            color: ChartPrimaryColor.STOP_LOSS,
-            title: `SL ${pnl}`,
-            value: order.triggerPrice || '',
-            lineStyle: LineStyle.Solid,
-          });
-
-          return;
-        }
-
-        if (order.orderType === OrderType.TRAILING_STOP_MARKET) {
-          lines.push({
-            color: ChartPrimaryColor.TRAILING_STOP_ACTIVE,
-            title: 'TSL',
-            value: order.activatePrice || '',
-            lineStyle: LineStyle.Dotted,
-          });
-          lines.push({
-            color: ChartPrimaryColor.TRAILING_STOP_PRICE,
-            title: 'TSL',
-            value: order.triggerPrice || '',
-            lineStyle: LineStyle.Dotted,
-          });
-
-          return;
-        }
+      // if (fee > 1 && positionAmt !== 0) {
+      if (entryPrice > breakEvenPrice) {
+        breakEvenPrice = entryPrice - Math.abs(breakEvenPrice - entryPrice) * 2;
+      } else {
+        breakEvenPrice = entryPrice + Math.abs(breakEvenPrice - entryPrice) * 2;
+      }
+      lines.push({
+        color: ChartPrimaryColor.BREAK_EVEN,
+        title: `BE(-$${this.fee().toFixed(2)})`,
+        value: breakEvenPrice.toString(),
+        lineStyle: LineStyle.Dotted,
       });
-    }
 
+      // }
+
+      const algoOrders = this.accountService.algoOrders().get(this.symbol);
+      if (algoOrders) {
+        algoOrders.forEach((order) => {
+          if (!order.orderType) return;
+          const pnl = calculatePnlAmount({
+            entryPrice: pos.entryPrice,
+            positionAmt: pos.positionAmt,
+            targetPrice: order.triggerPrice,
+          }).toFixed(2);
+          if (
+            order.orderType === OrderType.TAKE_PROFIT_LIMIT ||
+            order.orderType === OrderType.TAKE_PROFIT_MARKET
+          ) {
+            lines.push({
+              color: ChartPrimaryColor.TAKE_PROFIT,
+              title: `TP ${pnl}`,
+              value: order.triggerPrice || '',
+              lineStyle: LineStyle.Solid,
+            });
+
+            return;
+          }
+
+          if (
+            order.orderType === OrderType.STOP_LIMIT ||
+            order.orderType === OrderType.STOP_MARKET
+          ) {
+            lines.push({
+              color: ChartPrimaryColor.STOP_LOSS,
+              title: `SL ${pnl}`,
+              value: order.triggerPrice || '',
+              lineStyle: LineStyle.Solid,
+            });
+
+            return;
+          }
+
+          if (order.orderType === OrderType.TRAILING_STOP_MARKET) {
+            lines.push({
+              color: ChartPrimaryColor.TRAILING_STOP_ACTIVE,
+              title: 'TSL',
+              value: order.activatePrice || '',
+              lineStyle: LineStyle.Dotted,
+            });
+            lines.push({
+              color: ChartPrimaryColor.TRAILING_STOP_PRICE,
+              title: 'TSL',
+              value: order.triggerPrice || '',
+              lineStyle: LineStyle.Dotted,
+            });
+
+            return;
+          }
+        });
+      }
+    }
     const orders = this.accountService.orders().get(this.symbol);
     orders?.forEach((order) => {
       if (order) {
