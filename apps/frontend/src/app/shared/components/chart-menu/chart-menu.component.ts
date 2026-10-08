@@ -77,9 +77,9 @@ export class ChartMenuComponent {
     const positionAmt = this.position()?.positionAmt || 0;
 
     return calculatePnlAmount({
-      entryPrice: entryPrice,
-      positionAmt: positionAmt,
-      targetPrice: targetPrice,
+      entryPrice: String(entryPrice),
+      positionAmt: String(positionAmt),
+      targetPrice: String(targetPrice),
     });
   });
 

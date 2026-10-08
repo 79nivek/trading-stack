@@ -4,7 +4,6 @@ import {
   inject,
   Injectable,
   Injector,
-  InputSignal,
   OnDestroy,
   Signal,
 } from '@angular/core';
@@ -69,7 +68,7 @@ export class ChartDataService implements OnDestroy {
     });
   }
 
-  registerSymbolRealtime(symbol: InputSignal<string>): Signal<
+  registerSymbolRealtime(symbol: Signal<string>): Signal<
     | {
         unRealizedProfit: number;
         markPrice: number;
@@ -77,9 +76,17 @@ export class ChartDataService implements OnDestroy {
       }
     | undefined
   > {
+    const safeSymbol = computed(() => {
+      try {
+        return symbol();
+      } catch {
+        return undefined;
+      }
+    });
+
     return toSignal(
-      toObservable(symbol, { injector: this.injector }).pipe(
-        filter((sym) => !!sym),
+      toObservable(safeSymbol, { injector: this.injector }).pipe(
+        filter((sym): sym is string => !!sym),
         switchMap((sym) =>
           toObservable(this.positionQuery.data, {
             injector: this.injector,
