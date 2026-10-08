@@ -1,12 +1,10 @@
-import { injectMutation } from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
 import { Component, inject } from '@angular/core';
 
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { PopupService } from '../../core/services/popup.service';
-import { BackendApiService } from '../../core/services/api/backend-api.service';
+import { injectSignUpMutation } from '../../core/queries/auth.query';
 import { REGEX } from '../../core/constants/regex.constants';
 import { ERROR_MESSAGES } from '../../core/constants/error.constants';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -22,7 +20,6 @@ import { APP_PATHS } from '../../core/constants/routes.constants';
 })
 export class SignUpPageComponent {
   private fb = inject(FormBuilder);
-  private backendApi = inject(BackendApiService);
   private router = inject(Router);
   private popupService = inject(PopupService);
 
@@ -49,40 +46,7 @@ export class SignUpPageComponent {
     return !!(control && control.invalid && (control.dirty || control.touched));
   }
 
-  signUpMutation = injectMutation(() => ({
-    mutationFn: (dto: SignUpDto) => lastValueFrom(this.backendApi.signUp(dto)),
-    onSuccess: () => {
-      this.popupService.open({
-        title: 'SIGNUP.SUCCESS_TITLE',
-        message: 'SIGNUP.SUCCESS_MSG',
-        buttons: [
-          {
-            text: 'SIGNUP.GO_TO_LOGIN',
-            type: 'primary',
-            action: () => this.router.navigate([APP_PATHS.LOGIN]),
-          },
-        ],
-      });
-    },
-    onError: (err: any) => {
-      this.popupService.open({
-        title: 'SIGNUP.ERROR_TITLE',
-        message: err.error?.message || 'Registration failed.',
-        buttons: [
-          {
-            text: 'SIGNUP.CLOSE',
-            type: 'danger',
-            action: () => {},
-          },
-          {
-            text: 'SIGNUP.GO_TO_LOGIN',
-            type: 'primary',
-            action: () => this.router.navigate([APP_PATHS.LOGIN]),
-          },
-        ],
-      });
-    },
-  }));
+  signUpMutation = injectSignUpMutation();
 
   onSubmit() {
     if (this.signUpForm.invalid) {
@@ -90,6 +54,40 @@ export class SignUpPageComponent {
       return;
     }
 
-    this.signUpMutation.mutate(this.signUpForm.value as SignUpDto);
+    this.signUpMutation.mutate(this.signUpForm.value as SignUpDto, {
+      onSuccess: () => {
+        this.popupService.open({
+          title: 'SIGNUP.SUCCESS_TITLE',
+          message: 'SIGNUP.SUCCESS_MSG',
+          buttons: [
+            {
+              text: 'SIGNUP.GO_TO_LOGIN',
+              type: 'primary',
+              action: () => this.router.navigate([APP_PATHS.LOGIN]),
+            },
+          ],
+        });
+      },
+      onError: (err: any) => {
+        this.popupService.open({
+          title: 'SIGNUP.ERROR_TITLE',
+          message: err.error?.message || 'Registration failed.',
+          buttons: [
+            {
+              text: 'SIGNUP.CLOSE',
+              type: 'danger',
+              action: () => {
+                //
+              },
+            },
+            {
+              text: 'SIGNUP.GO_TO_LOGIN',
+              type: 'primary',
+              action: () => this.router.navigate([APP_PATHS.LOGIN]),
+            },
+          ],
+        });
+      },
+    });
   }
 }

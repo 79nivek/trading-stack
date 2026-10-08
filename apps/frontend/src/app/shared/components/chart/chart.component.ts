@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
 import {
   Component,
@@ -33,7 +34,7 @@ import { ChartSyncService } from '../../../core/services/chart-sync.service';
 import { ExchangeInfoService } from '../../../core/services/exchange.service';
 import { QueryClient } from '@tanstack/angular-query-experimental';
 import { calculateSMA } from '@trading-stack/shared';
-import { BackendApiService } from '../../../core/services/api/backend-api.service';
+import { getKlinesApi } from '../../../core/queries/klines.query';
 import { ForecastDto } from '@trading-stack/shared-dto';
 import { injectSettingQuery } from '../../../core/queries/user-setting.query';
 
@@ -67,6 +68,7 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
   // @ContentChild(ChartMenuComponent) menuRef!: ChartMenuComponent;
 
   private chart: IChartApi | null = null;
+  private resizeObserver: ResizeObserver | null = null;
   private candlestickSeries: ISeriesApi<'Candlestick'> | null = null;
   private volumeSeries: ISeriesApi<'Histogram'> | null = null;
 
@@ -81,7 +83,7 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
 
   hoveredData = signal<any>(null);
 
-  private backendServ = inject(BackendApiService);
+  private http = inject(HttpClient);
   private wsService = inject(FuturesWebsocketService);
   private themeService = inject(ThemeService);
   private chartSync = inject(ChartSyncService);
@@ -248,8 +250,6 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
         void this.userSettings.data()?.timeZone;
         void this.symbol();
 
-        console.log('re call');
-
         untracked(() => {
           if (this.chart && this.isFullyInitialized) {
             this.loadHistoricalData();
@@ -354,6 +354,11 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
     }
     if (this.chart) {
       this.chart.remove();
+      this.chart = null as any;
+    }
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null as any;
     }
   }
 
@@ -409,7 +414,6 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
       const info = await this.exchangeInfoService.getExchangeInfo(
         this.symbol(),
       );
-      console.log('applyBinanceFormatting info: ', info);
       if (this.candlestickSeries) {
         const precision = info?.pricePrecision ?? 2;
         const minMove = info?.minMove ?? 1;
@@ -560,7 +564,7 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
       },
     });
 
-    const resizeObserver = new ResizeObserver((entries) => {
+    this.resizeObserver = new ResizeObserver((entries) => {
       if (
         entries.length === 0 ||
         entries[0].target !== this.chartContainer.nativeElement
@@ -573,7 +577,7 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
         height: newRect.height,
       });
     });
-    resizeObserver.observe(this.chartContainer.nativeElement);
+    this.resizeObserver.observe(this.chartContainer.nativeElement);
 
     // Zoom/pan: load thêm dữ liệu + broadcast sync
     this.chart
@@ -681,15 +685,15 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
       const exchangeInfo = await this.exchangeInfoService.getExchangeInfo(
         this.symbol(),
       );
-      console.log('loadHistoricalData exchangeInfo: ', exchangeInfo);
-      const data = await this.queryClient.query({
+      const data = await this.queryClient.fetchQuery({
         queryKey: ['klines', this.symbol(), tf, 500, 'latest'],
         queryFn: () =>
           lastValueFrom(
-            this.backendServ.getKlines(
-              this.symbol(),
+            getKlinesApi(
+              this.http,
+              this.symbol() as string,
               {
-                timeFrame: tf,
+                timeFrame: tf as any,
                 limit: 500,
               },
               exchangeInfo,
@@ -698,17 +702,18 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
         staleTime: 1000 * 60 * 5,
       });
 
+      if (!this.chart) return;
       if (this.candlestickSeries && this.volumeSeries && data.length > 0) {
         this.earliestTime = data[0].time as number;
 
-        this.currentData = data.map((d) => ({
+        this.currentData = data.map((d: any) => ({
           time: ((d.time as number) + this.timeShiftSeconds) as Time,
           open: d.open,
           high: d.high,
           low: d.low,
           close: d.close,
         }));
-        this.currentVolumeData = data.map((d) => ({
+        this.currentVolumeData = data.map((d: any) => ({
           time: ((d.time as number) + this.timeShiftSeconds) as Time,
           value: d.volume,
           color: d.close >= d.open ? '#26a69a80' : '#ef535080',
@@ -743,12 +748,12 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
       const exchangeInfo = await this.exchangeInfoService.getExchangeInfo(
         this.symbol(),
       );
-      console.log('loadMoreHistoricalData exchangeInfo: ', exchangeInfo);
-      const data = await this.queryClient.query({
+      const data = await this.queryClient.fetchQuery({
         queryKey: ['klines', this.symbol(), tf, 500, endTime],
         queryFn: () =>
           lastValueFrom(
-            this.backendServ.getKlines(
+            getKlinesApi(
+              this.http,
               this.symbol(),
               {
                 limit: 500,
@@ -761,17 +766,18 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
         staleTime: Infinity,
       });
 
+      if (!this.chart) return;
       if (this.candlestickSeries && this.volumeSeries && data.length > 0) {
         this.earliestTime = data[0].time as number;
 
-        const olderCandles = data.map((d) => ({
+        const olderCandles = data.map((d: any) => ({
           time: ((d.time as number) + this.timeShiftSeconds) as Time,
           open: d.open,
           high: d.high,
           low: d.low,
           close: d.close,
         }));
-        const olderVolumes = data.map((d) => ({
+        const olderVolumes = data.map((d: any) => ({
           time: ((d.time as number) + this.timeShiftSeconds) as Time,
           value: d.volume,
           color: d.close >= d.open ? '#26a69a80' : '#ef535080',
@@ -803,6 +809,7 @@ export class ChartComponent implements AfterViewInit, OnDestroy {
     this.wsSubscription = this.wsService.register(this.symbol()).subscribe({
       next: (kline) => {
         if (this.isInitializing) return; // Skip realtime ticks while fetching history to prevent out-of-order data
+        if (!this.chart) return;
         if (this.candlestickSeries && this.volumeSeries) {
           const shiftedTime = ((kline.time as number) +
             this.timeShiftSeconds) as Time;

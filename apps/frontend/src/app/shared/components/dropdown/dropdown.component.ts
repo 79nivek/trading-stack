@@ -1,4 +1,12 @@
-import { Component, Input, Output, EventEmitter, ElementRef, HostListener, signal } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  ElementRef,
+  HostListener,
+  signal,
+} from '@angular/core';
 
 import { TranslatePipe } from '@ngx-translate/core';
 
@@ -14,7 +22,7 @@ export interface DropdownItem {
   standalone: true,
   imports: [TranslatePipe],
   templateUrl: './dropdown.component.html',
-  styleUrl: './dropdown.component.scss'
+  styleUrl: './dropdown.component.scss',
 })
 export class DropdownComponent {
   @Input() items: DropdownItem[] = [];
@@ -25,7 +33,7 @@ export class DropdownComponent {
   constructor(private eRef: ElementRef) {}
 
   toggle() {
-    this.isOpen.update(v => !v);
+    this.isOpen.update((v) => !v);
   }
 
   onItemClick(item: DropdownItem) {

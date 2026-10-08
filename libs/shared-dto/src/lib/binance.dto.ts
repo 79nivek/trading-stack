@@ -1,3 +1,4 @@
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { IsNotEmpty, IsString } from 'class-validator';
 import { Direction } from './shared-dto';
 
@@ -68,6 +69,9 @@ export class Position {
   bidNotional!: string;
   askNotional!: string;
   updateTime!: number;
+
+  fee!: number;
+  isLong!: boolean;
 
   constructor(params: any) {
     Object.assign(this, params);
@@ -151,15 +155,6 @@ export class Order {
     if (params.orderId) {
       this.orderId = BigInt(params.orderId).toString();
     }
-  }
-}
-
-export class OrdersResponse {
-  orders: Order[] = [];
-  algoOrders: AlgoOrder[] = [];
-
-  constructor(params: any) {
-    Object.assign(this, params);
   }
 }
 

@@ -1,10 +1,8 @@
 import { Component, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateDirective } from '@ngx-translate/core';
-import { BackendApiService } from '../../core/services/api/backend-api.service';
+import { injectSuggestionsQuery } from '../../core/queries/suggestion.query';
 import { SuggestionPositionModal } from './suggestion-position/suggestion-position.modal';
-import { injectQuery } from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
 import { ModalService } from '../../core/services/modal.service';
 import { BaseLayoutComponent } from '../../shared/classes/base-layout';
 import { TokenCardComponent } from '../../shared/components/token-card/token-card.component';
@@ -27,7 +25,6 @@ import {
   styleUrl: './suggestion.component.scss',
 })
 export class SuggestionPageComponent extends BaseLayoutComponent {
-  private backendApi = inject(BackendApiService);
   private modalService = inject(ModalService);
 
   private userSettings = injectSettingQuery();
@@ -61,12 +58,7 @@ export class SuggestionPageComponent extends BaseLayoutComponent {
     );
   }
 
-  suggestionsQuery = injectQuery(() => ({
-    queryKey: ['suggestions', 'futures', this.limit()],
-    queryFn: () =>
-      lastValueFrom(this.backendApi.getFuturesSuggestions(this.limit()!)),
-    enabled: this.limit() !== undefined,
-  }));
+  suggestionsQuery = injectSuggestionsQuery(this.limit as any);
 
   onRefresh() {
     this.suggestionsQuery.refetch();

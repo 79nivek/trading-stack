@@ -10,8 +10,8 @@
       ></app-auto-complete>
       <!-- Refresh button -->
       <button
-        (click)="onRefreshData()"
-        [disabled]="followedDataQuery.isFetching()"
+        (click)="followedQuery.refetch()"
+        [disabled]="followedQuery.isFetching()"
         class="flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-md hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
       >
         <svg
@@ -24,7 +24,7 @@
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          [class.animate-spin]="followedDataQuery.isFetching()"
+          [class.animate-spin]="followedQuery.isFetching()"
         >
           <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
           <path d="M21 3v5h-5"></path>
@@ -42,9 +42,9 @@
   />
 
   <!-- ===== Cards grid with drag-and-drop ===== -->
-  @if (orderedEntries().length > 0) {
+  @if (followedQuery.data(); as items) {
     <div class="cards-grid">
-      @for (entry of orderedEntries(); track entry.followedId; let i = $index) {
+      @for (entry of items; track entry.id; let i = $index) {
         <div
           class="followed-card-wrapper"
           [attr.draggable]="dragEnabledIndex() === i ? 'true' : 'false'"
@@ -56,12 +56,12 @@
           (dragend)="onDragEnd($event)"
         >
           <app-token-card
-            [symbol]="entry.token.symbol"
+            [symbol]="entry.symbol"
             syncGroup="followed"
             [showRemoveButton]="true"
             [draggable]="true"
             (openPosition)="openPositionModal($event)"
-            (remove)="onRemove(entry.followedId)"
+            (remove)="onRemove(entry.id)"
             (dragHover)="onDragHover($event, i)"
           />
         </div>

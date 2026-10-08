@@ -1,27 +1,29 @@
-import { Component, inject, signal, OnDestroy, computed } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  OnDestroy,
+  computed,
+  effect,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateDirective } from '@ngx-translate/core';
-import {
-  injectQuery,
-  injectMutation,
-  QueryClient,
-} from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
-
-import { BackendApiService } from '../../core/services/api/backend-api.service';
 import { ModalService } from '../../core/services/modal.service';
 import { ToastService } from '../../core/services/toast.service';
 import { BaseLayoutComponent } from '../../shared/classes/base-layout';
 import { TokenCardComponent } from '../../shared/components/token-card/token-card.component';
 import { SuggestionPositionModal } from '../suggestion/suggestion-position/suggestion-position.modal';
-import {
-  TokenSuggestionDto,
-  FollowedSymbolDto,
-} from '@trading-stack/shared-dto';
+import { TokenSuggestionDto } from '@trading-stack/shared-dto';
 import { AutoCompleteComponent } from '../../shared/components/auto-complete/auto-complete.component';
 import { NoDataComponent } from '../../shared/components/no-data/no-data.component';
 import { injectExchangeInfoQuery } from '../../core/queries/exchange-info.query';
+import {
+  injectAddFollowedMutation,
+  injectFollowedQuery,
+  injectRemoveFollowedMutation,
+  injectReorderFollowedMutation,
+} from '../../core/queries/followed-symbol.query';
 
 /** Pairs token market data with its followed-symbol record for rendering */
 export interface FollowedTokenEntry {
@@ -47,10 +49,8 @@ export class FollowedPageComponent
   extends BaseLayoutComponent
   implements OnDestroy
 {
-  private backendApi = inject(BackendApiService);
   private modalService = inject(ModalService);
   private toastService = inject(ToastService);
-  private queryClient = inject(QueryClient);
   exchangeInfo = injectExchangeInfoQuery();
   // ─── Search / Autocomplete ─────────────────────────────────────────────────
 
@@ -80,6 +80,10 @@ export class FollowedPageComponent
 
   constructor() {
     super();
+    effect(() => {
+      const followed = this.followedQuery.data();
+      console.log('followed', followed);
+    });
   }
 
   override ngOnDestroy(): void {
@@ -90,78 +94,15 @@ export class FollowedPageComponent
     this.selectSymbol(item.value);
   }
 
-  // ─── Build ordered entries when query data arrives ─────────────────────────
-
-  private buildOrderedEntries(
-    followedList: FollowedSymbolDto[],
-    tokenData: TokenSuggestionDto[],
-  ): FollowedTokenEntry[] {
-    return followedList
-      .filter((f) => tokenData.some((t) => t.symbol === f.symbol))
-      .map((f) => ({
-        followedId: f.id,
-        token: tokenData.find((t) => t.symbol === f.symbol)!,
-      }));
-  }
-
   // ─── Queries / Mutations ──────────────────────────────────────────────────
 
-  followedQuery = injectQuery(() => ({
-    queryKey: ['followed-symbols'],
-    queryFn: () => lastValueFrom(this.backendApi.getFollowedSymbols()),
-  }));
+  followedQuery = injectFollowedQuery();
 
-  followedDataQuery = injectQuery(() => ({
-    queryKey: ['followed-symbols', 'data'],
-    queryFn: async () => {
-      const data = await lastValueFrom(
-        this.backendApi.getFollowedSymbolsData(),
-      );
-      // Sync orderedEntries whenever fresh data arrives
-      const followed = this.followedQuery.data() ?? [];
-      this.orderedEntries.set(this.buildOrderedEntries(followed, data));
-      return data;
-    },
-    enabled: (this.followedQuery.data()?.length ?? 0) > 0,
-  }));
+  addMutation = injectAddFollowedMutation();
 
-  addMutation = injectMutation(() => ({
-    mutationFn: (symbol: string) =>
-      lastValueFrom(this.backendApi.addFollowedSymbol({ symbol })),
-    onSuccess: () => {
-      this.queryClient.invalidateQueries({ queryKey: ['followed-symbols'] });
-    },
-    onError: (err: any) => {
-      this.toastService.show(
-        err.error?.message || 'Failed to add symbol.',
-        'danger',
-      );
-    },
-  }));
+  removeMutation = injectRemoveFollowedMutation();
 
-  removeMutation = injectMutation(() => ({
-    mutationFn: (id: string) =>
-      lastValueFrom(this.backendApi.removeFollowedSymbol(id)),
-    onSuccess: () => {
-      this.queryClient.invalidateQueries({ queryKey: ['followed-symbols'] });
-    },
-    onError: (err: any) => {
-      this.toastService.show(
-        err.error?.message || 'Failed to remove symbol.',
-        'danger',
-      );
-    },
-  }));
-
-  reorderMutation = injectMutation(() => ({
-    mutationFn: (orderedIds: string[]) =>
-      lastValueFrom(this.backendApi.reorderFollowedSymbols({ orderedIds })),
-    onError: () => {
-      // On failure, restore from server by re-fetching
-      this.queryClient.invalidateQueries({ queryKey: ['followed-symbols'] });
-      this.toastService.show('Failed to save order.', 'danger');
-    },
-  }));
+  reorderMutation = injectReorderFollowedMutation();
 
   // ─── Actions ──────────────────────────────────────────────────────────────
 
@@ -173,16 +114,12 @@ export class FollowedPageComponent
     if (alreadyFollowed) {
       this.toastService.show(`${symbol} is already in your list.`, 'danger');
     } else {
-      this.addMutation.mutate(symbol);
+      this.addMutation.mutate({ symbol });
     }
   }
 
   onRemove(id: string): void {
     this.removeMutation.mutate(id);
-  }
-
-  onRefreshData(): void {
-    this.queryClient.invalidateQueries({ queryKey: ['followed-symbols'] });
   }
 
   // ─── Drag-and-Drop (native HTML5) ─────────────────────────────────────────
@@ -228,7 +165,7 @@ export class FollowedPageComponent
 
     // Persist to backend
     const orderedIds = current.map((e) => e.followedId);
-    this.reorderMutation.mutate(orderedIds);
+    this.reorderMutation.mutate({ orderedIds });
 
     this.resetDragState();
   }

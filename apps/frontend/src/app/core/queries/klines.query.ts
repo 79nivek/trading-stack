@@ -1,39 +1,54 @@
-import { inject, Signal } from '@angular/core';
-import { injectQuery } from '@tanstack/angular-query-experimental';
-import { BaseResponse, useAuth } from '../services/api/backend-api.service';
-import { lastValueFrom, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { ForecastDto } from '@trading-stack/shared-dto';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { BaseResponse } from '../services/api/backend-api.service';
 import { ENV } from '../../environments';
 import { skipSpinnerOptions } from '../interceptors/spinner.interceptor';
-import { injectSettingQuery } from './user-setting.query';
+import { TIME_FRAME, KlineData } from '@trading-stack/shared-dto';
+import { TradingFormatter } from '@trading-stack/shared';
 
-export function injectKlinesQuery(symbol: Signal<string | undefined>) {
-  const http = inject(HttpClient);
-  const userSettings = injectSettingQuery();
+export function getKlinesApi(
+  http: HttpClient,
+  symbol: string,
+  query: {
+    timeFrame: TIME_FRAME;
+    limit?: number;
+    endTime?: number;
+  },
+  options: TradingFormatter,
+): Observable<KlineData[]> {
+  if (query.limit === undefined) query.limit = 500;
 
-  return injectQuery(() => {
-    const _symbol: string = symbol() as string;
-    return {
-      queryKey: ['forecasts', _symbol, userSettings.data()?.timeFrame],
-      queryFn: () => {
-        return lastValueFrom(
-          http
-            .get<BaseResponse<ForecastDto[]>>(
-              `${ENV.BACKEND_URL}/api/v1/forecasts/futures`,
-              {
-                ...useAuth(true),
-                ...skipSpinnerOptions(),
-                params: {
-                  symbol: _symbol,
-                },
-              },
-            )
-            .pipe(map((res) => res.result)),
-        );
+  const params: any = {
+    symbol: symbol.toUpperCase(),
+    interval: query.timeFrame,
+    limit: query.limit.toString(),
+  };
+
+  if (query.endTime) {
+    params.endTime = query.endTime.toString();
+  }
+
+  return http
+    .get<BaseResponse<any[][]>>(
+      `${ENV.BACKEND_URL}/api/v1/market-data/klines/futures`,
+      {
+        params,
+        ...skipSpinnerOptions(),
       },
-      enabled: !!_symbol && !!userSettings.data()?.timeFrame,
-      structuralSharing: false,
-    };
-  });
+    )
+    .pipe(
+      map((res: any) => res.result || res),
+      map((data) => {
+        return data.map((kline: any) => ({
+          time: Math.floor(kline[0] / 1000), // convert ms to s for lightweight-charts
+          open: TradingFormatter.formatPrice(kline[1], options),
+          high: TradingFormatter.formatPrice(kline[2], options),
+          low: TradingFormatter.formatPrice(kline[3], options),
+          close: TradingFormatter.formatPrice(kline[4], options),
+          volume: TradingFormatter.formatPrice(kline[5], options),
+          normalizedToken: `${symbol.toLowerCase()}@kline_${query.timeFrame}`,
+        }));
+      }),
+    );
 }

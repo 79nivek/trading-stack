@@ -9,7 +9,7 @@ import { TranslatePipe } from '@ngx-translate/core';
   standalone: true,
   imports: [ButtonComponent, TranslatePipe],
   templateUrl: './popup.component.html',
-  styleUrl: './popup.component.scss'
+  styleUrl: './popup.component.scss',
 })
 export class PopupComponent {
   popupService = inject(PopupService);

@@ -1,14 +1,8 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BackendApiService } from '../../../core/services/api/backend-api.service';
+import { injectSuggestionPositionMutation } from '../../../core/queries/suggestion.query';
+import { injectPlaceFuturesPositionMutation } from '../../../core/queries/position.query';
 import {
   SuggestionPositionResponseDto,
   PositionSetupDto,
@@ -32,7 +26,8 @@ export class SuggestionPositionModal {
   @Input() dataInput: SuggestionPositionModalInput | null = null;
   @Output() close = new EventEmitter<void>();
 
-  private backendApi = inject(BackendApiService);
+  suggestionPositionMutation = injectSuggestionPositionMutation();
+  placePositionMutation = injectPlaceFuturesPositionMutation();
 
   balance = signal<number | null>(null);
 
@@ -54,18 +49,19 @@ export class SuggestionPositionModal {
     this.loadingSuggestion.set(true);
     this.suggestionResult.set(null);
 
-    this.backendApi
-      .getSuggestionPosition(this.dataInput.symbol, this.balance())
-      .subscribe({
-        next: (res) => {
+    this.suggestionPositionMutation.mutate(
+      { symbol: this.dataInput.symbol, balance: this.balance() },
+      {
+        onSuccess: (res) => {
           this.suggestionResult.set(res);
           this.loadingSuggestion.set(false);
         },
-        error: (err) => {
+        onError: (err: any) => {
           this.errorMsg.set(err.error?.message || 'Error getting suggestions.');
           this.loadingSuggestion.set(false);
         },
-      });
+      },
+    );
   }
 
   placingSetup = signal<string | null>(null);
@@ -98,8 +94,8 @@ export class SuggestionPositionModal {
       stopLossPrice: setup.stopLossPrice,
     };
 
-    this.backendApi.placeFuturesPosition(payload).subscribe({
-      next: (res) => {
+    this.placePositionMutation.mutate(payload, {
+      onSuccess: (res: any) => {
         if (res.ok) {
           this.placeSuccess.set(
             `Successfully placed ${setup.direction} order via ${setup.strategyName}!`,
@@ -109,7 +105,7 @@ export class SuggestionPositionModal {
         }
         this.placingSetup.set(null);
       },
-      error: (err) => {
+      onError: (err: any) => {
         this.errorMsg.set(
           err.error?.message || 'Error placing order on Binance.',
         );

@@ -7,7 +7,7 @@ import { SpinnerService } from '../../../core/services/spinner.service';
   standalone: true,
   imports: [],
   templateUrl: './spinner.component.html',
-  styleUrl: './spinner.component.scss'
+  styleUrl: './spinner.component.scss',
 })
 export class SpinnerComponent {
   spinnerService = inject(SpinnerService);

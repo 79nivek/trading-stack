@@ -1,5 +1,5 @@
-import { injectMutation } from "@tanstack/angular-query-experimental";
-import { lastValueFrom } from "rxjs";
+import { injectMutation } from '@tanstack/angular-query-experimental';
+import { lastValueFrom } from 'rxjs';
 import { Component, inject } from '@angular/core';
 
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -15,7 +15,7 @@ import { PopupService } from '../../../core/services/popup.service';
   standalone: true,
   imports: [ReactiveFormsModule, ModalComponent, ButtonComponent],
   templateUrl: './binance-credentials-modal.component.html',
-  styleUrl: './binance-credentials-modal.component.scss'
+  styleUrl: './binance-credentials-modal.component.scss',
 })
 export class BinanceCredentialsModalComponent {
   private fb = inject(FormBuilder);
@@ -26,16 +26,20 @@ export class BinanceCredentialsModalComponent {
 
   isChecking = false;
   isSaving = false;
-  permissions: { readAccount: boolean; tradeSpot: boolean; tradeFutures: boolean } | null = null;
+  permissions: {
+    readAccount: boolean;
+    tradeSpot: boolean;
+    tradeFutures: boolean;
+  } | null = null;
 
   form = this.fb.group({
     apiKey: ['', Validators.required],
     secretKey: ['', Validators.required],
   });
 
-
   checkMutation = injectMutation(() => ({
-    mutationFn: (credentials: any) => lastValueFrom(this.api.checkBinanceCredentials(credentials)),
+    mutationFn: (credentials: any) =>
+      lastValueFrom(this.api.checkBinanceCredentials(credentials)),
     onSuccess: (res: any) => {
       if (res && res.permissions) {
         this.permissions = res.permissions;
@@ -45,11 +49,12 @@ export class BinanceCredentialsModalComponent {
     onError: (err: any) => {
       this.permissions = null;
       this.toast.show(err.error?.message || 'Invalid credentials.', 'danger');
-    }
+    },
   }));
 
   saveMutation = injectMutation(() => ({
-    mutationFn: (credentials: any) => lastValueFrom(this.api.saveBinanceCredentials(credentials)),
+    mutationFn: (credentials: any) =>
+      lastValueFrom(this.api.saveBinanceCredentials(credentials)),
     onSuccess: (res: any) => {
       this.modalService.close();
 
@@ -62,20 +67,30 @@ export class BinanceCredentialsModalComponent {
             text: 'Copy Token',
             type: 'info',
             action: () => {
-              navigator.clipboard.writeText(res.token).then(() => {
-                this.toast.show('Token copied to clipboard', 'success');
-              }).catch(() => {
-                this.toast.show('Failed to copy token', 'danger');
-              });
-            }
+              navigator.clipboard
+                .writeText(res.token)
+                .then(() => {
+                  this.toast.show('Token copied to clipboard', 'success');
+                })
+                .catch(() => {
+                  this.toast.show('Failed to copy token', 'danger');
+                });
+            },
           },
-          { text: 'I have saved it', type: 'primary', action: () => this.popup.close() }
-        ]
+          {
+            text: 'I have saved it',
+            type: 'primary',
+            action: () => this.popup.close(),
+          },
+        ],
       });
     },
     onError: (err: any) => {
-      this.toast.show(err.error?.message || 'Failed to save credentials.', 'danger');
-    }
+      this.toast.show(
+        err.error?.message || 'Failed to save credentials.',
+        'danger',
+      );
+    },
   }));
 
   onCheck() {

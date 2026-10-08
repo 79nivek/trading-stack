@@ -1,4 +1,4 @@
-import { ExchangeInfoService } from './../../../core/services/exchange.service';
+import { CommonModule } from '@angular/common';
 import {
   Component,
   computed,
@@ -13,27 +13,33 @@ import {
 } from '@angular/core';
 import { ButtonComponent } from '../button/button.component';
 import { TranslatePipe } from '@ngx-translate/core';
-import { injectMutation } from '@tanstack/angular-query-experimental';
-import { ToastService } from '../../../core/services/toast.service';
-import { BackendApiService } from '../../../core/services/api/backend-api.service';
-import { lastValueFrom } from 'rxjs';
-import { Direction, Position } from '@trading-stack/shared-dto';
+import {
+  injectSetAlgoTPMutation,
+  injectSetAlgoSLMutation,
+  // injectOrderQuery,
+  // injectAlgoOrderQuery,
+} from '../../../core/queries/order.query';
+import { Direction } from '@trading-stack/shared-dto';
 import { calculatePnlAmount } from '@trading-stack/shared';
 import {
   injectMarkedPriceQuery,
   injectMarkedPriceMutation,
 } from '../../../core/queries/marked-price.query';
+import { ExchangeInfoService } from './../../../core/services/exchange.service';
+import { injectPositionQuery } from '../../../core/queries/position.query';
+import { ChartDataService } from '../../../core/services/chart-data.service';
+// import { injectPositionQuery } from '../../../core/queries/position.query';
+// import { injectPositionQuery } from '../../../core/queries/position.query';
 
 @Component({
   selector: 'app-chart-menu',
   standalone: true,
-  imports: [ButtonComponent, TranslatePipe],
+  imports: [ButtonComponent, TranslatePipe, CommonModule],
   templateUrl: './chart-menu.component.html',
   styleUrl: './chart-menu.component.scss',
 })
 export class ChartMenuComponent {
-  symbol = input<string>();
-  position = input<Position | undefined>();
+  symbol = input<string>('');
 
   @ViewChild('pricePopup') pricePopup?: ElementRef;
   @Output() onClose = new EventEmitter<void>();
@@ -50,66 +56,38 @@ export class ChartMenuComponent {
     }
   }
 
-  private backendService = inject(BackendApiService);
-  private toastService = inject(ToastService);
+  private positionQuery = injectPositionQuery();
+
+  private setTakeProfitMutation = injectSetAlgoTPMutation();
+  private setStopLossMutation = injectSetAlgoSLMutation();
+
   private exchangeService = inject(ExchangeInfoService);
+  private chartDataService = inject(ChartDataService);
 
-  entryPrice = computed(() => +(this.position()?.entryPrice || '0'));
-  markPrice = computed(() => +(this.position()?.markPrice || '0'));
+  position = computed(() => {
+    return this.positionQuery.data()?.get(this.symbol() || '');
+  });
 
-  isLong = computed(() => +(this.position()?.positionAmt || '0') > 0);
+  realtimePosition = this.chartDataService.registerSymbolRealtime(this.symbol);
 
   priceAt = computed(() => {
-    const targetPrice = this.selectedPrice().toString();
-    const currentEntryPrice = this.position()?.entryPrice || '0';
-    const currentPositionAmt = this.position()?.positionAmt || '0';
-    const pnl = calculatePnlAmount({
-      entryPrice: currentEntryPrice,
-      positionAmt: currentPositionAmt,
+    const targetPrice = this.selectedPrice();
+    const entryPrice = this.position()?.entryPrice || 0;
+
+    const positionAmt = this.position()?.positionAmt || 0;
+
+    return calculatePnlAmount({
+      entryPrice: entryPrice,
+      positionAmt: positionAmt,
       targetPrice: targetPrice,
-    }).toFixed(2);
-    return pnl;
+    });
   });
+
+  pnl = computed(() => this.priceAt() - (this.position()?.fee || 0));
 
   showMenu = signal(false);
 
   selectedPrice = signal<number>(0);
-
-  takeProfitMutate = injectMutation(() => ({
-    mutationFn: () =>
-      lastValueFrom(
-        this.backendService.setOrderTakeProfit({
-          symbol: this.symbol() || '',
-          price: this.selectedPrice().toString(),
-          direction: this.isLong() ? Direction.LONG : Direction.SHORT,
-          quantity: this.position()?.positionAmt || '0',
-        }),
-      ),
-    onSuccess: () => {
-      this.toastService.show(`Set Take Profit successfully`, 'success', 5000);
-    },
-    onError: (error) => {
-      this.toastService.show(`Set Take Profit failed`, 'danger');
-    },
-  }));
-
-  stopLossMutate = injectMutation(() => ({
-    mutationFn: () =>
-      lastValueFrom(
-        this.backendService.setOrderStopLoss({
-          symbol: this.symbol() || '',
-          price: this.selectedPrice().toString(),
-          direction: this.isLong() ? Direction.LONG : Direction.SHORT,
-          quantity: this.position()?.positionAmt || '0',
-        }),
-      ),
-    onSuccess: () => {
-      this.toastService.show(`Set Stop Loss successfully`, 'success', 5000);
-    },
-    onError: (error) => {
-      this.toastService.show(`Set Stop Loss failed`, 'danger');
-    },
-  }));
 
   addMarkedPriceMutation = injectMarkedPriceMutation(this.symbol);
 
@@ -134,29 +112,43 @@ export class ChartMenuComponent {
   }
 
   executeOrder(intendedType: 'TP' | 'SL') {
-    const isLong = this.isLong();
-    const price = this.selectedPrice();
-    const mark = this.markPrice();
-    const entry = this.entryPrice();
+    const pos = this.position();
+
+    if (!pos) return;
+
+    const selectedPrice = this.selectedPrice();
+    const mark = +(this.realtimePosition()?.markPrice || '0');
+    const entry = +pos.entryPrice || 0;
+    const isLong = pos.isLong;
+
+    const symbol = this.symbol() || '';
+
+    const params = {
+      symbol: symbol,
+      price: selectedPrice.toString(),
+      direction: isLong ? Direction.LONG : Direction.SHORT,
+      quantity: pos.positionAmt.toString() || '0',
+    };
+
     // 1. Xác định rõ vùng giá hiện tại thuộc về Chốt lời hay Cắt lỗ
     const isTPZone = isLong
-      ? price > mark && price > entry
-      : price < mark && price < entry;
+      ? selectedPrice > mark && selectedPrice > entry
+      : selectedPrice < mark && selectedPrice < entry;
     const isSLZone = isLong
-      ? price < mark && price < entry
-      : price > mark && price > entry;
+      ? selectedPrice < mark && selectedPrice < entry
+      : selectedPrice > mark && selectedPrice > entry;
     // 2. Tự động điều hướng hàm thực thi
     if (isTPZone) {
-      this.takeProfitMutate.mutate();
+      this.setTakeProfitMutation.mutate(params);
     } else if (isSLZone) {
-      this.stopLossMutate.mutate();
+      this.setStopLossMutation.mutate(params);
     } else {
       // 3. Fallback cho vùng giá "nhập nhằng" (kẹp giữa giá Mark và giá Entry)
       // Giữ nguyên fallback giống hệt như logic gốc của bạn
       if (intendedType === 'TP') {
-        this.stopLossMutate.mutate();
+        this.setStopLossMutation.mutate(params);
       } else {
-        this.takeProfitMutate.mutate();
+        this.setTakeProfitMutation.mutate(params);
       }
     }
   }

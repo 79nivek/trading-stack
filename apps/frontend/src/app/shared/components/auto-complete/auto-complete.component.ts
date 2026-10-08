@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, signal, computed, forwardRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  signal,
+  computed,
+  forwardRef,
+} from '@angular/core';
 import { TranslateDirective, TranslatePipe } from '@ngx-translate/core';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 
@@ -18,15 +26,15 @@ export type AutoCompleteData = {
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => AutoCompleteComponent),
-      multi: true
-    }
-  ]
+      multi: true,
+    },
+  ],
 })
 export class AutoCompleteComponent implements ControlValueAccessor {
   @Input() set data(val: AutoCompleteData[] | string[]) {
     // Map string[] to object array internally to reduce boilerplate in parents
-    const mapped = (val || []).map(item =>
-      typeof item === 'string' ? { label: item, value: item } : item
+    const mapped = (val || []).map((item) =>
+      typeof item === 'string' ? { label: item, value: item } : item,
     );
     this._data.set(mapped);
   }
@@ -46,7 +54,9 @@ export class AutoCompleteComponent implements ControlValueAccessor {
     const query = this.searchText().toLowerCase().trim();
     const all = this._data();
     if (!query) return all.slice(0, 30);
-    return all.filter(item => item.label.toLowerCase().includes(query)).slice(0, 30);
+    return all
+      .filter((item) => item.label.toLowerCase().includes(query))
+      .slice(0, 30);
   });
 
   // --- ControlValueAccessor ---
@@ -58,8 +68,12 @@ export class AutoCompleteComponent implements ControlValueAccessor {
   writeValue(val: string): void {
     this.searchText.set(val || '');
   }
-  registerOnChange(fn: any): void { this.onChange = fn; }
-  registerOnTouched(fn: any): void { this.onTouched = fn; }
+  registerOnChange(fn: any): void {
+    this.onChange = fn;
+  }
+  registerOnTouched(fn: any): void {
+    this.onTouched = fn;
+  }
 
   // --- Events ---
   onInput(event: Event): void {

@@ -63,6 +63,13 @@ export class FuturesController {
     return this.binanceService.getOrders(user.id, masterToken);
   }
 
+  @Get('algo-orders')
+  @HttpCode(HttpStatus.OK)
+  @RequireMasterToken()
+  async getAlgoOrders(@MasterToken() masterToken: string, @GetUser() user: User) {
+    return this.binanceService.getAlgoOrders(user.id, masterToken);
+  }
+
   @Post('orders/take-profit')
   @HttpCode(HttpStatus.OK)
   @RequireMasterToken()

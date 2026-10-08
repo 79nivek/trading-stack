@@ -56,7 +56,7 @@ export class FuturesWebsocketService implements OnDestroy {
     const normalizedToken = token.trim().toLowerCase();
 
     if (!this.tokens.has(normalizedToken)) {
-      this.tokens.add(normalizedToken);
+        this.tokens.add(normalizedToken);
       this.reconnect();
     }
 
@@ -75,8 +75,8 @@ export class FuturesWebsocketService implements OnDestroy {
    */
   unregister(token: string) {
     const normalizedToken = token.trim().toLowerCase();
-    if (this.tokens.has(normalizedToken)) {
-      this.tokens.delete(normalizedToken);
+      if (this.tokens.has(normalizedToken)) {
+        this.tokens.delete(normalizedToken);
       this.reconnect();
     }
   }

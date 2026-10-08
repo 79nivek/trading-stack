@@ -7,7 +7,7 @@ import { LanguageService } from '../../../core/services/language.service';
   standalone: true,
   imports: [],
   templateUrl: './lang-toggle.component.html',
-  styleUrl: './lang-toggle.component.scss'
+  styleUrl: './lang-toggle.component.scss',
 })
 export class LangToggleComponent {
   langService = inject(LanguageService);

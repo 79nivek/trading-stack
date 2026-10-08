@@ -28,14 +28,11 @@
   </ng-template>
 
   <!-- ===== Empty state ===== -->
-  <app-no-data [showNoData]=" positions.data()?.length === 0" />
+  <app-no-data [showNoData]="positions.data()?.size === 0" />
   <!-- ===== Cards grid with drag-and-drop ===== -->
-  @if (positions.data() && (positions.data()?.length || 0) > 0) {
+  @if (positions.data() && (positions.data()?.size || 0) > 0) {
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      @for (
-        position of positions.data();
-        track position.symbol
-      ) {
+      @for (position of positions.data()?.values(); track position.symbol) {
         <app-token-card
           [symbol]="position.symbol"
           syncGroup="current-trading"

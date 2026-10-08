@@ -41,29 +41,30 @@ export function injectMarkedPriceMutation(symbol: Signal<string | undefined>) {
   const toastService = inject(ToastService);
   const queryClient = inject(QueryClient);
 
-  const sym = symbol();
-
-  return injectMutation(() => ({
-    mutationKey: ['marked-prices', sym],
-    mutationFn: (body: CreateMarkedPriceDto) =>
-      lastValueFrom(
-        http
-          .post<
-            BaseResponse<MarkedPriceResDto>
-          >(`${ENV.BACKEND_URL}/api/v1/marked-prices`, body, { ...useAuth(true) })
-          .pipe(map((res) => res.result)),
-      ),
-    onSuccess: () => {
-      toastService.show(`Add Marked Price successfully`, 'success', 5000);
-      queryClient.invalidateQueries({
-        queryKey: ['marked-prices', sym],
-      });
-    },
-    onError: (error) => {
-      toastService.show(
-        error.message || 'Failed to add Marked Price',
-        'danger',
-      );
-    },
-  }));
+  return injectMutation(() => {
+    const sym = symbol();
+    return {
+      mutationKey: ['marked-prices', sym],
+      mutationFn: (body: CreateMarkedPriceDto) =>
+        lastValueFrom(
+          http
+            .post<
+              BaseResponse<MarkedPriceResDto>
+            >(`${ENV.BACKEND_URL}/api/v1/marked-prices`, body, { ...useAuth(true) })
+            .pipe(map((res) => res.result)),
+        ),
+      onSuccess: () => {
+        toastService.show(`Add Marked Price successfully`, 'success', 5000);
+        queryClient.invalidateQueries({
+          queryKey: ['marked-prices', sym],
+        });
+      },
+      onError: (error) => {
+        toastService.show(
+          error.message || 'Failed to add Marked Price',
+          'danger',
+        );
+      },
+    };
+  });
 }

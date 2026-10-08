@@ -1,9 +1,7 @@
-import { Position } from '@trading-stack/shared-dto';
 /**
  * Utility functions for formatting prices according to Binance Exchange logic.
  * Reference: https://binance-docs.github.io/apidocs/futures/en/#filters (PRICE_FILTER)
  */
-
 
 /**
  * Calculates the decimal precision based on the Binance tickSize.
@@ -62,23 +60,52 @@ export function calculateSMA(
   return smaData;
 }
 
-export function calculatePositionFee(position: Position): number {
-  const entryPrice = parseFloat(position.entryPrice || '0');
-  const positionAmt = parseFloat(position.positionAmt || '0');
+export function calculatePositionFee(params: {
+  entryPrice?: string | number;
+  positionAmt?: string | number;
+}): number {
+  if (!params.entryPrice || !params.positionAmt) return NaN;
+  const entryPrice =
+    typeof params.entryPrice === 'string'
+      ? parseFloat(params.entryPrice)
+      : params.entryPrice;
+  const positionAmt =
+    typeof params.positionAmt === 'string'
+      ? parseFloat(params.positionAmt)
+      : params.positionAmt;
+
+  if (isNaN(entryPrice) || isNaN(positionAmt)) {
+    return NaN;
+  }
   const takerPercent = 0.0005;
   return entryPrice * positionAmt * takerPercent * 2;
 }
 
 export function calculatePnlAmount(params: {
-  entryPrice?: string;
-  positionAmt?: string;
-  targetPrice?: string;
+  entryPrice?: string | number;
+  positionAmt?: string | number;
+  targetPrice?: string | number;
 }) {
   if (!params.entryPrice || !params.positionAmt || !params.targetPrice)
     return NaN;
-  const entryPrice = parseFloat(params.entryPrice);
-  const positionAmt = parseFloat(params.positionAmt);
-  const targetPrice = parseFloat(params.targetPrice);
+
+  const entryPrice =
+    typeof params.entryPrice === 'string'
+      ? parseFloat(params.entryPrice)
+      : params.entryPrice;
+  const positionAmt =
+    typeof params.positionAmt === 'string'
+      ? parseFloat(params.positionAmt)
+      : params.positionAmt;
+  const targetPrice =
+    typeof params.targetPrice === 'string'
+      ? parseFloat(params.targetPrice)
+      : params.targetPrice;
+
+  if (isNaN(entryPrice) || isNaN(positionAmt) || isNaN(targetPrice)) {
+    return NaN;
+  }
+
   const pnl = (targetPrice - entryPrice) * positionAmt;
 
   return pnl;

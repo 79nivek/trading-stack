@@ -1,3 +1,29 @@
+<ng-template
+  #SetTPSLContent
+  let-pos="position"
+  let-priceAt="priceAt"
+  let-selectedPrice="selectedPrice"
+>
+  <div class="flex flex-row gap-2 w-full">
+    <div class="flex flex-col gap-1 text-sm">
+      <span> unRealizedProfit: {{ priceAt | number: '1.2-2' }} </span>
+      <span> PnL: {{ pnl() | number: '1.2-2' }} </span>
+    </div>
+    @if (
+      (selectedPrice > +pos.entryPrice && pos.isLong) ||
+      (selectedPrice < +pos.entryPrice && !pos.isLong)
+    ) {
+      <app-button btnType="success" size="SM" (btnClick)="executeOrder('TP')">
+        {{ 'COMMON.TAKE_PROFIT' | translate }}
+      </app-button>
+    } @else {
+      <app-button btnType="warning" size="SM" (btnClick)="executeOrder('SL')">
+        {{ 'COMMON.STOP_LOSS' | translate }}
+      </app-button>
+    }
+  </div>
+</ng-template>
+
 @if (showMenu()) {
   <div #pricePopup class="menu">
     <!-- header -->
@@ -8,29 +34,18 @@
 
     <!-- body menu -->
     <div class="body">
-      @if (!!position()) {
+      @if (position(); as pos) {
         <!-- action SL/TP for position -->
-        <span> Long {{ priceAt() }} </span>
-        @if (
-          (selectedPrice() > entryPrice() && isLong()) ||
-          (selectedPrice() < entryPrice() && !isLong())
-        ) {
-          <app-button
-            btnType="success"
-            size="SM"
-            (btnClick)="executeOrder('TP')"
-          >
-            {{ 'COMMON.TAKE_PROFIT' | translate }}
-          </app-button>
-        } @else {
-          <app-button
-            btnType="warning"
-            size="SM"
-            (btnClick)="executeOrder('SL')"
-          >
-            {{ 'COMMON.STOP_LOSS' | translate }}
-          </app-button>
-        }
+        <ng-container
+          *ngTemplateOutlet="
+            SetTPSLContent;
+            context: {
+              position: pos,
+              priceAt: priceAt(),
+              selectedPrice: selectedPrice(),
+            }
+          "
+        ></ng-container>
       } @else {
         <!-- action place new order -->
       }

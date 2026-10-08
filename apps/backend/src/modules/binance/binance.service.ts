@@ -3,13 +3,16 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { EncryptionService } from '../encryption/encryption.service';
 import { BinanceCredentialRepository } from './binance-credential.repository';
 import { generateBinanceSignature } from './binance-signature.util';
-import { amtToSide, directionToOppositeSide } from '@trading-stack/shared';
+import {
+  amtToSide,
+  calculatePnlAmount,
+  directionToOppositeSide,
+} from '@trading-stack/shared';
 import {
   AccountInfoResponse,
   AlgoOrder,
   Direction,
   Order,
-  OrdersResponse,
   OrderType,
   Position,
   SetOrderReq,
@@ -585,7 +588,19 @@ export class BinanceService {
       .positionInformationV3()
       .then((res) => res.data());
 
-    return posData.map((pos: any) => new Position(pos));
+    return posData.map((pos: any) => {
+      const item = new Position(pos);
+      item.isLong = +(item.positionAmt || '0') > 0;
+
+      item.fee =
+        +calculatePnlAmount({
+          entryPrice: +item.entryPrice,
+          positionAmt: +item.positionAmt,
+          targetPrice: +item.breakEvenPrice,
+        }) * 2;
+
+      return item;
+    });
   }
 
   async getOrders(userId: string, masterToken: string) {
@@ -597,20 +612,28 @@ export class BinanceService {
       },
     });
 
-    const [orders, algoOrders] = await Promise.all([
-      client.restAPI
-        .currentAllOpenOrders()
-        .then((res) => res.data())
-        .then((data) => data.map((order: any) => new Order(order))),
-      client.restAPI
-        .currentAllAlgoOpenOrders({ algoType: 'CONDITIONAL' })
-        .then((res) => res.data())
-        .then((data) => data.map((order: any) => new AlgoOrder(order))),
-    ]);
+    const orders = await client.restAPI
+      .currentAllOpenOrders()
+      .then((res) => res.data())
+      .then((data) => data.map((order: any) => new Order(order)));
 
-    return new OrdersResponse({
-      orders,
-      algoOrders,
+    return orders;
+  }
+
+  async getAlgoOrders(userId: string, masterToken: string) {
+    const { apiKey, secretKey } = await this.getSecret(userId, masterToken);
+    const client = new DerivativesTradingUsdsFutures({
+      configurationRestAPI: {
+        apiKey: apiKey,
+        privateKey: secretKey,
+      },
     });
+
+    const algoOrders = await client.restAPI
+      .currentAllAlgoOpenOrders({ algoType: 'CONDITIONAL' })
+      .then((res) => res.data())
+      .then((data) => data.map((order: any) => new AlgoOrder(order)));
+
+    return algoOrders;
   }
 }

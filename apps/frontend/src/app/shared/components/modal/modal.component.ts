@@ -7,7 +7,7 @@ import { ModalService } from '../../../core/services/modal.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './modal.component.html',
-  styleUrl: './modal.component.scss'
+  styleUrl: './modal.component.scss',
 })
 export class ModalComponent {
   @Input() size: 'SM' | 'M' | 'L' = 'M';
@@ -16,11 +16,14 @@ export class ModalComponent {
   modalService = inject(ModalService);
 
   get sizeClass(): string {
-    switch(this.size) {
-      case 'SM': return 'max-w-md';
-      case 'L': return 'max-w-4xl';
+    switch (this.size) {
+      case 'SM':
+        return 'max-w-md';
+      case 'L':
+        return 'max-w-4xl';
       case 'M':
-      default: return 'max-w-2xl';
+      default:
+        return 'max-w-2xl';
     }
   }
 

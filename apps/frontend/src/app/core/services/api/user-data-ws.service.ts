@@ -1,16 +1,15 @@
 import { Injectable, inject, OnDestroy } from '@angular/core';
 import { effect } from '@angular/core';
 import { BackendApiService } from './backend-api.service';
-import { AccountService } from '../account.service';
 import { masterTokenStorageInstance } from '../storage.service';
+import { ChartDataService } from '../chart-data.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserDataWsService implements OnDestroy {
-
   private backendApi = inject(BackendApiService);
-  private accountServ = inject(AccountService);
+  private accountService = inject(ChartDataService);
 
   private ws: WebSocket | null = null;
   private listenKey: string | null = null;
@@ -92,13 +91,21 @@ export class UserDataWsService implements OnDestroy {
 
     switch (data.e) {
       case 'ACCOUNT_UPDATE': {
-        this.accountServ.fetchInfo();
+        this.accountService.debounceInfo.emit();
         break;
       }
-      case 'ALGO_UPDATE':
-      case 'ORDER_TRADE_UPDATE':
-        this.accountServ.fetchOrders();
+      case 'ALGO_UPDATE': {
+        this.accountService.debounceAlgoOrder.emit();
         break;
+      }
+      case 'ORDER_TRADE_UPDATE': {
+        this.accountService.debounceOrder.emit();
+        break;
+      }
+      case 'TRADE_LITE': {
+        this.accountService.debouncePosition.emit();
+        break;
+      }
 
       default:
         break;

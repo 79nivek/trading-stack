@@ -5,9 +5,7 @@ import { TokenCardComponent } from '../../shared/components/token-card/token-car
 @Component({
   selector: 'app-token-detail-page',
   standalone: true,
-  imports: [
-    TokenCardComponent
-],
+  imports: [TokenCardComponent],
   templateUrl: './token-detail.component.html',
   styleUrl: './token-detail.component.scss',
 })

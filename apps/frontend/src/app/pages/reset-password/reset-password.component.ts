@@ -1,5 +1,3 @@
-import { injectMutation } from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
 import { Component, inject } from '@angular/core';
 
 import {
@@ -13,7 +11,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { ModalService } from '../../core/services/modal.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BackendApiService } from '../../core/services/api/backend-api.service';
+import { injectResetPasswordMutation } from '../../core/queries/auth.query';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { ResetPasswordDto } from '@trading-stack/shared-dto';
 
@@ -31,7 +29,6 @@ import { ResetPasswordDto } from '@trading-stack/shared-dto';
 })
 export class ResetPasswordComponent {
   private fb = inject(FormBuilder);
-  private backendApi = inject(BackendApiService);
   private toast = inject(ToastService);
   modalService = inject(ModalService);
 
@@ -52,17 +49,7 @@ export class ResetPasswordComponent {
       : { mismatch: true };
   }
 
-  resetPasswordMutation = injectMutation(() => ({
-    mutationFn: (dto: ResetPasswordDto) =>
-      lastValueFrom(this.backendApi.resetPassword(dto)),
-    onSuccess: () => {
-      this.toast.show('Password reset successful', 'success');
-      this.modalService.close();
-    },
-    onError: (err: any) => {
-      this.toast.show(err.error?.message || 'Password reset failed', 'danger');
-    },
-  }));
+  resetPasswordMutation = injectResetPasswordMutation();
 
   submit() {
     if (this.form.invalid) {
@@ -75,6 +62,17 @@ export class ResetPasswordComponent {
       newPassword: this.form.value.newPassword,
     };
 
-    this.resetPasswordMutation.mutate(dto);
+    this.resetPasswordMutation.mutate(dto, {
+      onSuccess: () => {
+        this.toast.show('Password reset successful', 'success');
+        this.modalService.close();
+      },
+      onError: (err: any) => {
+        this.toast.show(
+          err.error?.message || 'Password reset failed',
+          'danger',
+        );
+      },
+    });
   }
 }

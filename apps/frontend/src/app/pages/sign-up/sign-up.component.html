@@ -1,22 +1,22 @@
 <div class="auth-container">
   <div class="auth-card">
-
     <div class="auth-header">
       <h1 class="auth-title">{{ 'SIGNUP.TITLE' | translate }}</h1>
     </div>
 
     <form [formGroup]="signUpForm" (ngSubmit)="onSubmit()" class="auth-form">
-
       <!-- Username -->
       <div class="form-group">
-        <label for="signup-username" class="form-label">{{ 'AUTH.USERNAME' | translate }}</label>
+        <label for="signup-username" class="form-label">{{
+          'AUTH.USERNAME' | translate
+        }}</label>
         <input
           id="signup-username"
           formControlName="username"
           type="text"
           [class.form-input]="!isFieldInvalid('username')"
           [class.form-input-error]="isFieldInvalid('username')"
-          >
+        />
         @if (isFieldInvalid('username')) {
           <p class="error-text">{{ ERRORS.REQUIRED | translate }}</p>
         }
@@ -25,27 +25,31 @@
       <!-- Name -->
       <div class="grid grid-cols-2 gap-4">
         <div class="form-group">
-          <label for="signup-firstname" class="form-label">{{ 'SIGNUP.FIRST_NAME' | translate }}</label>
+          <label for="signup-firstname" class="form-label">{{
+            'SIGNUP.FIRST_NAME' | translate
+          }}</label>
           <input
             id="signup-firstname"
             formControlName="firstName"
             type="text"
             [class.form-input]="!isFieldInvalid('firstName')"
             [class.form-input-error]="isFieldInvalid('firstName')"
-            >
+          />
           @if (isFieldInvalid('firstName')) {
             <p class="error-text">{{ ERRORS.REQUIRED | translate }}</p>
           }
         </div>
         <div class="form-group">
-          <label for="signup-lastname" class="form-label">{{ 'SIGNUP.LAST_NAME' | translate }}</label>
+          <label for="signup-lastname" class="form-label">{{
+            'SIGNUP.LAST_NAME' | translate
+          }}</label>
           <input
             id="signup-lastname"
             formControlName="lastName"
             type="text"
             [class.form-input]="!isFieldInvalid('lastName')"
             [class.form-input-error]="isFieldInvalid('lastName')"
-            >
+          />
           @if (isFieldInvalid('lastName')) {
             <p class="error-text">{{ ERRORS.REQUIRED | translate }}</p>
           }
@@ -61,7 +65,7 @@
           type="email"
           [class.form-input]="!isFieldInvalid('email')"
           [class.form-input-error]="isFieldInvalid('email')"
-          >
+        />
         @if (isFieldInvalid('email')) {
           <div>
             @if (f.email.errors?.['required']) {
@@ -76,14 +80,16 @@
 
       <!-- Password -->
       <div class="form-group">
-        <label for="signup-password" class="form-label">{{ 'AUTH.PASSWORD' | translate }}</label>
+        <label for="signup-password" class="form-label">{{
+          'AUTH.PASSWORD' | translate
+        }}</label>
         <input
           id="signup-password"
           formControlName="password"
           type="password"
           [class.form-input]="!isFieldInvalid('password')"
           [class.form-input-error]="isFieldInvalid('password')"
-          >
+        />
         @if (isFieldInvalid('password')) {
           <div>
             @if (f.password.errors?.['required']) {
@@ -104,13 +110,15 @@
           [disabled]="signUpForm.invalid || signUpMutation.isPending()"
           [isLoading]="signUpMutation.isPending()"
           class="w-full block"
-          >
+        >
           {{ 'SIGNUP.TITLE' | translate }}
         </app-button>
       </div>
 
       <div class="auth-footer">
-        <a [routerLink]="APP_PATHS.LOGIN" class="auth-link">{{ 'SIGNUP.ALREADY_HAVE_ACCOUNT' | translate }}</a>
+        <a [routerLink]="APP_PATHS.LOGIN" class="auth-link">{{
+          'SIGNUP.ALREADY_HAVE_ACCOUNT' | translate
+        }}</a>
       </div>
     </form>
   </div>

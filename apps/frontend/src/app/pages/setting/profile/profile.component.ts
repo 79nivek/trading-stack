@@ -7,15 +7,14 @@ import {
   FormGroup,
 } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { injectMutation } from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
 
-import { BackendApiService } from '../../../core/services/api/backend-api.service';
+import { injectUpdateProfileMutation } from '../../../core/queries/auth.query';
 import { ModalService } from '../../../core/services/modal.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ResetPasswordComponent } from '../../reset-password/reset-password.component';
 import { UpdateUserDto } from '@trading-stack/shared-dto';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { BackendApiService } from '../../../core/services/api/backend-api.service';
 
 @Component({
   selector: 'app-profile-page',
@@ -30,19 +29,7 @@ export class ProfilePageComponent implements OnInit {
   private toast = inject(ToastService);
   private modal = inject(ModalService);
 
-  updateProfileMutation = injectMutation(() => ({
-    mutationFn: (dto: UpdateUserDto) =>
-      lastValueFrom(this.backendApi.updateProfile(dto)),
-    onSuccess: () => {
-      this.toast.show('Profile updated successfully', 'success');
-      this.form.markAsPristine();
-      // Refresh user info
-      this.backendApi.getMe().subscribe();
-    },
-    onError: (err: any) => {
-      this.toast.show(err.error?.message || 'Update failed', 'danger');
-    },
-  }));
+  updateProfileMutation = injectUpdateProfileMutation();
 
   form: FormGroup = this.fb.group({
     firstName: ['', [Validators.required]],
@@ -80,6 +67,16 @@ export class ProfilePageComponent implements OnInit {
     });
 
     const dto: UpdateUserDto = dirtyValues;
-    this.updateProfileMutation.mutate(dto);
+    this.updateProfileMutation.mutate(dto, {
+      onSuccess: () => {
+        this.toast.show('Profile updated successfully', 'success');
+        this.form.markAsPristine();
+        // Refresh user info
+        this.backendApi.getMe().subscribe();
+      },
+      onError: (err: any) => {
+        this.toast.show(err.error?.message || 'Update failed', 'danger');
+      },
+    });
   }
 }

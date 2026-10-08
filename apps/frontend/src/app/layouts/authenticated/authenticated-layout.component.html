@@ -64,7 +64,7 @@
       class="p-3 border-t border-border flex flex-col gap-2 text-sm overflow-hidden whitespace-nowrap"
     >
       @if (hasMasterToken()) {
-        @if (accountService.futureBalance(); as futureBalance) {
+        @if (chartDataService.futureBalance(); as futureBalance) {
           <div class="flex flex-col gap-1">
             <div
               class="flex justify-between items-center"
@@ -89,21 +89,21 @@
                 <span class="text-text-muted text-xs">Realized (Day)</span>
                 <span
                   class="font-medium"
-                  [class.text-success]="accountService.realizedPnlToday() > 0"
-                  [class.text-danger]="accountService.realizedPnlToday() < 0"
+                  [class.text-success]="chartDataService.realizedPnlToday() > 0"
+                  [class.text-danger]="chartDataService.realizedPnlToday() < 0"
                 >
-                  {{ accountService.realizedPnlToday() > 0 ? '+' : ''
-                  }}{{ accountService.realizedPnlToday() | number: '1.2-2' }}
+                  {{ chartDataService.realizedPnlToday() > 0 ? '+' : ''
+                  }}{{ chartDataService.realizedPnlToday() | number: '1.2-2' }}
                 </span>
               } @else {
                 <span
                   class="font-medium text-xs"
-                  [class.text-success]="accountService.realizedPnlToday() > 0"
-                  [class.text-danger]="accountService.realizedPnlToday() < 0"
+                  [class.text-success]="chartDataService.realizedPnlToday() > 0"
+                  [class.text-danger]="chartDataService.realizedPnlToday() < 0"
                   title="Realized (Day)"
                 >
-                  {{ accountService.realizedPnlToday() > 0 ? '+' : ''
-                  }}{{ accountService.realizedPnlToday() | number: '1.2-2' }}
+                  {{ chartDataService.realizedPnlToday() > 0 ? '+' : ''
+                  }}{{ chartDataService.realizedPnlToday() | number: '1.2-2' }}
                 </span>
               }
             </div>
@@ -116,39 +116,28 @@
                 <span
                   class="font-medium"
                   [class.text-success]="
-                    ((accountService.$unrealizedPnl | async) || 0) > 0
+                    (totalTradeData()?.unRealizedProfit || 0) > 0
                   "
                   [class.text-danger]="
-                    ((accountService.$unrealizedPnl | async) || 0) < 0
+                    (totalTradeData()?.unRealizedProfit || 0) < 0
                   "
                 >
-                  {{
-                    ((accountService.$unrealizedPnl | async) || 0) > 0
-                      ? '+'
-                      : ''
-                  }}{{
-                    accountService.$unrealizedPnl | async | number: '1.2-2'
-                  }}
+                  {{ (totalTradeData()?.unRealizedProfit || 0) > 0 ? '+' : ''
+                  }}{{ totalTradeData()?.unRealizedProfit | number: '1.2-2' }}
                 </span>
               } @else {
                 <span
                   class="font-medium text-xs"
                   [class.text-success]="
-                    ((accountService.$unrealizedPnl | async) || 0) > 0
+                    (totalTradeData()?.unRealizedProfit || 0) > 0
                   "
                   [class.text-danger]="
-                    ((accountService.$unrealizedPnl | async) || 0) < 0
+                    (totalTradeData()?.unRealizedProfit || 0) < 0
                   "
                   title="Unrealized"
                 >
-                  {{
-                    ((accountService.$unrealizedPnl | async) || 0) > 0
-                      ? '+'
-                      : ''
-                  }}{{
-                    (accountService.$unrealizedPnl | async) || 0
-                      | number: '1.2-2'
-                  }}
+                  {{ (totalTradeData()?.unRealizedProfit || 0) > 0 ? '+' : ''
+                  }}{{ totalTradeData()?.unRealizedProfit | number: '1.2-2' }}
                 </span>
               }
             </div>

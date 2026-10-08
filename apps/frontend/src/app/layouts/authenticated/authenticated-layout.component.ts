@@ -17,7 +17,7 @@ import { APP_PATHS } from '../../core/constants/routes.constants';
 import { ToastService } from '../../core/services/toast.service';
 import { FormsModule } from '@angular/forms';
 import { LayoutService } from '../../core/services/layout.service';
-import { AccountService } from '../../core/services/account.service';
+import { ChartDataService } from '../../core/services/chart-data.service';
 import { UserDataWsService } from '../../core/services/api/user-data-ws.service';
 import {
   injectSettingQuery,
@@ -46,14 +46,23 @@ export class AuthenticatedLayoutComponent implements OnDestroy, OnInit {
   private router = inject(Router);
   private toastService = inject(ToastService);
 
-  public accountService = inject(AccountService);
+  public chartDataService = inject(ChartDataService);
   public authService = inject(BackendApiService);
 
   private userDataWsService = inject(UserDataWsService);
 
   public layoutService = inject(LayoutService);
 
-  hasMasterToken = signal(!!masterTokenStorageInstance.get())
+  totalTradeData = this.chartDataService.registerTotalPnL();
+  // totalTradeData = () => {
+  //   return {
+  //     unRealizedProfit: 0,
+  //     markPrice: 0,
+  //     pnl: 0,
+  //   };
+  // };
+
+  hasMasterToken = signal(!!masterTokenStorageInstance.get());
 
   masterTokenInput = '';
   isVerifyingToken = false;

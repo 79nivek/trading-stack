@@ -6,17 +6,12 @@
 
   <!-- Dropdown Menu -->
   @if (isOpen()) {
-    <div
-      class="dropdown-menu"
-      >
+    <div class="dropdown-menu">
       <div class="dropdown-menu-content">
         @for (item of items; track item; let last = $last) {
           <!-- Item -->
           @if (!item.divider) {
-            <a
-              (click)="onItemClick(item)"
-              class="dropdown-item"
-              >
+            <a (click)="onItemClick(item)" class="dropdown-item">
               <div class="dropdown-item-flex">
                 @if (item.icon) {
                   <span class="dropdown-icon">{{ item.icon }}</span>
@@ -26,7 +21,7 @@
             </a>
           }
           <!-- Divider -->
-          @if (item.divider || (item.action === 'divider')) {
+          @if (item.divider || item.action === 'divider') {
             <div class="border-t border-border my-1"></div>
           }
         }

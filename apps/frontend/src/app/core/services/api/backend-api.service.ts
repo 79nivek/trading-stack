@@ -9,7 +9,7 @@ export interface BaseResponse<T> {
 }
 
 import { HttpClient } from '@angular/common/http';
-import { tap, catchError, map, retry } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { Observable, of, interval, Subscription } from 'rxjs';
 import {
   masterTokenStorageInstance,
@@ -18,22 +18,6 @@ import {
 
 import { APP_PATHS } from '../../constants/routes.constants';
 import { ENV } from '../../../environments';
-import {
-  TokenSuggestionDto,
-  SuggestionPositionResponseDto,
-  PlacePositionDto,
-  FollowedSymbolDto,
-  CreateFollowedSymbolDto,
-  ReorderFollowedSymbolsDto,
-  KlineData,
-  AccountInfoResponse,
-  Position,
-  SetOrderReq,
-  OrdersResponse,
-  LlmAnalyzeTokenResponseDto,
-  TIME_FRAME,
-} from '@trading-stack/shared-dto';
-import { TradingFormatter } from '@trading-stack/shared';
 
 export interface UserProfile {
   id: string;
@@ -165,51 +149,6 @@ export class BackendApiService implements OnInit, OnDestroy {
     });
   }
 
-  getKlines(
-    symbol: string,
-    query: {
-      timeFrame: TIME_FRAME;
-      limit?: number;
-      endTime?: number;
-    },
-    options: TradingFormatter,
-  ): Observable<KlineData[]> {
-    if (query.limit === undefined) query.limit = 500;
-
-    const params: any = {
-      symbol: symbol.toUpperCase(),
-      interval: query.timeFrame,
-      limit: query.limit.toString(),
-    };
-
-    if (query.endTime) {
-      params.endTime = query.endTime.toString();
-    }
-
-    return this.http
-      .get<BaseResponse<any[][]>>(
-        `${ENV.BACKEND_URL}/api/v1/market-data/klines/futures`,
-        {
-          params,
-          ...skipSpinnerOptions(),
-        },
-      )
-      .pipe(
-        map((res: any) => res.result || res),
-        map((data) => {
-          return data.map((kline: any) => ({
-            time: Math.floor(kline[0] / 1000), // convert ms to s for lightweight-charts
-            open: TradingFormatter.formatPrice(kline[1], options),
-            high: TradingFormatter.formatPrice(kline[2], options),
-            low: TradingFormatter.formatPrice(kline[3], options),
-            close: TradingFormatter.formatPrice(kline[4], options),
-            volume: TradingFormatter.formatPrice(kline[5], options),
-            normalizedToken: `${symbol.toLowerCase()}@kline_${query.timeFrame}`,
-          }));
-        }),
-      );
-  }
-
   getMe(): Observable<boolean> {
     if (!tokenStorageInstance.get()) {
       this.isAuthenticated.set(false);
@@ -241,31 +180,6 @@ export class BackendApiService implements OnInit, OnDestroy {
       );
   }
 
-  signUp(data: any): Observable<any> {
-    return this.http
-      .post<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/auth/sign-up`, data, {
-        ...skipSpinnerOptions(),
-      })
-      .pipe(map((res) => res.result));
-  }
-
-  resetPassword(data: any): Observable<any> {
-    return this.http
-      .post<
-        BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/auth/reset-password`, data, { ...useAuth(), ...skipSpinnerOptions() })
-      .pipe(map((res) => res.result));
-  }
-
-  updateProfile(data: any): Observable<any> {
-    return this.http
-      .patch<BaseResponse<any>>(`${ENV.BACKEND_URL}/api/v1/users`, data, {
-        ...useAuth(),
-        ...skipSpinnerOptions(),
-      })
-      .pipe(map((res) => res.result));
-  }
-
   checkBinanceCredentials(data: any): Observable<any> {
     return this.http
       .post<
@@ -290,14 +204,6 @@ export class BackendApiService implements OnInit, OnDestroy {
       .pipe(map((res) => res.result));
   }
 
-  getFuturesSuggestions(limit = 10): Observable<TokenSuggestionDto[]> {
-    return this.http
-      .get<
-        BaseResponse<TokenSuggestionDto[]>
-      >(`${ENV.BACKEND_URL}/api/v1/suggestions/futures?limit=${limit}`, { ...useAuth() })
-      .pipe(map((res) => res.result));
-  }
-
   getAiCheck(symbol: string, timeFrame = '4h'): Observable<any> {
     return this.http
       .get<
@@ -312,146 +218,5 @@ export class BackendApiService implements OnInit, OnDestroy {
         BaseResponse<{ listenKey: string }>
       >(`${ENV.BACKEND_URL}/api/v1/binance/credentials/listen-key`, { ...useAuth(true), ...skipSpinnerOptions() })
       .pipe(map((res) => res.result.listenKey));
-  }
-
-  getFuturesAccountInfo(): Observable<AccountInfoResponse> {
-    return this.http
-      .get<
-        BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/account-info`, { ...useAuth(true), ...skipSpinnerOptions() })
-      .pipe(map((res) => res.result));
-  }
-
-  getFuturesPositions(): Observable<Position[]> {
-    return this.http
-      .get<
-        BaseResponse<Position[]>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions`, { ...useAuth(true), ...skipSpinnerOptions() })
-      .pipe(map((res) => res.result));
-  }
-
-  getFuturesOrders(): Observable<OrdersResponse> {
-    return this.http
-      .get<
-        BaseResponse<OrdersResponse>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders`, { ...useAuth(true), ...skipSpinnerOptions() })
-      .pipe(map((res) => res.result));
-  }
-
-  getSuggestionPosition(
-    symbol: string,
-    balance: number | null,
-  ): Observable<SuggestionPositionResponseDto> {
-    const payload: any = { symbol };
-    if (balance) payload.balance = balance;
-
-    return this.http
-      .post<
-        BaseResponse<SuggestionPositionResponseDto>
-      >(`${ENV.BACKEND_URL}/api/v1/suggestions/position`, payload, { ...useAuth(true) })
-      .pipe(map((res) => res.result));
-  }
-
-  placeFuturesPosition(setup: PlacePositionDto): Observable<any> {
-    return this.http
-      .post<
-        BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions`, setup, { ...useAuth(true) })
-      .pipe(map((res) => res.result));
-  }
-
-  setOrderTakeProfit(params: SetOrderReq) {
-    return this.http
-      .post<
-        BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders/take-profit`, params, { ...useAuth(true) })
-      .pipe(
-        retry(3),
-        map((res) => res.result),
-      );
-  }
-
-  setOrderStopLoss(params: SetOrderReq) {
-    return this.http
-      .post<
-        BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/orders/stop-loss`, params, { ...useAuth(true) })
-      .pipe(
-        retry(3),
-        map((res) => res.result),
-      );
-  }
-
-  // ============ analyze ===============
-
-  quantAnalyzeToken(symbol: string): Observable<TokenSuggestionDto> {
-    return this.http
-      .get<
-        BaseResponse<TokenSuggestionDto>
-      >(`${ENV.BACKEND_URL}/api/v1/analyze/quantitative/${symbol}`, { ...useAuth(), ...skipSpinnerOptions() })
-      .pipe(map((res) => res.result));
-  }
-
-  llmAnalyzeToken(symbol: string): Observable<LlmAnalyzeTokenResponseDto> {
-    return this.http
-      .get<
-        BaseResponse<LlmAnalyzeTokenResponseDto>
-      >(`${ENV.BACKEND_URL}/api/v1/analyze/llm/${symbol}`, { ...useAuth(), ...skipSpinnerOptions() })
-      .pipe(map((res) => res.result));
-  }
-
-  // ─── Followed Symbols ─────────────────────────────────────────────────────
-
-  getFollowedSymbols(): Observable<FollowedSymbolDto[]> {
-    return this.http
-      .get<
-        BaseResponse<FollowedSymbolDto[]>
-      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols`, { ...useAuth() })
-      .pipe(map((res) => res.result));
-  }
-
-  addFollowedSymbol(
-    dto: CreateFollowedSymbolDto,
-  ): Observable<FollowedSymbolDto> {
-    return this.http
-      .post<
-        BaseResponse<FollowedSymbolDto>
-      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols`, dto, { ...useAuth() })
-      .pipe(map((res) => res.result));
-  }
-
-  removeFollowedSymbol(id: string): Observable<void> {
-    return this.http
-      .delete<
-        BaseResponse<void>
-      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/${id}`, { ...useAuth() })
-      .pipe(map((res) => res.result));
-  }
-
-  getFollowedSymbolsData(): Observable<TokenSuggestionDto[]> {
-    return this.http
-      .get<
-        BaseResponse<TokenSuggestionDto[]>
-      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/data`, { ...useAuth() })
-      .pipe(map((res) => res.result));
-  }
-
-  reorderFollowedSymbols(dto: ReorderFollowedSymbolsDto): Observable<void> {
-    return this.http
-      .patch<
-        BaseResponse<void>
-      >(`${ENV.BACKEND_URL}/api/v1/followed-symbols/reorder`, dto, { ...useAuth(), ...skipSpinnerOptions() })
-      .pipe(map((res) => res.result));
-  }
-
-  closePosition(symbol: string): Observable<any> {
-    return this.http
-      .delete<
-        BaseResponse<any>
-      >(`${ENV.BACKEND_URL}/api/v1/binance/futures/positions/${symbol}`, { ...useAuth(true) })
-      .pipe(
-        retry(3),
-        map((res) => res.result),
-      );
   }
 }
